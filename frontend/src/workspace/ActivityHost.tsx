@@ -3,12 +3,19 @@
 // Checking work is coordinated by WorkspaceTab, so it can also be triggered from elsewhere.
 
 import type { ReactNode } from 'react';
-import type { ActivityDefinition, ActivityReport } from '../types/contracts';
+import type { ActivityDefinition, ActivityKind, ActivityReport, StakeholderRef } from '../types/contracts';
 import { DiagramActivity, type DiagramState } from '../activities/diagram/DiagramActivity';
 import { AnnotationActivity, type AnnotationState } from '../activities/annotation/AnnotationActivity';
 import {
   StakeholderTokensActivity, type StakeholderTokensState,
 } from '../activities/stakeholder-tokens/StakeholderTokensActivity';
+import { stakeholderRefs } from '../activities/stakeholder-tokens/model';
+import { ValueScenariosActivity, type ValueScenariosState } from '../activities/value-scenarios/ValueScenariosActivity';
+
+/** Activities whose saved state can list stakeholders for other activities (see stakeholderSource). */
+export const STAKEHOLDER_EXPORTERS: Partial<Record<ActivityKind, (state: unknown) => StakeholderRef[]>> = {
+  'stakeholder-tokens': stakeholderRefs,
+};
 
 interface Props {
   definition: ActivityDefinition;
@@ -22,12 +29,13 @@ interface Props {
   example?: boolean;
   /** Leaves the example (shown next to the Example badge). */
   onExitExample?: () => void;
+  importStakeholders?: { label: string; load: () => Promise<StakeholderRef[]> };
   /** Extra header controls supplied by the layout (e.g. expand). */
   headerActions?: ReactNode;
 }
 
 export function ActivityHost({
-  definition, number, savedReport, onReport, onCheck, canCheck, example, onExitExample, headerActions,
+  definition, number, savedReport, onReport, onCheck, canCheck, example, onExitExample, importStakeholders, headerActions,
 }: Props) {
   const onChange = (state: unknown) =>
     !example &&
@@ -39,7 +47,7 @@ export function ActivityHost({
       updatedAt: new Date().toISOString(),
     });
 
-  const common = { prompt: definition.prompt, config: definition.config, onChange, example };
+  const common = { prompt: definition.prompt, config: definition.config, onChange, example, importStakeholders };
 
   let activity;
   switch (definition.kind) {
@@ -51,6 +59,9 @@ export function ActivityHost({
       break;
     case 'stakeholder-tokens':
       activity = <StakeholderTokensActivity {...common} savedState={savedReport?.state as StakeholderTokensState | null} />;
+      break;
+    case 'value-scenarios':
+      activity = <ValueScenariosActivity {...common} savedState={savedReport?.state as ValueScenariosState | null} />;
       break;
   }
 

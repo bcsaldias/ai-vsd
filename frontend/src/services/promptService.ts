@@ -1,23 +1,27 @@
-// Prompt templates and their version history.
+// Prompt templates and their version history, kept per lesson.
 // Placeholder: in-memory store seeded from mock data. Later: FastAPI endpoints.
 
 import type { PromptSet, PromptVersion } from '../types/contracts';
 import { SEED_PROMPT_VERSIONS } from './mockData';
 
 const versions: PromptVersion[] = [...SEED_PROMPT_VERSIONS];
+const forLesson = (lessonId: string) => versions.filter((v) => v.lessonId === lessonId);
 
-export async function listPromptVersions(): Promise<PromptVersion[]> {
-  return [...versions].reverse(); // newest first
+export async function listPromptVersions(lessonId: string): Promise<PromptVersion[]> {
+  return forLesson(lessonId).reverse(); // newest first
 }
 
-export async function getLatestPromptVersion(): Promise<PromptVersion> {
-  return versions[versions.length - 1];
+export async function getLatestPromptVersion(lessonId: string): Promise<PromptVersion> {
+  const list = forLesson(lessonId);
+  if (!list.length) throw new Error(`No prompts for lesson: ${lessonId}`);
+  return list[list.length - 1];
 }
 
-export async function savePromptVersion(prompts: PromptSet, note: string): Promise<PromptVersion> {
-  const number = versions.length + 1;
+export async function savePromptVersion(lessonId: string, prompts: PromptSet, note: string): Promise<PromptVersion> {
+  const number = forLesson(lessonId).length + 1;
   const version: PromptVersion = {
-    id: `pv-${number}`,
+    id: `${lessonId}-v${number}`,
+    lessonId,
     number,
     author: 'you',
     note: note.trim() || `Version ${number}`,

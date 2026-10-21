@@ -5,8 +5,8 @@
 // Activities with a `stateKey` also share one current state, so several steps can work on
 // the same board.
 
-import type { ActivityDefinition, ActivityReport, Lesson } from '../types/contracts';
-import { MOCK_LESSON } from './mockData';
+import type { ActivityDefinition, ActivityReport, Lesson, LessonSummary } from '../types/contracts';
+import { LESSONS } from './mockData';
 
 const reportKey = (activityId: string) => `activity-report:${activityId}`;
 const sharedKey = (stateKey: string) => `activity-state:${stateKey}`;
@@ -33,8 +33,19 @@ function write(key: string, value: unknown) {
   }
 }
 
-export async function getLesson(): Promise<Lesson> {
-  return MOCK_LESSON;
+export async function getLessons(): Promise<LessonSummary[]> {
+  return LESSONS.map(({ id, title }) => ({ id, title }));
+}
+
+export async function getLesson(id: string): Promise<Lesson> {
+  const lesson = LESSONS.find((l) => l.id === id);
+  if (!lesson) throw new Error(`Unknown lesson: ${id}`);
+  return lesson;
+}
+
+/** The current shared state for a stateKey, e.g. to bring stakeholders into another lesson. */
+export async function loadSharedState(stateKey: string): Promise<unknown | null> {
+  return read<SharedState>(sharedKey(stateKey))?.state ?? null;
 }
 
 export async function loadReport(definition: ActivityDefinition): Promise<ActivityReport | null> {

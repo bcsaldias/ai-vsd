@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Lesson } from '../types/contracts';
+import type { Lesson, LessonSummary } from '../types/contracts';
 
 interface Props {
+  lessons: LessonSummary[];
+  onSelectLesson: (id: string) => void;
   lesson: Lesson;
   currentActivityId: string;
   onSelectActivity: (activityId: string) => void;
@@ -20,7 +22,7 @@ interface Props {
 /** Lesson intro, the current activity's card (what to do + objectives), and the activity list.
     Activities don't repeat their prompt; this card is where students read it. */
 export function LearningWorkspace({
-  lesson, currentActivityId, onSelectActivity, checked, canCheck, onCheck, onNext, hasExample, showingExample, onToggleExample,
+  lessons, onSelectLesson, lesson, currentActivityId, onSelectActivity, checked, canCheck, onCheck, onNext, hasExample, showingExample, onToggleExample,
 }: Props) {
   const index = lesson.activities.findIndex((a) => a.id === currentActivityId);
   const current = lesson.activities[index];
@@ -55,7 +57,22 @@ export function LearningWorkspace({
   return (
     <section id="workspace-panel" className="panel workspace-panel" aria-label="VSD Learning workspace">
       <header className="panel-header">
-        <h2>{lesson.title}</h2>
+        {lessons.length > 1 ? (
+          <nav className="lesson-switch" aria-label="Lessons">
+            {lessons.map((l) => (
+              <button
+                key={l.id}
+                className={l.id === lesson.id ? 'lesson-tab active' : 'lesson-tab'}
+                aria-current={l.id === lesson.id ? 'page' : undefined}
+                onClick={() => onSelectLesson(l.id)}
+              >
+                {l.title}
+              </button>
+            ))}
+          </nav>
+        ) : (
+          <h2>{lesson.title}</h2>
+        )}
       </header>
       <div className="panel-body">
         <p>{lesson.intro}</p>

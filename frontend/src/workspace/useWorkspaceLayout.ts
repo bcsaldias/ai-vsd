@@ -40,6 +40,23 @@ function load(): WorkspaceLayout {
   };
 }
 
+/** The lesson the student last had open in this browser (a UI preference, like panel sizes). */
+export function rememberedLesson(): string | null {
+  try {
+    return localStorage.getItem('workspace-lesson');
+  } catch {
+    return null;
+  }
+}
+
+export function rememberLesson(id: string) {
+  try {
+    localStorage.setItem('workspace-lesson', id);
+  } catch {
+    // Storage unavailable — the first lesson opens next time.
+  }
+}
+
 export function useWorkspaceLayout() {
   const [layout, setLayout] = useState<WorkspaceLayout>(load);
 

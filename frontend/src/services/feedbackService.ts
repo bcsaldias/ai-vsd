@@ -4,8 +4,9 @@
 import type { ActivityReport, Feedback } from '../types/contracts';
 import { getLatestPromptVersion } from './promptService';
 
-export async function requestFeedback(report: ActivityReport): Promise<Feedback> {
-  const promptVersion = await getLatestPromptVersion();
+/** Uses the latest prompts of the lesson the activity belongs to. */
+export async function requestFeedback(report: ActivityReport, lessonId: string): Promise<Feedback> {
+  const promptVersion = await getLatestPromptVersion(lessonId);
   await new Promise((resolve) => setTimeout(resolve, 400)); // simulate latency
 
   return {

@@ -133,6 +133,35 @@ report (status, plus a snapshot of the board when it was saved), so feedback and
 traced to a step. A step that was submitted shows as in-progress again once the board changes elsewhere.
 
 
+VALUE SCENARIOS LESSON
+
+A second, independent lesson (Nathan, Klasnja & Friedman, 2007): short stories about how a technology
+plays out for different stakeholders, once widely used and over many years. Its own steps, saved work
+(stateKey "value-scenarios"), example, Export / Import / Start over, and prompts. The learning
+workspace header switches between lessons; the browser remembers the last one opened, and each lesson
+opens at its first step.
+
+Bottom panel (a simple list for now; a time × pervasiveness grid may come later):
+  - Left: the technology, and "Whose stories?" (stakeholders, direct or indirect). Optional bridge:
+    "Add from my stakeholder map" brings in the named stakeholders from the stakeholder lesson,
+    skipping names already listed. The lessons stay independent: nothing else is shared, and the
+    bridge reads the other lesson's saved work through the services layer.
+  - Right: scenario cards (title, whose story, the story today), then fields added by later steps.
+
+Steps:
+  1. Choose the technology.
+  2. Whose stories? — at least one indirect stakeholder.
+  3. Write a scenario — a person, a place, a moment; scenarios for at least two stakeholders.
+  4. Move it forward in time — "Later" in 5 or 20+ years.
+  5. Imagine everyone has it — widespread use.
+  6. Trace systemic effects — institutions, norms, relationships.
+  7. Value implications — values per scenario, each marked harm or benefit.
+  8. Compare scenarios — tensions between two scenarios, with a note on the values in conflict.
+
+Worked example: the same smart doorbell camera, as three scenarios (a delivery driver, a passer-by,
+a homeowner) with two tensions; read only and filtered by step, as in the stakeholder lesson.
+
+
 B. PROMPTS TAB
 
 Edit the prompts used to generate AI feedback:
@@ -143,6 +172,9 @@ Edit the prompts used to generate AI feedback:
 - Assistant prompt: optional prefill or example response.
 - A preview that shows the user prompt filled in with sample data.
 - Saving creates a new version; it never overwrites an existing one.
+- Prompts are kept per lesson (each lesson has its own tutor role and rubric). A lesson picker at the
+  top chooses which lesson's prompts to edit; the Versions tab follows the same choice. The preview
+  uses the lesson's first activity and its worked example as sample student work.
 
 
 C. VERSIONS TAB
@@ -192,7 +224,7 @@ ai-vsd/
       types/         Shared data contracts
       services/      The only code that talks to data sources (mock now, backend later)
       workspace/     Workspace tab: WorkspaceTab, LearningWorkspace, FeedbackPanel, ActivityHost
-      activities/    One folder per activity (diagram/, annotation/, stakeholder-tokens/)
+      activities/    One folder per activity (diagram/, annotation/, stakeholder-tokens/, value-scenarios/)
       prompts/       Prompts tab
       versions/      Versions tab
   backend/         Self-contained FastAPI project (requirements.txt, app/)
@@ -215,14 +247,15 @@ activity behavior; it treats each activity's state as opaque JSON.
 BACKEND RESPONSIBILITIES
 
 Placeholder phase:
+- GET  /lessons                        Lesson list (id, title)
 - GET  /lessons/{id}                    Lesson and activity definitions
 - GET  /activities/{id}/report          Load a student's saved work (with the shared state, if the activity has a stateKey)
 - PUT  /activities/{id}/report          Save a student's work (and update the shared state, if any)
 - DELETE /activities/{id}/report        Start over (clears the shared state too; consider archiving
                                         instead if student work is research data)
 - POST /feedback                        Return a Feedback object (mock for now)
-- GET  /prompts/versions                Prompt version history
-- POST /prompts/versions                Save a new prompt version
+- GET  /lessons/{id}/prompts/versions   Prompt version history for a lesson
+- POST /lessons/{id}/prompts/versions   Save a new prompt version for a lesson
 
 Later:
 - Fill the user prompt template, call the AI model with the system / user / assistant prompts,
@@ -247,7 +280,10 @@ Defined once in frontend/src/types/contracts.ts and mirrored as Pydantic models 
 - Feedback: activityId, source (mock | ai), promptVersionId, generatedAt, summary, items[].
 - FeedbackItem: id, tone (praise | suggestion | issue), message, optional targetId.
 - PromptSet: system, user, assistant.
-- PromptVersion: id, number, author, note, createdAt, prompts.
+- LessonSummary: id, title (for lesson lists).
+- StakeholderRef: name, kind (direct | indirect) — stakeholders passed between activities.
+- ActivityDefinition.stakeholderSource: optional { stateKey, kind, label } to bring stakeholders in from.
+- PromptVersion: id, lessonId, number (within the lesson), author, note, createdAt, prompts.
 
 
 ARCHITECTURE PRINCIPLES

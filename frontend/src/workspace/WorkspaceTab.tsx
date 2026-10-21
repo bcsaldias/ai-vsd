@@ -2,18 +2,22 @@
 // reports to persistence and feedback; implements no activity behavior itself.
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import type { ActivityReport, ActivityStatus, Feedback, Lesson } from '../types/contracts';
-import { clearWork, exportWork, getLesson, importWork, loadReport, saveReport } from '../services/activityService';
+import type { ActivityReport, ActivityStatus, Feedback, Lesson, LessonSummary } from '../types/contracts';
+import {
+  clearWork, exportWork, getLesson, getLessons, importWork, loadReport, loadSharedState, saveReport,
+} from '../services/activityService';
 import { requestFeedback } from '../services/feedbackService';
 import { LearningWorkspace } from './LearningWorkspace';
 import { FeedbackPanel } from './FeedbackPanel';
-import { ActivityHost } from './ActivityHost';
+import { ActivityHost, STAKEHOLDER_EXPORTERS } from './ActivityHost';
 import { ResizeHandle } from './ResizeHandle';
-import { LAYOUT_LIMITS, useWorkspaceLayout } from './useWorkspaceLayout';
+import { LAYOUT_LIMITS, rememberLesson, rememberedLesson, useWorkspaceLayout } from './useWorkspaceLayout';
 
 export function WorkspaceTab() {
   const [layout, setLayout] = useWorkspaceLayout();
   const gridRef = useRef<HTMLDivElement>(null);
+  const [lessons, setLessons] = useState<LessonSummary[]>([]);
+  const [lessonId, setLessonId] = useState<string | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [activityId, setActivityId] = useState<string | null>(null);
   const [saved, setSaved] = useState<{ activityId: string; report: ActivityReport | null } | null>(null);
@@ -45,11 +49,23 @@ export function WorkspaceTab() {
   }, [lesson]);
 
   useEffect(() => {
-    getLesson().then((l) => {
+    getLessons().then((list) => {
+      setLessons(list);
+      const remembered = rememberedLesson();
+      setLessonId(list.some((l) => l.id === remembered) ? remembered : (list[0]?.id ?? null));
+    });
+  }, []);
+
+  // Each lesson is independent: switching starts at its first step, with its own board.
+  useEffect(() => {
+    if (!lessonId) return;
+    rememberLesson(lessonId);
+    setShowExample(false);
+    getLesson(lessonId).then((l) => {
       setLesson(l);
       setActivityId(l.activities[0]?.id ?? null);
     });
-  }, []);
+  }, [lessonId]);
 
   useEffect(() => {
     currentId.current = activityId;
@@ -77,7 +93,7 @@ export function WorkspaceTab() {
     if (report.status !== 'submitted') return;
     setLoadingFeedback(true);
     try {
-      const result = await requestFeedback(report);
+      const result = await requestFeedback(report, lesson!.id);
       // Ignore results for an activity the student has already left.
       if (result.activityId === currentId.current) setFeedback(result);
     } finally {
@@ -85,7 +101,9 @@ export function WorkspaceTab() {
     }
   };
 
-  if (!lesson || !activityId) return <p className="hint">Loading lesson…</p>;
+  if (!lesson || !activityId || !lesson.activities.some((a) => a.id === activityId)) {
+    return <p className="hint">Loading lesson…</p>;
+  }
   const index = lesson.activities.findIndex((a) => a.id === activityId);
   const definition = lesson.activities[index];
   const next = lesson.activities[index + 1];
@@ -101,6 +119,13 @@ export function WorkspaceTab() {
       updatedAt: new Date().toISOString(),
     });
   };
+  // Optional bridge: bring stakeholders in from another lesson's saved work.
+  const source = definition.stakeholderSource;
+  const exporter = source && STAKEHOLDER_EXPORTERS[source.kind];
+  const importStakeholders = source && exporter
+    ? { label: source.label, load: async () => exporter(await loadSharedState(source.stateKey)) }
+    : undefined;
+
   // Activities sharing this one's state (all steps of one board), or just this activity.
   const group = definition.stateKey ? lesson.activities.filter((a) => a.stateKey === definition.stateKey) : [definition];
 
@@ -221,6 +246,8 @@ export function WorkspaceTab() {
   return (
     <div className="workspace-grid" ref={gridRef} style={gridStyle}>
       <LearningWorkspace
+        lessons={lessons}
+        onSelectLesson={(id) => id !== lesson.id && setLessonId(id)}
         lesson={lesson}
         currentActivityId={activityId}
         onSelectActivity={setActivityId}
@@ -277,6 +304,7 @@ export function WorkspaceTab() {
       ) : hostReady ? (
         <ActivityHost
           key={`${hostKey(activityId)}#${hostVersion}`}
+          importStakeholders={importStakeholders}
           definition={definition}
           number={index + 1}
           onCheck={checkWork}

@@ -1,3 +1,5 @@
+import type { StakeholderRef } from '../../types/contracts';
+
 // Board model for the Stakeholder Tokens activity: plain data and pure updates,
 // with no React Flow types, so the saved state stays library-independent.
 
@@ -252,6 +254,13 @@ export function forStep(b: Board, step: number): Board {
       }))
     : [];
   return { context: b.context, tokens, links, impacts, values };
+}
+
+/** The board's stakeholders in the shared StakeholderRef shape, for other activities to bring in. */
+export function stakeholderRefs(saved: unknown): StakeholderRef[] {
+  return normalize(saved as Partial<Board> | null).tokens
+    .filter((t) => t.label.trim())
+    .map((t) => ({ name: t.label.trim(), kind: t.kind }));
 }
 
 // ---------- Queries ----------

@@ -1,22 +1,32 @@
 // Prompt version history. Compare and restore are placeholders for now.
 
 import { useEffect, useState } from 'react';
-import type { PromptRole, PromptVersion } from '../types/contracts';
+import type { LessonSummary, PromptRole, PromptVersion } from '../types/contracts';
 import { listPromptVersions } from '../services/promptService';
+import { LessonPicker } from '../lessons/LessonPicker';
 
 const ROLES: PromptRole[] = ['system', 'user', 'assistant'];
 
-/** `refreshKey` changes whenever a new version is saved elsewhere. */
-export function VersionsTab({ refreshKey }: { refreshKey: number }) {
+interface Props {
+  lessons: LessonSummary[];
+  lessonId: string | null;
+  onLessonChange: (id: string) => void;
+  /** Changes whenever a new version is saved elsewhere. */
+  refreshKey: number;
+}
+
+/** Prompt history for one lesson at a time. */
+export function VersionsTab({ lessons, lessonId, onLessonChange, refreshKey }: Props) {
   const [versions, setVersions] = useState<PromptVersion[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
-    listPromptVersions().then((list) => {
+    if (!lessonId) return;
+    listPromptVersions(lessonId).then((list) => {
       setVersions(list);
-      setSelectedId((id) => id ?? list[0]?.id ?? null);
+      setSelectedId((id) => (list.some((v) => v.id === id) ? id : (list[0]?.id ?? null)));
     });
-  }, [refreshKey]);
+  }, [refreshKey, lessonId]);
 
   const selected = versions.find((v) => v.id === selectedId);
 
@@ -25,6 +35,7 @@ export function VersionsTab({ refreshKey }: { refreshKey: number }) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Versions.</h1>
+          <LessonPicker lessons={lessons} value={lessonId} onChange={onLessonChange} />
           <p className="hint">Prompt history. Every saved prompt change appears here; feedback records which version produced it.</p>
         </div>
       </div>

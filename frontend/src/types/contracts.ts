@@ -3,7 +3,7 @@
 
 // ---------- Lessons & activities ----------
 
-export type ActivityKind = 'diagram' | 'annotation' | 'stakeholder-tokens';
+export type ActivityKind = 'diagram' | 'annotation' | 'stakeholder-tokens' | 'value-scenarios';
 
 /** Something an activity introduces, listed on the step card so students know where to look. */
 export interface ActivityGuideItem {
@@ -29,11 +29,22 @@ export interface ActivityDefinition {
   guide?: ActivityGuideItem[];
   /** A worked example in the activity's state shape, shown read-only on request. */
   example?: unknown;
+  /** Where the student can optionally bring in stakeholders from (another lesson's saved work). */
+  stakeholderSource?: { stateKey: string; kind: ActivityKind; label: string };
 }
 
-export interface Lesson {
+/** A stakeholder as passed between activities (e.g. from the stakeholder map into value scenarios). */
+export interface StakeholderRef {
+  name: string;
+  kind: 'direct' | 'indirect';
+}
+
+export interface LessonSummary {
   id: string;
   title: string;
+}
+
+export interface Lesson extends LessonSummary {
   intro: string;
   activities: ActivityDefinition[];
 }
@@ -48,6 +59,8 @@ export interface ActivityProps<S> {
   savedState: S | null;
   /** Showing a worked example: read-only. Activities may show only what applies to the current step. */
   example?: boolean;
+  /** Offered when the activity can bring in stakeholders from elsewhere (see stakeholderSource). */
+  importStakeholders?: { label: string; load: () => Promise<StakeholderRef[]> };
   onChange: (state: S) => void;
 }
 
@@ -87,8 +100,11 @@ export type PromptRole = 'system' | 'user' | 'assistant';
 /** One editable template per chat role. `user` supports {{variables}}. */
 export type PromptSet = Record<PromptRole, string>;
 
+/** Prompt versions are kept per lesson: each lesson has its own tutor prompts and rubric. */
 export interface PromptVersion {
   id: string;
+  lessonId: string;
+  /** Numbered within the lesson. */
   number: number;
   author: string;
   note: string;

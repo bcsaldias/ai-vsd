@@ -1,9 +1,10 @@
 // Edit the system / user / assistant prompts. Saving always creates a new version.
 
 import { useEffect, useState } from 'react';
-import type { ActivityDefinition, PromptRole, PromptSet, PromptVersion } from '../types/contracts';
+import type { ActivityDefinition, LessonSummary, PromptRole, PromptSet, PromptVersion } from '../types/contracts';
 import { getLatestPromptVersion, renderTemplate, savePromptVersion, TEMPLATE_VARIABLES } from '../services/promptService';
 import { getLesson } from '../services/activityService';
+import { LessonPicker } from '../lessons/LessonPicker';
 
 const ROLES: { role: PromptRole; label: string; help: string }[] = [
   { role: 'system', label: 'System', help: "The tutor's role, tone, and rules." },
@@ -11,41 +12,41 @@ const ROLES: { role: PromptRole; label: string; help: string }[] = [
   { role: 'assistant', label: 'Assistant', help: 'Optional prefill or example response.' },
 ];
 
-const SAMPLE_STUDENT_WORK = JSON.stringify(
-  {
-    context: { type: 'technology', label: 'Reading app that shares progress with parents' },
-    tokens: [
-      { id: 't1', label: 'Students', kind: 'direct', ring: 'core' },
-      { id: 't2', label: 'Parents', kind: 'indirect', ring: 'peripheral' },
-    ],
-    links: [{ source: 't2', target: 't1', type: 'relationship', label: 'cares for' }],
-    impacts: [{ tokenId: 't1', kind: 'harm', text: 'Struggles are visible to others', valueIds: ['v1'] }],
-    values: [{ id: 'v1', name: 'Privacy', definition: '' }],
-  },
-  null,
-  2,
-);
+interface Props {
+  lessons: LessonSummary[];
+  lessonId: string | null;
+  onLessonChange: (id: string) => void;
+  onSaved: () => void;
+}
 
-export function PromptsTab({ onSaved }: { onSaved: () => void }) {
+/** Each lesson has its own prompts. The preview fills the template with the lesson's first
+    activity and, as sample student work, its worked example. */
+export function PromptsTab({ lessons, lessonId, onLessonChange, onSaved }: Props) {
   const [base, setBase] = useState<PromptVersion | null>(null);
   const [draft, setDraft] = useState<PromptSet | null>(null);
   const [note, setNote] = useState('');
   const [sampleActivity, setSampleActivity] = useState<ActivityDefinition | null>(null);
 
   useEffect(() => {
-    getLatestPromptVersion().then((v) => {
+    if (!lessonId) return;
+    getLatestPromptVersion(lessonId).then((v) => {
       setBase(v);
       setDraft(v.prompts);
+      setNote('');
     });
-    getLesson().then((l) => setSampleActivity(l.activities[0] ?? null));
-  }, []);
+    getLesson(lessonId).then((l) => setSampleActivity(l.activities[0] ?? null));
+  }, [lessonId]);
 
-  if (!base || !draft) return <p className="hint">Loading prompts…</p>;
+  if (!lessonId || !base || !draft || base.lessonId !== lessonId) return <p className="hint">Loading prompts…</p>;
 
   const dirty = ROLES.some(({ role }) => draft[role] !== base.prompts[role]);
+  const switchLesson = (id: string) => {
+    if (dirty && !window.confirm('You have unsaved prompt changes. Switch lessons and discard them?')) return;
+    onLessonChange(id);
+  };
 
   const save = async () => {
-    const v = await savePromptVersion(draft, note);
+    const v = await savePromptVersion(lessonId, draft, note);
     setBase(v);
     setNote('');
     onSaved();
@@ -55,7 +56,7 @@ export function PromptsTab({ onSaved }: { onSaved: () => void }) {
     activity_title: sampleActivity?.title ?? '',
     activity_prompt: sampleActivity?.prompt ?? '',
     objectives: sampleActivity?.objectives.map((o) => `- ${o}`).join('\n') ?? '',
-    student_work: SAMPLE_STUDENT_WORK,
+    student_work: sampleActivity?.example ? JSON.stringify(sampleActivity.example, null, 2) : '(sample student work)',
   });
 
   return (
@@ -63,6 +64,7 @@ export function PromptsTab({ onSaved }: { onSaved: () => void }) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Prompts.</h1>
+          <LessonPicker lessons={lessons} value={lessonId} onChange={switchLesson} />
           <p className="hint">
             Editing from version {base.number}
             {dirty && <span className="badge">Unsaved changes</span>}

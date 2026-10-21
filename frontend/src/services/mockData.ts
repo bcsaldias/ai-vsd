@@ -1,4 +1,5 @@
 import type { Lesson, PromptVersion } from '../types/contracts';
+import { SCENARIOS_LESSON } from './scenariosLesson';
 
 /**
  * Worked example for the stakeholder board: a smart doorbell camera. A different case from the one
@@ -94,7 +95,7 @@ const DOORBELL_EXAMPLE = {
 /** Every step works on the same stakeholder token board (shared stateKey); config.step unlocks its tools. */
 const BOARD = 'stakeholder-board';
 
-export const MOCK_LESSON: Lesson = {
+export const STAKEHOLDER_LESSON: Lesson = {
   id: 'vsd-stakeholder-analysis',
   title: 'Stakeholder Analysis',
   intro:
@@ -249,22 +250,47 @@ export const MOCK_LESSON: Lesson = {
   ],
 };
 
+export const LESSONS: Lesson[] = [STAKEHOLDER_LESSON, SCENARIOS_LESSON];
+
+const USER_TEMPLATE =
+  'Activity: {{activity_title}}\n' +
+  'Task: {{activity_prompt}}\n' +
+  'Objectives:\n{{objectives}}\n\n' +
+  'Student work (JSON):\n{{student_work}}';
+
+/** One starting prompt set per lesson; each lesson's versions are numbered separately. */
 export const SEED_PROMPT_VERSIONS: PromptVersion[] = [
   {
-    id: 'pv-1',
+    id: `${STAKEHOLDER_LESSON.id}-v1`,
+    lessonId: STAKEHOLDER_LESSON.id,
     number: 1,
     author: 'placeholder',
     note: 'Initial draft',
     createdAt: '2026-10-21T10:00:00.000Z',
     prompts: {
       system:
-        'You are a supportive tutor. Give short, specific feedback on the student\'s work. ' +
-        'Do not give away the full answer.',
-      user:
-        'Activity: {{activity_title}}\n' +
-        'Task: {{activity_prompt}}\n' +
-        'Objectives:\n{{objectives}}\n\n' +
-        'Student work (JSON):\n{{student_work}}',
+        'You are a supportive tutor for Value Sensitive Design stakeholder analysis. Give short, specific feedback ' +
+        'on the student\'s stakeholder map: who is missing (especially indirect, excluded, or overlooked groups), ' +
+        'whether harms and benefits are traced to values, and whether tensions name the values on each side. ' +
+        'Ask questions rather than listing answers. Do not give away the full answer.',
+      user: USER_TEMPLATE,
+      assistant: '',
+    },
+  },
+  {
+    id: `${SCENARIOS_LESSON.id}-v1`,
+    lessonId: SCENARIOS_LESSON.id,
+    number: 1,
+    author: 'placeholder',
+    note: 'Initial draft',
+    createdAt: '2026-10-21T10:00:00.000Z',
+    prompts: {
+      system:
+        'You are a supportive tutor helping students write value scenarios (Nathan, Klasnja & Friedman, 2007). ' +
+        'Check that scenarios are concrete stories, include indirect stakeholders, consider long-term and widespread use, ' +
+        'trace systemic effects, and name the values at stake. Ask questions rather than listing answers. ' +
+        'Do not write the scenario for the student.',
+      user: USER_TEMPLATE,
       assistant: '',
     },
   },

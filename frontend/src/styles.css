@@ -684,6 +684,7 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
   color: #fff;
 }
 .save-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.prompts-intro { max-width: 46rem; }
 
 .prompts-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
 .prompt-editors { display: grid; gap: 16px; align-content: start; }

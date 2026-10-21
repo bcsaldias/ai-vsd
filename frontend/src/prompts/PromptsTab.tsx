@@ -65,6 +65,10 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, onSaved }: Props
         <div>
           <h1 className="page-title">Prompts.</h1>
           <LessonPicker lessons={lessons} value={lessonId} onChange={onLessonChange} />
+          <p className="prompts-intro">
+            These are the instructions the AI tutor follows when it gives feedback in this lesson. Anyone,
+            students included, can read and change them: shaping these rules is part of learning how to prompt AI.
+          </p>
           <p className="hint">
             Editing from version {base.number}
             {dirty && <span className="badge">Unsaved changes</span>}

@@ -11,6 +11,11 @@ C. Versions tab (student / instructor / researcher)
 The Prompts and Versions tabs are for the people participating in the learning experience, and for students.
 Placeholders are acceptable for the initial version, but each tab should have its basic structure in place.
 
+Students see and edit the prompts because they take part in shaping the norms, rules, and prompts
+that guide the AI tutor, and doing so teaches them how to prompt AI. The prompts are fully transparent
+and nothing is locked: a student could remove a rule such as "do not give away the answer". We trust
+them not to.
+
 
 A. WORKSPACE TAB
 
@@ -176,7 +181,9 @@ a homeowner) with two tensions; read only and filtered by step, as in the stakeh
 
 B. PROMPTS TAB
 
-Edit the prompts used to generate AI feedback:
+Edit the prompts used to generate AI feedback (open to students; see PRODUCT):
+
+- A short introduction says what the prompts are and that anyone, students included, can change them.
 
 - System prompt: the tutor's role, tone, and rules (e.g. "do not give away the answer").
 - User prompt: a template filled with activity and student data using variables:
@@ -193,7 +200,7 @@ C. VERSIONS TAB
 
 Track the history of prompt changes:
 
-- List of versions: number, author, date, and a short note describing the change.
+- List of versions: number, author (a placeholder, "you", until sign-in), date, and a short note.
 - Selecting a version shows its full system / user / assistant prompts.
 - Placeholders for later: comparing two versions (diff) and restoring an older version.
 - Every feedback result records the prompt version that produced it, so results can be traced back
@@ -274,7 +281,7 @@ Later:
   and convert the response into the Feedback contract.
 - Log every feedback request and response, with its prompt version and the student's rating.
 - Stream feedback as it is generated.
-- Separate student and instructor / researcher roles; students do not see the Prompts or Versions tabs.
+- Add sign-in, and record each prompt version's author and role (student, instructor, researcher).
 
 
 DATA CONTRACTS
@@ -327,7 +334,7 @@ AppShell (tabs)
 LEARNING-TOOL CONSIDERATIONS
 
 - Learning objectives: every activity lists what the student should demonstrate; the same objectives are given to the AI as rubric context.
-- Feedback should guide, not give away answers (enforced through the system prompt).
+- Feedback should guide, not give away answers (set in the system prompt, which students can change; see PRODUCT).
 - Accessibility: keyboard access for activities, screen-reader announcements for new feedback.
 - Privacy: student work and feedback logs may be research data (consent, anonymized IDs, IRB / FERPA where applicable).
 
@@ -350,7 +357,7 @@ Phase 2 — Minimal backend
 - Point the frontend services at the backend.
 
 Phase 3 — Real AI feedback
-- Connect the model in POST /feedback, log results with prompt versions, add streaming and roles.
+- Connect the model in POST /feedback, log results with prompt versions, add streaming and sign-in.
 
 
 OPEN QUESTIONS
@@ -358,4 +365,5 @@ OPEN QUESTIONS
 - Will real students use this, and in what setting (class, study, demo)?
 - Which AI model / provider?
 - Should version tracking also cover lessons and activity definitions, or only prompts?
-- Who can edit prompts, and is any sign-in needed?
+- When a student saves a prompt version, does it apply only to their own feedback or to everyone in
+  the lesson? (Today prompts live in each browser, so only their own.)

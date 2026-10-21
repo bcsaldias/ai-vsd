@@ -23,6 +23,10 @@
   --surface: rgba(255, 255, 255, 0.25);
   --surface-strong: rgba(255, 255, 255, 0.5);
 
+  /* Hatched fill that marks worked examples (the example board and the button that opens it). */
+  --example-hatch: repeating-linear-gradient(135deg, var(--paper) 0 12px, #e9e4dc 12px 14px);
+  --example-hatch-hover: repeating-linear-gradient(135deg, #fff 0 12px, #ddd5ca 12px 14px);
+
   --praise: #3f5a39;
   --suggestion: #7a5a0c;
   --issue: #9c3328;
@@ -152,6 +156,8 @@ textarea { width: 100%; resize: vertical; font-family: var(--mono); font-size: 0
   padding: 8px 14px;
   border-bottom: 1px solid var(--rule);
 }
+.panel-title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+.panel-title .badge { margin-left: 0; }
 .panel-header h2, .panel-header h3 {
   margin: 0;
   font-size: 0.8rem;
@@ -577,11 +583,14 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 .read-only textarea:disabled { resize: none; }
 .showing-example .tokens-board {
   border: 2px dashed var(--plum);
-  background: repeating-linear-gradient(135deg, var(--paper) 0 12px, #e9e4dc 12px 14px);
+  background: var(--example-hatch);
 }
 .showing-example .tokens-board .react-flow { --xy-background-color: transparent; }
 .example-note { margin: 0; font-size: 0.85rem; }
 .example-toggle { margin-top: 0.9rem; }
+/* Hatched like the example board it opens; plain once it reads "Back to my board". */
+.example-toggle:not([aria-pressed='true']) { border: 2px dashed var(--plum); background: var(--example-hatch); }
+.example-toggle:not([aria-pressed='true']):hover:not(:disabled) { background: var(--example-hatch-hover); }
 /* Draws the eye to the Name field of a token the student just added. */
 @keyframes name-prompt {
   from { box-shadow: 0 0 0 4px var(--mustard); }

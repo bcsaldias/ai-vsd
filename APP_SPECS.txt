@@ -117,7 +117,7 @@ Worked example: a smart doorbell camera board (a different case from the reading
 offered, so it models each step without giving away their answers). "See an example of this step" on
 the step card swaps the activity panel to the example: read only, filtered to what exists by the
 current step (e.g. step 2 shows only direct stakeholders; definitions appear from step 7), marked
-"Example", with "Back to my board". The board has a hatched background and a dashed border so it reads as
+"Example" in the panel header, with "← Back to my board" right beside the badge. The board has a hatched background and a dashed border so it reads as
 read only. The student's board is not touched. Always available. The example
 is lesson content (ActivityDefinition.example), served like the rest of the lesson.
 

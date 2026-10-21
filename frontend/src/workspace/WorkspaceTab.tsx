@@ -190,12 +190,9 @@ export function WorkspaceTab() {
 
   const hasWork = status !== null;
   const exampleActions = (
-    <>
-      <button className="primary" onClick={toggleExample}>Back to my board</button>
-      <button className="expand-toggle" onClick={toggleExpanded} aria-controls="activity-panel">
-        {expanded ? 'Restore' : 'Expand'}
-      </button>
-    </>
+    <button className="expand-toggle" onClick={toggleExpanded} aria-controls="activity-panel">
+      {expanded ? 'Restore' : 'Expand'}
+    </button>
   );
   const headerActions = (
     <>
@@ -274,6 +271,7 @@ export function WorkspaceTab() {
           onCheck={() => {}}
           canCheck={false}
           example
+          onExitExample={toggleExample}
           headerActions={exampleActions}
         />
       ) : hostReady ? (

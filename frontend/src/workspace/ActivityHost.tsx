@@ -20,11 +20,15 @@ interface Props {
   canCheck: boolean;
   /** Show `savedReport` as a read-only worked example. */
   example?: boolean;
+  /** Leaves the example (shown next to the Example badge). */
+  onExitExample?: () => void;
   /** Extra header controls supplied by the layout (e.g. expand). */
   headerActions?: ReactNode;
 }
 
-export function ActivityHost({ definition, number, savedReport, onReport, onCheck, canCheck, example, headerActions }: Props) {
+export function ActivityHost({
+  definition, number, savedReport, onReport, onCheck, canCheck, example, onExitExample, headerActions,
+}: Props) {
   const onChange = (state: unknown) =>
     !example &&
     onReport({
@@ -53,10 +57,15 @@ export function ActivityHost({ definition, number, savedReport, onReport, onChec
   return (
     <section id="activity-panel" className={example ? 'panel activity-panel showing-example' : 'panel activity-panel'} aria-label="Activity">
       <header className="panel-header">
-        <h2>
-          Step {number} · {definition.title}
-          {example && <span className="badge">Example</span>}
-        </h2>
+        <div className="panel-title">
+          <h2>Step {number} · {definition.title}</h2>
+          {example && (
+            <>
+              <span className="badge">Example</span>
+              {onExitExample && <button className="small primary" onClick={onExitExample}>← Back to my board</button>}
+            </>
+          )}
+        </div>
         <div className="actions">
           {headerActions}
           {!example && (

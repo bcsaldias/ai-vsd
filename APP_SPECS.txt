@@ -2,16 +2,32 @@ Student Learning Workspace — Initial Specs
 
 PRODUCT
 
-Build a student-facing learning application with three coordinated areas:
+Build a learning application organized into three tabs:
+
+A. Workspace tab (student-facing)
+B. Prompts tab (instructor / researcher)
+C. Versions tab (instructor / researcher)
+
+The Prompts and Versions tabs are for the people designing the learning experience, not for students.
+Placeholders are acceptable for the initial version, but each tab should have its basic structure in place.
+
+
+A. WORKSPACE TAB
+
+Three coordinated areas:
 
 1. Learning workspace on the left
    - Hosts learning and activity modules.
    - Owns the current lesson or activity content.
+   - Shows the lesson introduction, the list of activities, and the learning objectives for the current activity.
 
 2. AI feedback panel on the right
    - Reserved for feedback about the student's work in the learning workspace.
-   - For the initial version, use placeholder content or mock data only.
+   - For the initial version, use placeholder content or mock data only, clearly labeled as placeholder.
    - Keep the panel independent so a real AI feedback source can be connected later.
+   - Feedback is requested on demand (e.g. a "Check my work" action), not on every change.
+   - Each feedback item may point to a specific part of the student's work (a diagram node or an annotated region).
+   - Students can rate feedback as helpful / not helpful (placeholder for now).
 
 3. Activity panel along the bottom
    - Displays interactive content for the current activity.
@@ -19,6 +35,40 @@ Build a student-facing learning application with three coordinated areas:
      - Composing diagrams by placing and connecting items.
      - Hovering over, highlighting, and annotating parts of a visual.
    - Treat this as a host for activity-specific components, not as one universal canvas.
+
+Resizable panels:
+   - Students can resize the panels by dragging the dividers between them:
+     - A vertical divider between the learning workspace and the feedback panel (feedback width).
+     - A horizontal divider above the activity panel (activity height).
+   - Dividers are keyboard accessible: focus with Tab, Arrow keys resize, Enter resets.
+     Double-clicking a divider resets it to the default size.
+   - Each panel has a minimum and maximum size so no panel can be collapsed or hidden.
+   - Panel sizes are remembered per browser (a UI preference, not student data).
+   - On narrow screens (800px wide or less) the panels stack vertically and resizing is disabled.
+
+
+B. PROMPTS TAB
+
+Edit the prompts used to generate AI feedback:
+
+- System prompt: the tutor's role, tone, and rules (e.g. "do not give away the answer").
+- User prompt: a template filled with activity and student data using variables:
+    {{activity_title}}, {{activity_prompt}}, {{objectives}}, {{student_work}}
+- Assistant prompt: optional prefill or example response.
+- A preview that shows the user prompt filled in with sample data.
+- Saving creates a new version; it never overwrites an existing one.
+
+
+C. VERSIONS TAB
+
+Track the history of prompt changes:
+
+- List of versions: number, author, date, and a short note describing the change.
+- Selecting a version shows its full system / user / assistant prompts.
+- Placeholders for later: comparing two versions (diff) and restoring an older version.
+- Every feedback result records the prompt version that produced it, so results can be traced back
+  to the prompts that generated them.
+
 
 RECOMMENDED TECHNOLOGY
 
@@ -29,31 +79,124 @@ RECOMMENDED TECHNOLOGY
 - Freeform canvas activities: React Konva when students need to draw, move, or resize shapes.
 - Region highlighting and annotation: Prefer SVG overlays when the visual consists of selectable shapes or regions.
 - Backend communication: Use HTTP endpoints for loading activities and saving student work. Add streaming for AI feedback later; use WebSockets only if ongoing two-way interaction is needed.
+- Storage: SQLite (or JSON files) to start; move to a hosted database only when needed.
+
+
+REPOSITORY LAYOUT
+
+ai-vsd/
+  APP_SPECS.txt
+  frontend/        Self-contained Vite project (package.json, index.html, src/)
+    src/
+      types/         Shared data contracts
+      services/      The only code that talks to data sources (mock now, backend later)
+      workspace/     Workspace tab: WorkspaceTab, LearningWorkspace, FeedbackPanel, ActivityHost
+      activities/    One folder per activity (diagram/, annotation/)
+      prompts/       Prompts tab
+      versions/      Versions tab
+  backend/         Self-contained FastAPI project (requirements.txt, app/)
+
+Frontend and backend are siblings so the Node and Python toolchains stay separate and each can be run or deployed on its own.
+
+
+WHY A BACKEND
+
+Frontend-only is sufficient while everything is mock data. A backend is required once any of the following is true:
+
+- AI feedback is real: the model API key must never be shipped to the browser.
+- Prompt versions must be shared and persistent across people and devices.
+- Real students use the tool: their work and feedback must be stored centrally, not in one browser.
+
+The backend stays thin. It stores and serves data and makes the AI call. It never implements
+activity behavior; it treats each activity's state as opaque JSON.
+
+
+BACKEND RESPONSIBILITIES
+
+Placeholder phase:
+- GET  /lessons/{id}                    Lesson and activity definitions
+- GET  /activities/{id}/report          Load a student's saved work
+- PUT  /activities/{id}/report          Save a student's work
+- POST /feedback                        Return a Feedback object (mock for now)
+- GET  /prompts/versions                Prompt version history
+- POST /prompts/versions                Save a new prompt version
+
+Later:
+- Fill the user prompt template, call the AI model with the system / user / assistant prompts,
+  and convert the response into the Feedback contract.
+- Log every feedback request and response, with its prompt version and the student's rating.
+- Stream feedback as it is generated.
+- Separate student and instructor / researcher roles; students do not see the Prompts or Versions tabs.
+
+
+DATA CONTRACTS
+
+Defined once in frontend/src/types/contracts.ts and mirrored as Pydantic models in the backend.
+
+- ActivityDefinition: id, kind (diagram | annotation), title, prompt, objectives.
+- ActivityProps (what an activity receives): prompt, savedState, onChange(state).
+- ActivityReport (what gets stored and sent for feedback): activityId, kind, status (in-progress | submitted), state, updatedAt.
+- Feedback: activityId, source (mock | ai), promptVersionId, generatedAt, summary, items[].
+- FeedbackItem: id, tone (praise | suggestion | issue), message, optional targetId.
+- PromptSet: system, user, assistant.
+- PromptVersion: id, number, author, note, createdAt, prompts.
+
 
 ARCHITECTURE PRINCIPLES
 
 - Keep coupling low and encapsulation high.
-- The app shell coordinates the panels but does not implement activity-specific behavior.
+- The app shell coordinates the tabs; the workspace tab coordinates its panels. Neither implements activity-specific behavior.
 - Each panel owns its presentation and internal behavior.
 - Each activity owns its interaction logic and any canvas library it requires.
 - Connect modules using small, explicit data contracts rather than direct dependencies on one another's internals.
 - An activity receives its prompt and saved state, then reports changes or a result in a standard format.
 - The feedback panel receives a feedback object. Initially, provide it from mock data; later, replace the data source without changing the panel or activity components.
+- All data access goes through the services layer, so switching from mock data to the backend changes only that layer.
 - Keep shared types and service boundaries explicit. Avoid building a plugin system or extra framework layers until the project needs them.
+
 
 SUGGESTED COMPONENT SHAPE
 
-AppShell
-  LearningWorkspace
-  FeedbackPanel
-  ActivityHost
-    DiagramActivity
-    AnnotationActivity
+AppShell (tabs)
+  WorkspaceTab
+    LearningWorkspace
+    FeedbackPanel
+    ActivityHost
+      DiagramActivity
+      AnnotationActivity
+  PromptsTab
+  VersionsTab
 
-INITIAL IMPLEMENTATION SCOPE
 
-- Build the panel layout and responsive behavior.
+LEARNING-TOOL CONSIDERATIONS
+
+- Learning objectives: every activity lists what the student should demonstrate; the same objectives are given to the AI as rubric context.
+- Feedback should guide, not give away answers (enforced through the system prompt).
+- Accessibility: keyboard access for activities, screen-reader announcements for new feedback.
+- Privacy: student work and feedback logs may be research data (consent, anonymized IDs, IRB / FERPA where applicable).
+
+
+IMPLEMENTATION PHASES
+
+Phase 1 — Frontend with mock data (current)
+- Build the tab shell, the panel layout, resizable panels, and responsive behavior.
 - Implement the feedback panel with clearly marked placeholder content.
 - Define the activity input/output contract and render an activity through ActivityHost.
 - Keep the diagram and annotation activity implementations separate so either can evolve independently.
-- Persist activity state as structured data that can later be sent to the FastAPI backend.
+- Persist activity state as structured data (localStorage for now) that can later be sent to the FastAPI backend.
+- Prompts and Versions tabs with basic structure; versions are kept in memory.
+
+Phase 2 — Minimal backend
+- FastAPI app with the placeholder-phase endpoints above and simple storage.
+- Point the frontend services at the backend.
+
+Phase 3 — Real AI feedback
+- Connect the model in POST /feedback, log results with prompt versions, add streaming and roles.
+
+
+OPEN QUESTIONS
+
+- Will real students use this, and in what setting (class, study, demo)?
+- Which AI model / provider?
+- Should version tracking also cover lessons and activity definitions, or only prompts?
+- Who can edit prompts, and is any sign-in needed?

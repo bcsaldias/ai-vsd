@@ -1,7 +1,7 @@
 // React Flow node and edge components for the token board. They read the board
 // from context, so node data only needs an id.
 
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useLayoutEffect, useRef, useState } from 'react';
 import {
   BaseEdge, Handle, Position, useInternalNode,
   type Edge, type EdgeProps, type InternalNode, type NodeProps,
@@ -17,6 +17,30 @@ function useBoard() {
   const ctx = useContext(BoardContext);
   if (!ctx) throw new Error('Board nodes must render inside BoardContext');
   return ctx;
+}
+
+/**
+ * Shrinks a clamped label's font (max → min px) until it fits without splitting words.
+ * Returns whether it still doesn't fit at the minimum size, i.e. is cut off with an ellipsis.
+ */
+function useFitText(text: string, max: number, min: number) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [truncated, setTruncated] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const overflows = () => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1;
+    const fit = () => {
+      let size = max;
+      el.style.fontSize = `${size}px`;
+      while (size > min && overflows()) el.style.fontSize = `${--size}px`;
+      setTruncated(overflows());
+    };
+    fit();
+    // Measure again once the web font has loaded; fallback fonts have different widths.
+    document.fonts?.ready.then(fit);
+  }, [text, max, min]);
+  return { ref, truncated };
 }
 
 /** The rings themselves: a non-interactive node, so fitView frames the whole board. */
@@ -35,13 +59,16 @@ export function RingsNode() {
   );
 }
 
-/** What is being designed, fixed at the centre of the board. */
+/** What is being designed, fixed at the centre of the board. The heading above the board shows it in full. */
 export function ContextNode() {
   const { board, step } = useBoard();
+  const label = board.context.label || 'Name what you’re designing';
+  const { ref, truncated } = useFitText(label, 15, 13);
   return (
     <div className="context-token" {...guide(step, 'context')}>
       <span className="context-type">{CONTEXT_LABEL[board.context.type]}</span>
-      <span className={board.context.label ? undefined : 'placeholder'}>{board.context.label || 'Name what you’re designing'}</span>
+      <span ref={ref} className={board.context.label ? 'context-label' : 'context-label placeholder'}>{label}</span>
+      {truncated && <span className="token-tooltip" aria-hidden="true">{label}</span>}
     </div>
   );
 }
@@ -49,6 +76,7 @@ export function ContextNode() {
 export function TokenNode({ id }: NodeProps) {
   const { board, step } = useBoard();
   const token = board.tokens.find((t) => t.id === id);
+  const { ref, truncated } = useFitText(token?.label || 'Name me', 16, 12);
   if (!token) return null;
 
   const impacts = board.impacts.filter((i) => i.tokenId === id);
@@ -57,8 +85,9 @@ export function TokenNode({ id }: NodeProps) {
   const values = tokenValueIds(board, id).map((v) => valueName(board, v)).filter(Boolean);
 
   return (
-    <div className={`token ${token.kind}${token.overlooked ? ' overlooked' : ''}`} title={token.label || undefined}>
-      <span className={token.label ? 'token-label' : 'token-label unnamed'}>{token.label || 'Name me'}</span>
+    <div className={`token ${token.kind}${token.overlooked ? ' overlooked' : ''}`}>
+      <span ref={ref} className={token.label ? 'token-label' : 'token-label unnamed'}>{token.label || 'Name me'}</span>
+      {truncated && <span className="token-tooltip" aria-hidden="true">{token.label}</span>}
       {token.overlooked && <span className="token-flag" aria-hidden="true">?</span>}
       {(impacts.length > 0 || values.length > 0) && (
         <div className="token-notes" aria-hidden="true">

@@ -229,6 +229,31 @@ export function removeValue(b: Board, id: string): Board {
   };
 }
 
+/** The parts of a board that exist by a given step — used to show a worked example step by step,
+    so students see a model of the current step without the answers to later ones. */
+export function forStep(b: Board, step: number): Board {
+  const tokens = b.tokens
+    .filter((t) => allows(step, 'direct') && (t.kind === 'direct' || allows(step, 'indirect')))
+    .map((t) => (allows(step, 'overlooked') ? t : { ...t, overlooked: false }));
+  const ids = new Set(tokens.map((t) => t.id));
+  const links = b.links
+    .filter((l) => ids.has(l.source) && ids.has(l.target))
+    .filter((l) => allows(step, l.type === 'tension' ? 'tensions' : 'relationships'))
+    .map((l) => (allows(step, 'organization') ? l : { ...l, owner: undefined, action: undefined }));
+  const impacts = allows(step, 'impacts')
+    ? b.impacts.filter((i) => ids.has(i.tokenId)).map((i) => (allows(step, 'values') ? i : { ...i, valueIds: [] }))
+    : [];
+  const values = allows(step, 'values')
+    ? b.values.map((v) => ({
+        ...v,
+        definition: allows(step, 'definitions') ? v.definition : '',
+        owner: allows(step, 'organization') ? v.owner : '',
+        action: allows(step, 'organization') ? v.action : '',
+      }))
+    : [];
+  return { context: b.context, tokens, links, impacts, values };
+}
+
 // ---------- Queries ----------
 
 export const valueName = (b: Board, id?: string) => b.values.find((v) => v.id === id)?.name;

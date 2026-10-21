@@ -18,12 +18,15 @@ interface Props {
   onReport: (report: ActivityReport) => void;
   onCheck: () => void;
   canCheck: boolean;
+  /** Show `savedReport` as a read-only worked example. */
+  example?: boolean;
   /** Extra header controls supplied by the layout (e.g. expand). */
   headerActions?: ReactNode;
 }
 
-export function ActivityHost({ definition, number, savedReport, onReport, onCheck, canCheck, headerActions }: Props) {
+export function ActivityHost({ definition, number, savedReport, onReport, onCheck, canCheck, example, headerActions }: Props) {
   const onChange = (state: unknown) =>
+    !example &&
     onReport({
       activityId: definition.id,
       kind: definition.kind,
@@ -32,7 +35,7 @@ export function ActivityHost({ definition, number, savedReport, onReport, onChec
       updatedAt: new Date().toISOString(),
     });
 
-  const common = { prompt: definition.prompt, config: definition.config, onChange };
+  const common = { prompt: definition.prompt, config: definition.config, onChange, example };
 
   let activity;
   switch (definition.kind) {
@@ -48,14 +51,19 @@ export function ActivityHost({ definition, number, savedReport, onReport, onChec
   }
 
   return (
-    <section id="activity-panel" className="panel activity-panel" aria-label="Activity">
+    <section id="activity-panel" className={example ? 'panel activity-panel showing-example' : 'panel activity-panel'} aria-label="Activity">
       <header className="panel-header">
-        <h2>Step {number} · {definition.title}</h2>
+        <h2>
+          Step {number} · {definition.title}
+          {example && <span className="badge">Example</span>}
+        </h2>
         <div className="actions">
           {headerActions}
-          <button className="primary" onClick={onCheck} disabled={!canCheck}>
-            Check my work
-          </button>
+          {!example && (
+            <button className="primary" onClick={onCheck} disabled={!canCheck}>
+              Check my work
+            </button>
+          )}
         </div>
       </header>
       <div className="panel-body">{activity}</div>

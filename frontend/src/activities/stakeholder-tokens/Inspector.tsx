@@ -19,18 +19,21 @@ interface Props {
   selection: Selection;
   update: (fn: (b: Board) => Board) => void;
   select: (s: Selection) => void;
+  /** Showing a worked example: fields are read-only and edit actions are hidden. */
+  readOnly?: boolean;
   /** Id of a token that was just added and needs a name; its Name field takes focus. */
   nameRequest?: string | null;
   onNameFocused?: () => void;
 }
 
-export function Inspector({ board, step, selection, update, select, nameRequest, onNameFocused }: Props) {
+export function Inspector({ board, step, selection, update, select, readOnly, nameRequest, onNameFocused }: Props) {
   const token = selection?.kind === 'token' ? board.tokens.find((t) => t.id === selection.id) : undefined;
   const link = selection?.kind === 'link' ? board.links.find((l) => l.id === selection.id) : undefined;
   const common = { board, step, update, select };
 
   return (
-    <aside className="token-inspector" aria-label="Inspector">
+    <aside className={readOnly ? 'token-inspector read-only' : 'token-inspector'} aria-label="Inspector">
+      <fieldset className="inspector-fields" disabled={readOnly}>
       {token ? (
         <TokenForm
           key={token.id}
@@ -41,11 +44,12 @@ export function Inspector({ board, step, selection, update, select, nameRequest,
         />
       ) : link ? <LinkForm link={link} {...common} /> : <ContextForm {...common} />}
       {allows(step, 'values') && <ValuesList {...common} />}
+      </fieldset>
     </aside>
   );
 }
 
-type FormProps = Omit<Props, 'selection' | 'nameRequest' | 'onNameFocused'>;
+type FormProps = Omit<Props, 'selection' | 'readOnly' | 'nameRequest' | 'onNameFocused'>;
 
 function ContextForm({ board, step, update }: FormProps) {
   return (
@@ -157,7 +161,7 @@ function TokenForm({ token, board, step, update, select, focusName, onNameFocuse
       )}
 
       {allows(step, 'relationships') && others.length > 0 && (
-        <label className="field" {...guide(step, 'relationships')}>
+        <label className="field edit-only" {...guide(step, 'relationships')}>
           <span>Connect to…</span>
           <select value="" onChange={(e) => connect('relationship', e.target.value)}>
             <option value="">Choose a stakeholder</option>
@@ -166,7 +170,7 @@ function TokenForm({ token, board, step, update, select, focusName, onNameFocuse
         </label>
       )}
       {allows(step, 'tensions') && others.length > 0 && (
-        <label className="field" {...guide(step, 'tensions')}>
+        <label className="field edit-only" {...guide(step, 'tensions')}>
           <span>Tension with…</span>
           <select value="" onChange={(e) => connect('tension', e.target.value)}>
             <option value="">Choose a stakeholder</option>
@@ -228,7 +232,7 @@ function ImpactEditor({ impact, board, step, update }: Omit<FormProps, 'select'>
             );
           })}
           <input
-            className="tag-input"
+            className="tag-input edit-only"
             list={listId}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}

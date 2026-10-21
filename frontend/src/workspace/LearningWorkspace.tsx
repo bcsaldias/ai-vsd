@@ -12,11 +12,16 @@ interface Props {
   onCheck: () => void;
   /** Goes to the next activity; absent on the last one. */
   onNext?: () => void;
+  hasExample: boolean;
+  showingExample: boolean;
+  onToggleExample: () => void;
 }
 
 /** Lesson intro, the current activity's card (what to do + objectives), and the activity list.
     Activities don't repeat their prompt; this card is where students read it. */
-export function LearningWorkspace({ lesson, currentActivityId, onSelectActivity, checked, canCheck, onCheck, onNext }: Props) {
+export function LearningWorkspace({
+  lesson, currentActivityId, onSelectActivity, checked, canCheck, onCheck, onNext, hasExample, showingExample, onToggleExample,
+}: Props) {
   const index = lesson.activities.findIndex((a) => a.id === currentActivityId);
   const current = lesson.activities[index];
 
@@ -88,6 +93,11 @@ export function LearningWorkspace({ lesson, currentActivityId, onSelectActivity,
               <ul>
                 {current.objectives.map((o) => <li key={o}>{o}</li>)}
               </ul>
+              {hasExample && (
+                <button className="example-toggle" onClick={onToggleExample} aria-pressed={showingExample}>
+                  {showingExample ? 'Back to my board' : 'See an example of this step'}
+                </button>
+              )}
             </article>
           )}
 

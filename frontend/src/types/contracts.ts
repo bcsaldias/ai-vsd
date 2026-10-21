@@ -27,6 +27,8 @@ export interface ActivityDefinition {
   config?: Record<string, unknown>;
   /** What is new in this activity and where to find it. */
   guide?: ActivityGuideItem[];
+  /** A worked example in the activity's state shape, shown read-only on request. */
+  example?: unknown;
 }
 
 export interface Lesson {
@@ -44,6 +46,8 @@ export interface ActivityProps<S> {
   prompt: string;
   config?: Record<string, unknown>;
   savedState: S | null;
+  /** Showing a worked example: read-only. Activities may show only what applies to the current step. */
+  example?: boolean;
   onChange: (state: S) => void;
 }
 

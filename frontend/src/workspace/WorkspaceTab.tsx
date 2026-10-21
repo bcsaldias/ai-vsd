@@ -24,8 +24,10 @@ export function WorkspaceTab() {
   // (null until there is work to check).
   const latest = useRef<ActivityReport | null>(null);
   const [status, setStatus] = useState<ActivityStatus | null>(null);
-  // Bumped to remount the activity with new saved state (after Import or Start over).
+  // Bumped to remount the activity with new saved state (after Import, Start over, or the example).
   const [hostVersion, setHostVersion] = useState(0);
+  // Showing the lesson's worked example instead of the student's work (follows the current step).
+  const [showExample, setShowExample] = useState(false);
   const importInput = useRef<HTMLInputElement>(null);
   // Expanded = activity panel fills the visible area; Restore returns to the previous height.
   const [expanded, setExpanded] = useState(false);
@@ -173,7 +175,28 @@ export function WorkspaceTab() {
     );
   };
 
+  const exampleShown = showExample && definition.example != null;
+  const toggleExample = () => {
+    if (exampleShown) {
+      // Remount the student's work from its latest state.
+      setShowExample(false);
+      setHostVersion((v) => v + 1);
+    } else {
+      setSaved({ activityId: definition.id, report: latest.current });
+      setShowExample(true);
+    }
+    requestAnimationFrame(() => document.getElementById('activity-panel')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+  };
+
   const hasWork = status !== null;
+  const exampleActions = (
+    <>
+      <button className="primary" onClick={toggleExample}>Back to my board</button>
+      <button className="expand-toggle" onClick={toggleExpanded} aria-controls="activity-panel">
+        {expanded ? 'Restore' : 'Expand'}
+      </button>
+    </>
+  );
   const headerActions = (
     <>
       <div className="work-actions" role="group" aria-label="Your work">
@@ -208,6 +231,9 @@ export function WorkspaceTab() {
         canCheck={status !== null}
         onCheck={checkWork}
         onNext={next ? () => setActivityId(next.id) : undefined}
+        hasExample={definition.example != null}
+        showingExample={exampleShown}
+        onToggleExample={toggleExample}
       />
       <ResizeHandle
         orientation="vertical"
@@ -238,7 +264,19 @@ export function WorkspaceTab() {
         onReset={() => setLayout((l) => ({ ...l, topHeight: null }))}
         className="top-split"
       />
-      {hostReady ? (
+      {exampleShown ? (
+        <ActivityHost
+          key={`example:${hostKey(activityId)}`}
+          definition={definition}
+          number={index + 1}
+          savedReport={{ activityId: definition.id, kind: definition.kind, status: 'in-progress', state: definition.example, updatedAt: '' }}
+          onReport={() => {}}
+          onCheck={() => {}}
+          canCheck={false}
+          example
+          headerActions={exampleActions}
+        />
+      ) : hostReady ? (
         <ActivityHost
           key={`${hostKey(activityId)}#${hostVersion}`}
           definition={definition}

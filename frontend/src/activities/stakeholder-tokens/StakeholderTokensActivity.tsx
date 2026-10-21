@@ -4,7 +4,7 @@
 // the lesson; `config.step` decides which tools are available (see STEP in model.ts).
 // React Flow handles the canvas; the saved state is the plain board from model.ts.
 
-import { useEffect, useRef, useState, type DragEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import {
   ReactFlow, Controls, ConnectionMode, ConnectionLineType, MarkerType, applyEdgeChanges, applyNodeChanges,
   type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type ReactFlowInstance,
@@ -13,7 +13,7 @@ import '@xyflow/react/dist/style.css';
 import type { ActivityProps } from '../../types/contracts';
 import {
   CONTEXT_LABEL, CONTEXT_SIZE, LAST_STEP, RADIUS, RING_LABEL, TOKEN_SIZE, addLink, addToken, allows, guide, hasLink,
-  linkLabel, moveToken, newId, normalize, removeLinks, removeTokens,
+  forStep, linkLabel, moveToken, newId, normalize, removeLinks, removeTokens,
   type Link, type StakeholderTokensState, type Token,
 } from './model';
 import { BoardContext, ContextNode, LinkEdge, RingsNode, TokenNode } from './BoardNodes';
@@ -73,9 +73,11 @@ function toEdges(board: Board, selection: Selection): Edge[] {
   }));
 }
 
-export function StakeholderTokensActivity({ savedState, onChange, config }: ActivityProps<Board>) {
+export function StakeholderTokensActivity({ savedState, onChange, config, example }: ActivityProps<Board>) {
   const step = typeof config?.step === 'number' ? config.step : LAST_STEP;
-  const [board, setBoard] = useState<Board>(() => normalize(savedState));
+  const [stored, setBoard] = useState<Board>(() => normalize(savedState));
+  // A worked example is read-only and shows only what exists by the current step.
+  const board = useMemo(() => (example ? forStep(stored, step) : stored), [stored, step, example]);
   const [selection, setSelection] = useState<Selection>(null);
   const [nodes, setNodes] = useState<BoardNode[]>(() => toNodes([], board, null));
   const [edges, setEdges] = useState<Edge[]>(() => toEdges(board, null));
@@ -90,15 +92,16 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
   // Report only after edits to the student's work settle — not selection or mid-drag movement.
   const pendingReport = useRef(false);
   const update = (fn: (b: Board) => Board) => {
+    if (example) return;
     pendingReport.current = true;
     setBoard(fn);
   };
   useEffect(() => {
     if (pendingReport.current) {
       pendingReport.current = false;
-      onChange(board);
+      onChange(stored);
     }
-  }, [board]);
+  }, [stored]);
 
   useEffect(() => {
     setNodes((ns) => toNodes(ns, board, selection));
@@ -183,13 +186,17 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
     </div>
   );
 
-  const canConnect = allows(step, 'relationships');
+  const canConnect = allows(step, 'relationships') && !example;
 
   return (
     <div className="activity">
       <div className="tokens-layout">
         <div className="token-palette">
-          {allows(step, 'direct') ? (
+          {example ? (
+            <p className="example-note">
+              <strong>Example</strong> (read only). Select tokens and connections to read the notes in the panel on the right.
+            </p>
+          ) : allows(step, 'direct') ? (
             <>
               <span className="palette-title">Add a stakeholder</span>
               {paletteToken('direct', 'Direct')}
@@ -199,7 +206,7 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
           ) : (
             <p className="hint">First, name what you’re designing: select the centre of the board.</p>
           )}
-          {allows(step, 'tensions') && (
+          {allows(step, 'tensions') && !example && (
             <fieldset className="field" {...guide(step, 'tensions')}>
               <legend>Dragging between tokens adds a…</legend>
               <div className="choices">
@@ -218,6 +225,14 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
           </ul>
         </div>
 
+        <div className="board-column">
+          {/* The starting point in full, as the board's heading; the centre token has room for only a few words. */}
+          <button className="board-heading" onClick={() => setSelection({ kind: 'context', id: CONTEXT_ID })} title="Edit the starting point">
+            <span className="context-type">{CONTEXT_LABEL[board.context.type]}</span>
+            <span className={board.context.label ? 'board-heading-label' : 'board-heading-label placeholder'}>
+              {board.context.label || 'Name what you’re designing'}
+            </span>
+          </button>
         <div className={`canvas tokens-board${canConnect ? ' can-connect' : ''}`} onDragOver={onDragOver} onDrop={onDrop}>
           <BoardContext.Provider value={{ board, step }}>
             <ReactFlow
@@ -227,17 +242,18 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
               edgeTypes={edgeTypes}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
+              onConnect={example ? undefined : onConnect}
               onNodeDragStop={(_, __, dragged) =>
                 update((b) => dragged.reduce((acc, n) => moveToken(acc, n.id, n.position.x + TOKEN_SIZE / 2, n.position.y + TOKEN_SIZE / 2), b))
               }
               onInit={setFlow}
               isValidConnection={isValidConnection}
               nodesConnectable={canConnect}
+              nodesDraggable={!example}
               connectionMode={ConnectionMode.Loose}
               connectionLineType={ConnectionLineType.Straight}
               connectionRadius={40}
-              deleteKeyCode={['Backspace', 'Delete']}
+              deleteKeyCode={example ? null : ['Backspace', 'Delete']}
               multiSelectionKeyCode={null}
               selectionKeyCode={null}
               colorMode="light"
@@ -251,6 +267,7 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
             </ReactFlow>
           </BoardContext.Provider>
         </div>
+        </div>
 
         <Inspector
           board={board}
@@ -258,6 +275,7 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
           selection={selection}
           update={update}
           select={setSelection}
+          readOnly={example}
           nameRequest={nameRequest}
           onNameFocused={() => setNameRequest(null)}
         />

@@ -90,6 +90,10 @@ The board:
     (Yoo's first goal: surfacing hidden, overlooked, or neglected stakeholders).
   - Relationships are arrows; tensions are dashed red curves labelled with the two values.
   - Harms (−), benefits (+), and values show as small chips under each token.
+  - The starting point appears in full as a heading strip above the board (click it to edit); the
+    centre token shows a short version.
+  - Long names: token and centre labels shrink (16px down to 12px) until whole words fit; if a label
+    still doesn't fit it ends in "…" and its full text shows on hover or keyboard focus.
 
 Interaction:
   - A palette on the left: drag a Direct / Indirect token onto the rings, or click it (or press Enter)
@@ -108,6 +112,14 @@ Interaction:
     excluded ring is drawn amber; in step 4 the token dots grow and turn amber). Hovering or focusing a
     card item makes its controls pulse; clicking scrolls to them. The card finds controls through a
     data-guide attribute, so it does not depend on how the activity is built.
+
+Worked example: a smart doorbell camera board (a different case from the reading app students are
+offered, so it models each step without giving away their answers). "See an example of this step" on
+the step card swaps the activity panel to the example: read only, filtered to what exists by the
+current step (e.g. step 2 shows only direct stakeholders; definitions appear from step 7), marked
+"Example", with "Back to my board". The board has a hatched background and a dashed border so it reads as
+read only. The student's board is not touched. Always available. The example
+is lesson content (ActivityDefinition.example), served like the rest of the lesson.
 
 Your work (activity panel header): Export downloads the current state as a .json file
 (format "vsd-activity-export", with the activity kind and state key). Import loads such a file,

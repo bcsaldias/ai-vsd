@@ -109,6 +109,13 @@ Interaction:
     card item makes its controls pulse; clicking scrolls to them. The card finds controls through a
     data-guide attribute, so it does not depend on how the activity is built.
 
+Your work (activity panel header): Export downloads the current state as a .json file
+(format "vsd-activity-export", with the activity kind and state key). Import loads such a file,
+rejecting other files or other activity kinds, and asks before replacing existing work.
+Start over asks for confirmation, clears the work of every activity sharing the state (all
+steps of the board) and their checked status, and returns to the first step. These are generic:
+they work for any activity, through the services layer (exportWork, importWork, clearWork).
+
 Saving: the board is one shared state for the lesson (shared stateKey). Each step still has its own
 report (status, plus a snapshot of the board when it was saved), so feedback and submissions can be
 traced to a step. A step that was submitted shows as in-progress again once the board changes elsewhere.
@@ -199,6 +206,8 @@ Placeholder phase:
 - GET  /lessons/{id}                    Lesson and activity definitions
 - GET  /activities/{id}/report          Load a student's saved work (with the shared state, if the activity has a stateKey)
 - PUT  /activities/{id}/report          Save a student's work (and update the shared state, if any)
+- DELETE /activities/{id}/report        Start over (clears the shared state too; consider archiving
+                                        instead if student work is research data)
 - POST /feedback                        Return a Feedback object (mock for now)
 - GET  /prompts/versions                Prompt version history
 - POST /prompts/versions                Save a new prompt version

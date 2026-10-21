@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { ActivityReport, ActivityStatus, Feedback, Lesson } from '../types/contracts';
-import { getLesson, loadReport, saveReport } from '../services/activityService';
+import { clearWork, exportWork, getLesson, importWork, loadReport, saveReport } from '../services/activityService';
 import { requestFeedback } from '../services/feedbackService';
 import { LearningWorkspace } from './LearningWorkspace';
 import { FeedbackPanel } from './FeedbackPanel';
@@ -24,6 +24,9 @@ export function WorkspaceTab() {
   // (null until there is work to check).
   const latest = useRef<ActivityReport | null>(null);
   const [status, setStatus] = useState<ActivityStatus | null>(null);
+  // Bumped to remount the activity with new saved state (after Import or Start over).
+  const [hostVersion, setHostVersion] = useState(0);
+  const importInput = useRef<HTMLInputElement>(null);
   // Expanded = activity panel fills the visible area; Restore returns to the previous height.
   const [expanded, setExpanded] = useState(false);
   const restoreActivityTo = useRef<number>(LAYOUT_LIMITS.activityHeight.default);
@@ -96,6 +99,51 @@ export function WorkspaceTab() {
       updatedAt: new Date().toISOString(),
     });
   };
+  // Activities sharing this one's state (all steps of one board), or just this activity.
+  const group = definition.stateKey ? lesson.activities.filter((a) => a.stateKey === definition.stateKey) : [definition];
+
+  const exportBoard = () => {
+    if (!latest.current) return;
+    const { filename, text } = exportWork(definition, latest.current.state);
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importBoard = async (file: File) => {
+    const result = importWork(definition, await file.text());
+    if ('error' in result) {
+      window.alert(result.error);
+      return;
+    }
+    if (latest.current && !window.confirm('Replace your current work with the imported file?')) return;
+    const report: ActivityReport = {
+      activityId: definition.id,
+      kind: definition.kind,
+      status: 'in-progress',
+      state: result.state,
+      updatedAt: new Date().toISOString(),
+    };
+    setFeedback(null);
+    await handleReport(report);
+    setSaved({ activityId: definition.id, report });
+    setHostVersion((v) => v + 1);
+  };
+
+  const startOver = async () => {
+    const what = group.length > 1 ? `your work for all ${group.length} steps` : 'your work on this activity';
+    if (!window.confirm(`This clears ${what}. Start over?`)) return;
+    await clearWork(group);
+    const first = group[0];
+    latest.current = null;
+    setStatus(null);
+    setFeedback(null);
+    setSaved({ activityId: first.id, report: null });
+    setActivityId(first.id);
+    setHostVersion((v) => v + 1);
+  };
+
   // Activities that share state (the steps of one board) share one host, so the board
   // stays mounted — with its zoom and selection — when the student moves between steps.
   const hostKey = (id: string) => lesson.activities.find((a) => a.id === id)?.stateKey ?? id;
@@ -125,10 +173,29 @@ export function WorkspaceTab() {
     );
   };
 
-  const expandButton = (
-    <button className="expand-toggle" onClick={toggleExpanded} aria-controls="activity-panel">
-      {expanded ? 'Restore' : 'Expand'}
-    </button>
+  const hasWork = status !== null;
+  const headerActions = (
+    <>
+      <div className="work-actions" role="group" aria-label="Your work">
+        <button className="small" onClick={exportBoard} disabled={!hasWork} title="Download your work as a file">Export</button>
+        <button className="small" onClick={() => importInput.current?.click()} title="Load work from an exported file">Import</button>
+        <button className="small" onClick={startOver} disabled={!hasWork}>Start over</button>
+        <input
+          ref={importInput}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = ''; // so choosing the same file again still fires
+            if (file) importBoard(file);
+          }}
+        />
+      </div>
+      <button className="expand-toggle" onClick={toggleExpanded} aria-controls="activity-panel">
+        {expanded ? 'Restore' : 'Expand'}
+      </button>
+    </>
   );
 
   return (
@@ -173,14 +240,14 @@ export function WorkspaceTab() {
       />
       {hostReady ? (
         <ActivityHost
-          key={hostKey(activityId)}
+          key={`${hostKey(activityId)}#${hostVersion}`}
           definition={definition}
           number={index + 1}
           onCheck={checkWork}
           canCheck={status !== null}
           savedReport={saved.report}
           onReport={handleReport}
-          headerActions={expandButton}
+          headerActions={headerActions}
         />
       ) : (
         <section id="activity-panel" className="panel activity-panel" aria-label="Activity">

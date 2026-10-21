@@ -56,3 +56,54 @@ export async function saveReport(definition: ActivityDefinition, report: Activit
   write(reportKey(report.activityId), report);
   if (definition.stateKey) write(sharedKey(definition.stateKey), { state: report.state, updatedAt: report.updatedAt });
 }
+
+/** Deletes saved work for these activities, including any state they share ("Start over"). */
+export async function clearWork(definitions: ActivityDefinition[]): Promise<void> {
+  try {
+    for (const d of definitions) {
+      localStorage.removeItem(reportKey(d.id));
+      if (d.stateKey) localStorage.removeItem(sharedKey(d.stateKey));
+    }
+  } catch {
+    // Storage unavailable — nothing was saved.
+  }
+}
+
+// ---------- Export / import files ----------
+
+const EXPORT_FORMAT = 'vsd-activity-export';
+
+interface ExportFile {
+  format: typeof EXPORT_FORMAT;
+  version: 1;
+  activityKind: ActivityDefinition['kind'];
+  /** The shared state's key, or the activity id when the activity has its own state. */
+  stateKey: string;
+  exportedAt: string;
+  state: unknown;
+}
+
+/** A downloadable file holding an activity's current state. */
+export function exportWork(definition: ActivityDefinition, state: unknown): { filename: string; text: string } {
+  const exportedAt = new Date().toISOString();
+  const key = definition.stateKey ?? definition.id;
+  const file: ExportFile = { format: EXPORT_FORMAT, version: 1, activityKind: definition.kind, stateKey: key, exportedAt, state };
+  return { filename: `${key}-${exportedAt.slice(0, 10)}.json`, text: JSON.stringify(file, null, 2) };
+}
+
+/** Reads an exported file back, checking it was made by the same kind of activity. */
+export function importWork(definition: ActivityDefinition, text: string): { state: unknown } | { error: string } {
+  let file: Partial<ExportFile>;
+  try {
+    file = JSON.parse(text);
+  } catch {
+    return { error: 'That file isn’t a saved board (it isn’t valid JSON).' };
+  }
+  if (file?.format !== EXPORT_FORMAT || file.state == null) {
+    return { error: 'That file isn’t a board exported from this workspace.' };
+  }
+  if (file.activityKind !== definition.kind) {
+    return { error: `That file is from a different kind of activity (${file.activityKind}).` };
+  }
+  return { state: file.state };
+}

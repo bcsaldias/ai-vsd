@@ -575,7 +575,10 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 .version.active { background: var(--surface-strong); border-left-color: var(--plum); }
 .version .badge { justify-self: start; margin-left: 0; }
 .version-note { font-size: 0.9rem; }
-.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+/* Export / Import / Start over: quieter than the main actions, set off by a divider. */
+.work-actions { display: flex; gap: 4px; padding-right: 8px; margin-right: 2px; border-right: 1px solid var(--rule); }
+.work-actions button { border-color: var(--ink-line); font-weight: 500; }
 
 /* ---------- Short windows: compact header to leave room for the panels ---------- */
 

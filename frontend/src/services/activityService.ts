@@ -34,7 +34,7 @@ function write(key: string, value: unknown) {
 }
 
 export async function getLessons(): Promise<LessonSummary[]> {
-  return LESSONS.map(({ id, title }) => ({ id, title }));
+  return LESSONS.map(({ id, title, accent, symbol }) => ({ id, title, accent, symbol }));
 }
 
 export async function getLesson(id: string): Promise<Lesson> {

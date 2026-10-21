@@ -92,6 +92,8 @@ const step = (n: number, def: Omit<ActivityDefinition, 'kind' | 'stateKey' | 'co
 export const SCENARIOS_LESSON: Lesson = {
   id: 'vsd-value-scenarios',
   title: 'Value Scenarios',
+  accent: '#d26559', // coral, from the VSD Lab palette
+  symbol: '≡',
   intro:
     'Value scenarios are short stories about how a technology plays out for different people, including people who never ' +
     'use it, once it is widely used and has been around for years (Nathan, Klasnja & Friedman, 2007). In this lesson you ' +

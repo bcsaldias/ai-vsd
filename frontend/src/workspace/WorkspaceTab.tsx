@@ -4,20 +4,27 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { ActivityReport, ActivityStatus, Feedback, Lesson, LessonSummary } from '../types/contracts';
 import {
-  clearWork, exportWork, getLesson, getLessons, importWork, loadReport, loadSharedState, saveReport,
+  clearWork, exportWork, getLesson, importWork, loadReport, loadSharedState, saveReport,
 } from '../services/activityService';
 import { requestFeedback } from '../services/feedbackService';
 import { LearningWorkspace } from './LearningWorkspace';
 import { FeedbackPanel } from './FeedbackPanel';
 import { ActivityHost, STAKEHOLDER_EXPORTERS } from './ActivityHost';
 import { ResizeHandle } from './ResizeHandle';
-import { LAYOUT_LIMITS, rememberLesson, rememberedLesson, useWorkspaceLayout } from './useWorkspaceLayout';
+import { LAYOUT_LIMITS, useWorkspaceLayout } from './useWorkspaceLayout';
 
-export function WorkspaceTab() {
+interface Props {
+  lessons: LessonSummary[];
+  /** The lesson selected across the app (shared with the Prompts and Versions tabs). */
+  lessonId: string | null;
+  onLessonChange: (id: string) => void;
+}
+
+export function WorkspaceTab({ lessons, lessonId, onLessonChange }: Props) {
   const [layout, setLayout] = useWorkspaceLayout();
   const gridRef = useRef<HTMLDivElement>(null);
-  const [lessons, setLessons] = useState<LessonSummary[]>([]);
-  const [lessonId, setLessonId] = useState<string | null>(null);
+  // The step last open in each lesson, so switching lessons (from any tab) comes back to it.
+  const lastStep = useRef<Record<string, string>>({});
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [activityId, setActivityId] = useState<string | null>(null);
   const [saved, setSaved] = useState<{ activityId: string; report: ActivityReport | null } | null>(null);
@@ -48,24 +55,20 @@ export function WorkspaceTab() {
     return () => observer.disconnect();
   }, [lesson]);
 
-  useEffect(() => {
-    getLessons().then((list) => {
-      setLessons(list);
-      const remembered = rememberedLesson();
-      setLessonId(list.some((l) => l.id === remembered) ? remembered : (list[0]?.id ?? null));
-    });
-  }, []);
-
-  // Each lesson is independent: switching starts at its first step, with its own board.
+  // Each lesson is independent: switching opens its own board, at the step last open there.
   useEffect(() => {
     if (!lessonId) return;
-    rememberLesson(lessonId);
     setShowExample(false);
     getLesson(lessonId).then((l) => {
       setLesson(l);
-      setActivityId(l.activities[0]?.id ?? null);
+      const last = lastStep.current[l.id];
+      setActivityId(l.activities.some((a) => a.id === last) ? last : (l.activities[0]?.id ?? null));
     });
   }, [lessonId]);
+
+  useEffect(() => {
+    if (lesson && activityId && lesson.activities.some((a) => a.id === activityId)) lastStep.current[lesson.id] = activityId;
+  }, [lesson, activityId]);
 
   useEffect(() => {
     currentId.current = activityId;
@@ -177,6 +180,7 @@ export function WorkspaceTab() {
   const hostReady = saved !== null && hostKey(saved.activityId) === hostKey(activityId);
 
   const gridStyle = {
+    '--lesson': lesson.accent,
     '--feedback-size': layout.feedback,
     '--activity-height': `${layout.activityHeight}px`,
     ...(layout.topHeight != null && { '--top-height': `${layout.topHeight}px` }),
@@ -247,7 +251,7 @@ export function WorkspaceTab() {
     <div className="workspace-grid" ref={gridRef} style={gridStyle}>
       <LearningWorkspace
         lessons={lessons}
-        onSelectLesson={(id) => id !== lesson.id && setLessonId(id)}
+        onSelectLesson={(id) => id !== lesson.id && onLessonChange(id)}
         lesson={lesson}
         currentActivityId={activityId}
         onSelectActivity={setActivityId}
@@ -293,6 +297,7 @@ export function WorkspaceTab() {
           key={`example:${hostKey(activityId)}`}
           definition={definition}
           number={index + 1}
+          lesson={lesson}
           savedReport={{ activityId: definition.id, kind: definition.kind, status: 'in-progress', state: definition.example, updatedAt: '' }}
           onReport={() => {}}
           onCheck={() => {}}
@@ -307,6 +312,7 @@ export function WorkspaceTab() {
           importStakeholders={importStakeholders}
           definition={definition}
           number={index + 1}
+          lesson={lesson}
           onCheck={checkWork}
           canCheck={status !== null}
           savedReport={saved.report}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { LessonSummary } from './types/contracts';
 import { getLessons } from './services/activityService';
+import { rememberLesson, rememberedLesson } from './lessons/rememberedLesson';
 import { WorkspaceTab } from './workspace/WorkspaceTab';
 import { PromptsTab } from './prompts/PromptsTab';
 import { VersionsTab } from './versions/VersionsTab';
@@ -18,16 +19,21 @@ const TABS: { id: TabId; label: string }[] = [
 export function App() {
   const [tab, setTab] = useState<TabId>('workspace');
   const [versionsRefreshKey, setVersionsRefreshKey] = useState(0);
-  // Which lesson's prompts the Prompts and Versions tabs show (shared, so they stay in step).
+  // One lesson selection for every tab: picking a lesson anywhere changes it everywhere.
   const [lessons, setLessons] = useState<LessonSummary[]>([]);
-  const [promptLessonId, setPromptLessonId] = useState<string | null>(null);
+  const [lessonId, setLessonId] = useState<string | null>(null);
   useEffect(() => {
     getLessons().then((list) => {
       setLessons(list);
-      setPromptLessonId(list[0]?.id ?? null);
+      const remembered = rememberedLesson();
+      setLessonId(list.some((l) => l.id === remembered) ? remembered : (list[0]?.id ?? null));
     });
   }, []);
-  const lessonProps = { lessons, lessonId: promptLessonId, onLessonChange: setPromptLessonId };
+  const selectLesson = (id: string) => {
+    setLessonId(id);
+    rememberLesson(id);
+  };
+  const lessonProps = { lessons, lessonId, onLessonChange: selectLesson };
 
   return (
     <div className="app" data-tab={tab}>
@@ -51,7 +57,7 @@ export function App() {
 
       <main className="tab-content">
         <div role="tabpanel" id="panel-workspace" aria-labelledby="tab-workspace" hidden={tab !== 'workspace'}>
-          <WorkspaceTab />
+          <WorkspaceTab {...lessonProps} />
         </div>
         <div role="tabpanel" id="panel-prompts" aria-labelledby="tab-prompts" hidden={tab !== 'prompts'}>
           <PromptsTab {...lessonProps} onSaved={() => setVersionsRefreshKey((k) => k + 1)} />

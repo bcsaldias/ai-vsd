@@ -157,6 +157,8 @@ textarea { width: 100%; resize: vertical; font-family: var(--mono); font-size: 0
   border-bottom: 1px solid var(--rule);
 }
 .panel-title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+/* The activity header carries the lesson color: it's what stays in view while working below. */
+.activity-panel > .panel-header { background: var(--lesson, transparent); }
 .panel-title .badge { margin-left: 0; }
 .panel-header h2, .panel-header h3 {
   margin: 0;
@@ -233,7 +235,7 @@ body.resizing-row { cursor: row-resize; user-select: none; }
 .lesson-steps > nav > h3 { margin-top: 0; }
 /* The current step, as a flat white card (no shadow, per the site's style). */
 /* Even padding on all sides; the first and last lines carry no extra margin of their own. */
-.step-card { background: #fff; padding: 20px 24px; }
+.step-card { background: #fff; padding: 20px 24px; border-top: 10px solid var(--lesson, var(--plum)); }
 .step-card p { margin: 0.5rem 0 0.9rem; }
 .step-card h4 { margin: 0; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
 .step-card ul { margin: 0.35rem 0 0; padding-left: 1.1rem; }
@@ -649,18 +651,23 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 .lesson-tab {
   border: none;
   background: none;
-  padding: 0;
+  padding: 2px 8px;
   font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--plum);
+  color: var(--ink); /* plum is under 4.5:1 on the orange, mauve, and blue grounds at this size */
   text-underline-offset: 5px;
 }
 .lesson-tab:hover:not(:disabled) { background: none; text-decoration: underline; }
-.lesson-tab.active { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: var(--plum); }
-.lesson-picker { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; }
-.lesson-picker > span { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+/* The active lesson is filled with its own color (set per tab as --tab-accent). */
+.lesson-tab.active, .lesson-tab.active:hover:not(:disabled) { color: var(--ink); font-weight: 700; background: var(--tab-accent); text-decoration: none; }
+.lesson-mark { font-weight: 700; }
+.lesson-picker { margin-top: 10px; }
+/* On Prompts and Versions, the lesson being edited colors the editors, preview, and version details. */
+.prompts-page .prompt-editor textarea { border-left: 6px solid var(--lesson, var(--ink-line)); }
+.prompts-page .prompt-preview, .versions-page .version-detail { border-top: 10px solid var(--lesson, var(--rule)); }
+.versions-page .version.active { border-left-color: var(--lesson, var(--plum)); }
 
 /* ---------- Prompts & versions tabs ---------- */
 

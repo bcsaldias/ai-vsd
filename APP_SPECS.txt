@@ -135,11 +135,23 @@ traced to a step. A step that was submitted shows as in-progress again once the 
 
 VALUE SCENARIOS LESSON
 
+The selected lesson is one choice for the whole app: picking a lesson on any tab (Workspace, Prompts,
+Versions) changes it everywhere, and the browser remembers it. Switching back to a lesson returns to
+the step last open in it. Unsaved prompt edits are kept per lesson, so switching never discards them.
+
 A second, independent lesson (Nathan, Klasnja & Friedman, 2007): short stories about how a technology
 plays out for different stakeholders, once widely used and over many years. Its own steps, saved work
 (stateKey "value-scenarios"), example, Export / Import / Start over, and prompts. The learning
-workspace header switches between lessons; the browser remembers the last one opened, and each lesson
-opens at its first step.
+workspace header switches between lessons.
+
+Telling lessons apart: each lesson has an accent color and a symbol (Stakeholder Analysis: sage
+#A6BAA0 and ◎; Value Scenarios: coral #D26559 and ≡), both from the VSD Lab palette. The color
+appears in three places only: the active lesson tab (filled), a band along the top of the step card,
+and the activity panel header (filled; it stays in view while working). The lesson's name and symbol
+always appear alongside, so color is never the only cue. The workspace ground stays orange.
+The Prompts and Versions tabs use the same lesson switcher (active lesson filled with its color),
+and the lesson being edited colors the prompt editors' left edge, the preview, the selected version,
+and the version details. Each tab keeps its own ground.
 
 Bottom panel (a simple list for now; a time × pervasiveness grid may come later):
   - Left: the technology, and "Whose stories?" (stakeholders, direct or indirect). Optional bridge:
@@ -172,8 +184,8 @@ Edit the prompts used to generate AI feedback:
 - Assistant prompt: optional prefill or example response.
 - A preview that shows the user prompt filled in with sample data.
 - Saving creates a new version; it never overwrites an existing one.
-- Prompts are kept per lesson (each lesson has its own tutor role and rubric). A lesson picker at the
-  top chooses which lesson's prompts to edit; the Versions tab follows the same choice. The preview
+- Prompts are kept per lesson (each lesson has its own tutor role and rubric). The lesson switcher at
+  the top is the same selection as in the Workspace and Versions tabs. The preview
   uses the lesson's first activity and its worked example as sample student work.
 
 

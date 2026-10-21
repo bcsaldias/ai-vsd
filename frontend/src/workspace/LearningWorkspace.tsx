@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { Lesson, LessonSummary } from '../types/contracts';
 
 interface Props {
@@ -63,15 +63,16 @@ export function LearningWorkspace({
               <button
                 key={l.id}
                 className={l.id === lesson.id ? 'lesson-tab active' : 'lesson-tab'}
+                style={{ '--tab-accent': l.accent } as CSSProperties}
                 aria-current={l.id === lesson.id ? 'page' : undefined}
                 onClick={() => onSelectLesson(l.id)}
               >
-                {l.title}
+                <span className="lesson-mark" aria-hidden="true">{l.symbol}</span> {l.title}
               </button>
             ))}
           </nav>
         ) : (
-          <h2>{lesson.title}</h2>
+          <h2><span className="lesson-mark" aria-hidden="true">{lesson.symbol}</span> {lesson.title}</h2>
         )}
       </header>
       <div className="panel-body">
@@ -80,7 +81,9 @@ export function LearningWorkspace({
         <div className="lesson-steps">
           {current && (
             <article className="step-card" aria-labelledby="step-card-title">
-              <span className="step-count">Step {index + 1} of {lesson.activities.length}</span>
+              <span className="step-count">
+                <span className="lesson-mark" aria-hidden="true">{lesson.symbol}</span> {lesson.title} · Step {index + 1} of {lesson.activities.length}
+              </span>
               <h3 id="step-card-title" className="step-title">{current.title}</h3>
               <p>{current.prompt}</p>
               {current.guide && current.guide.length > 0 && (

@@ -3,7 +3,7 @@
 // Checking work is coordinated by WorkspaceTab, so it can also be triggered from elsewhere.
 
 import type { ReactNode } from 'react';
-import type { ActivityDefinition, ActivityKind, ActivityReport, StakeholderRef } from '../types/contracts';
+import type { ActivityDefinition, ActivityKind, ActivityReport, LessonSummary, StakeholderRef } from '../types/contracts';
 import { DiagramActivity, type DiagramState } from '../activities/diagram/DiagramActivity';
 import { AnnotationActivity, type AnnotationState } from '../activities/annotation/AnnotationActivity';
 import {
@@ -21,6 +21,8 @@ interface Props {
   definition: ActivityDefinition;
   /** 1-based position of the activity in the lesson, shown in the header. */
   number: number;
+  /** The lesson's name and symbol head the panel, so students can tell lessons apart while working. */
+  lesson: LessonSummary;
   savedReport: ActivityReport | null;
   onReport: (report: ActivityReport) => void;
   onCheck: () => void;
@@ -35,7 +37,7 @@ interface Props {
 }
 
 export function ActivityHost({
-  definition, number, savedReport, onReport, onCheck, canCheck, example, onExitExample, importStakeholders, headerActions,
+  definition, number, lesson, savedReport, onReport, onCheck, canCheck, example, onExitExample, importStakeholders, headerActions,
 }: Props) {
   const onChange = (state: unknown) =>
     !example &&
@@ -69,7 +71,9 @@ export function ActivityHost({
     <section id="activity-panel" className={example ? 'panel activity-panel showing-example' : 'panel activity-panel'} aria-label="Activity">
       <header className="panel-header">
         <div className="panel-title">
-          <h2>Step {number} · {definition.title}</h2>
+          <h2>
+            <span className="lesson-mark" aria-hidden="true">{lesson.symbol}</span> {lesson.title} · Step {number} · {definition.title}
+          </h2>
           {example && (
             <>
               <span className="badge">Example</span>

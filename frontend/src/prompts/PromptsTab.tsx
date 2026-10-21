@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import type { ActivityDefinition, LessonSummary, PromptRole, PromptSet, PromptVersion } from '../types/contracts';
 import { getLatestPromptVersion, renderTemplate, savePromptVersion, TEMPLATE_VARIABLES } from '../services/promptService';
 import { getLesson } from '../services/activityService';
-import { LessonPicker } from '../lessons/LessonPicker';
+import { LessonPicker, lessonAccent } from '../lessons/LessonPicker';
 
 const ROLES: { role: PromptRole; label: string; help: string }[] = [
   { role: 'system', label: 'System', help: "The tutor's role, tone, and rules." },
@@ -22,33 +22,33 @@ interface Props {
 /** Each lesson has its own prompts. The preview fills the template with the lesson's first
     activity and, as sample student work, its worked example. */
 export function PromptsTab({ lessons, lessonId, onLessonChange, onSaved }: Props) {
-  const [base, setBase] = useState<PromptVersion | null>(null);
-  const [draft, setDraft] = useState<PromptSet | null>(null);
-  const [note, setNote] = useState('');
+  // One editing session per lesson (the version it started from, the draft, the note), kept while
+  // the app is open, so switching lessons — from any tab — never discards unsaved edits.
+  const [sessions, setSessions] = useState<Record<string, { base: PromptVersion; draft: PromptSet; note: string }>>({});
   const [sampleActivity, setSampleActivity] = useState<ActivityDefinition | null>(null);
 
   useEffect(() => {
     if (!lessonId) return;
-    getLatestPromptVersion(lessonId).then((v) => {
-      setBase(v);
-      setDraft(v.prompts);
-      setNote('');
-    });
+    if (!sessions[lessonId]) {
+      getLatestPromptVersion(lessonId).then((v) =>
+        setSessions((all) => (all[lessonId] ? all : { ...all, [lessonId]: { base: v, draft: v.prompts, note: '' } })),
+      );
+    }
     getLesson(lessonId).then((l) => setSampleActivity(l.activities[0] ?? null));
   }, [lessonId]);
 
-  if (!lessonId || !base || !draft || base.lessonId !== lessonId) return <p className="hint">Loading prompts…</p>;
+  const session = lessonId ? sessions[lessonId] : undefined;
+  if (!lessonId || !session) return <p className="hint">Loading prompts…</p>;
+  const { base, draft, note } = session;
+  const patch = (p: Partial<typeof session>) => setSessions((all) => ({ ...all, [lessonId]: { ...all[lessonId], ...p } }));
+  const setDraft = (d: PromptSet) => patch({ draft: d });
+  const setNote = (n: string) => patch({ note: n });
 
   const dirty = ROLES.some(({ role }) => draft[role] !== base.prompts[role]);
-  const switchLesson = (id: string) => {
-    if (dirty && !window.confirm('You have unsaved prompt changes. Switch lessons and discard them?')) return;
-    onLessonChange(id);
-  };
 
   const save = async () => {
     const v = await savePromptVersion(lessonId, draft, note);
-    setBase(v);
-    setNote('');
+    patch({ base: v, note: '' });
     onSaved();
   };
 
@@ -60,11 +60,11 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, onSaved }: Props
   });
 
   return (
-    <div className="tab-page prompts-page">
+    <div className="tab-page prompts-page" style={lessonAccent(lessons, lessonId)}>
       <div className="page-header">
         <div>
           <h1 className="page-title">Prompts.</h1>
-          <LessonPicker lessons={lessons} value={lessonId} onChange={switchLesson} />
+          <LessonPicker lessons={lessons} value={lessonId} onChange={onLessonChange} />
           <p className="hint">
             Editing from version {base.number}
             {dirty && <span className="badge">Unsaved changes</span>}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { LessonSummary, PromptRole, PromptVersion } from '../types/contracts';
 import { listPromptVersions } from '../services/promptService';
-import { LessonPicker } from '../lessons/LessonPicker';
+import { LessonPicker, lessonAccent } from '../lessons/LessonPicker';
 
 const ROLES: PromptRole[] = ['system', 'user', 'assistant'];
 
@@ -31,7 +31,7 @@ export function VersionsTab({ lessons, lessonId, onLessonChange, refreshKey }: P
   const selected = versions.find((v) => v.id === selectedId);
 
   return (
-    <div className="tab-page versions-page">
+    <div className="tab-page versions-page" style={lessonAccent(lessons, lessonId)}>
       <div className="page-header">
         <div>
           <h1 className="page-title">Versions.</h1>

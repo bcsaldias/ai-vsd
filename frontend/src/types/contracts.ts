@@ -42,6 +42,10 @@ export interface StakeholderRef {
 export interface LessonSummary {
   id: string;
   title: string;
+  /** Identifies the lesson in the workspace (lesson tab, step card band, activity header). Ink text must stay readable on it. */
+  accent: string;
+  /** A short symbol shown with the lesson name, so the lesson isn't told apart by color alone. */
+  symbol: string;
 }
 
 export interface Lesson extends LessonSummary {

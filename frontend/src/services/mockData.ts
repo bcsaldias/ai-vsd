@@ -98,6 +98,8 @@ const BOARD = 'stakeholder-board';
 export const STAKEHOLDER_LESSON: Lesson = {
   id: 'vsd-stakeholder-analysis',
   title: 'Stakeholder Analysis',
+  accent: '#a6baa0', // sage, from the VSD Lab palette
+  symbol: '◎',
   intro:
     'Value Sensitive Design asks you to account for everyone a technology affects — not only the people who use it. ' +
     'In this lesson you will build a stakeholder map with tokens: place stakeholders on rings around what you are designing, ' +

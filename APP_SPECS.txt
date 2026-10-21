@@ -1,0 +1,59 @@
+Student Learning Workspace — Initial Specs
+
+PRODUCT
+
+Build a student-facing learning application with three coordinated areas:
+
+1. Learning workspace on the left
+   - Hosts learning and activity modules.
+   - Owns the current lesson or activity content.
+
+2. AI feedback panel on the right
+   - Reserved for feedback about the student's work in the learning workspace.
+   - For the initial version, use placeholder content or mock data only.
+   - Keep the panel independent so a real AI feedback source can be connected later.
+
+3. Activity panel along the bottom
+   - Displays interactive content for the current activity.
+   - Different activities may provide different interactions, including:
+     - Composing diagrams by placing and connecting items.
+     - Hovering over, highlighting, and annotating parts of a visual.
+   - Treat this as a host for activity-specific components, not as one universal canvas.
+
+RECOMMENDED TECHNOLOGY
+
+- Frontend: React with TypeScript, built with Vite.
+- Layout: CSS Grid for the main three-panel arrangement.
+- Backend: Python with FastAPI.
+- Diagram activities: React Flow for node-and-connection diagrams.
+- Freeform canvas activities: React Konva when students need to draw, move, or resize shapes.
+- Region highlighting and annotation: Prefer SVG overlays when the visual consists of selectable shapes or regions.
+- Backend communication: Use HTTP endpoints for loading activities and saving student work. Add streaming for AI feedback later; use WebSockets only if ongoing two-way interaction is needed.
+
+ARCHITECTURE PRINCIPLES
+
+- Keep coupling low and encapsulation high.
+- The app shell coordinates the panels but does not implement activity-specific behavior.
+- Each panel owns its presentation and internal behavior.
+- Each activity owns its interaction logic and any canvas library it requires.
+- Connect modules using small, explicit data contracts rather than direct dependencies on one another's internals.
+- An activity receives its prompt and saved state, then reports changes or a result in a standard format.
+- The feedback panel receives a feedback object. Initially, provide it from mock data; later, replace the data source without changing the panel or activity components.
+- Keep shared types and service boundaries explicit. Avoid building a plugin system or extra framework layers until the project needs them.
+
+SUGGESTED COMPONENT SHAPE
+
+AppShell
+  LearningWorkspace
+  FeedbackPanel
+  ActivityHost
+    DiagramActivity
+    AnnotationActivity
+
+INITIAL IMPLEMENTATION SCOPE
+
+- Build the panel layout and responsive behavior.
+- Implement the feedback panel with clearly marked placeholder content.
+- Define the activity input/output contract and render an activity through ActivityHost.
+- Keep the diagram and annotation activity implementations separate so either can evolve independently.
+- Persist activity state as structured data that can later be sent to the FastAPI backend.

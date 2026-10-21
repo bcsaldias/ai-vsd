@@ -18,6 +18,7 @@ export const MOCK_LESSON: Lesson = {
       kind: 'stakeholder-tokens',
       stateKey: BOARD,
       config: { step: 1 },
+      guide: [{ target: 'context', label: 'The centre of the board', where: 'Select it, then name it in the panel on the right.' }],
       title: 'Choose a starting point',
       prompt: 'Start from a technology, a value, or a context of use. Select the centre of the board and name what you are designing.',
       objectives: [
@@ -30,6 +31,7 @@ export const MOCK_LESSON: Lesson = {
       kind: 'stakeholder-tokens',
       stateKey: BOARD,
       config: { step: 2 },
+      guide: [{ target: 'direct', label: 'Direct token', where: 'In the palette left of the board. Drag it onto the rings, then type its name.' }],
       title: 'Direct stakeholders',
       prompt:
         'Add the people who will interact with the technology or its outputs. Drag each token onto the rings: ' +
@@ -45,6 +47,11 @@ export const MOCK_LESSON: Lesson = {
       kind: 'stakeholder-tokens',
       stateKey: BOARD,
       config: { step: 3 },
+      guide: [
+        { target: 'indirect', label: 'Indirect token', where: 'In the palette left of the board.' },
+        { target: 'excluded', label: 'Excluded area', where: 'The outer dashed ring. Drag left-out stakeholders there.' },
+        { target: 'overlooked', label: 'Hidden or overlooked', where: 'Right panel, after you select a stakeholder.' },
+      ],
       title: 'Indirect stakeholders',
       prompt:
         'Add the people affected by the technology who never use it. Look for those who are easy to miss: ' +
@@ -60,6 +67,7 @@ export const MOCK_LESSON: Lesson = {
       kind: 'stakeholder-tokens',
       stateKey: BOARD,
       config: { step: 4 },
+      guide: [{ target: 'relationships', label: 'Connections', where: 'Drag from a token’s dot to another token, or use “Connect to…” in the right panel.' }],
       title: 'Relationships between stakeholders',
       prompt:
         'Connect stakeholders who affect one another: drag from a token’s dot to another token, ' +
@@ -74,6 +82,7 @@ export const MOCK_LESSON: Lesson = {
       kind: 'stakeholder-tokens',
       stateKey: BOARD,
       config: { step: 5 },
+      guide: [{ target: 'impacts', label: '+ Harm / + Benefit', where: 'Right panel, after you select a stakeholder.' }],
       title: 'Harms and benefits',
       prompt: 'Select each stakeholder and note what they could gain or lose from the technology.',
       objectives: [
@@ -86,6 +95,7 @@ export const MOCK_LESSON: Lesson = {
       kind: 'stakeholder-tokens',
       stateKey: BOARD,
       config: { step: 6 },
+      guide: [{ target: 'values', label: '+ value', where: 'Under each harm and benefit in the right panel. Type a value and press Enter.' }],
       title: 'Map to values',
       prompt: 'For each harm and benefit, name the human values it touches (e.g. privacy, autonomy, trust, fairness).',
       objectives: [
@@ -98,6 +108,7 @@ export const MOCK_LESSON: Lesson = {
       kind: 'stakeholder-tokens',
       stateKey: BOARD,
       config: { step: 7 },
+      guide: [{ target: 'definitions', label: 'Value definitions', where: 'In the Values list at the bottom of the right panel.' }],
       title: 'Define the key values',
       prompt:
         'For the values that matter most, write what each one means in this context. ' +
@@ -112,6 +123,7 @@ export const MOCK_LESSON: Lesson = {
       kind: 'stakeholder-tokens',
       stateKey: BOARD,
       config: { step: 8 },
+      guide: [{ target: 'tensions', label: 'Tensions', where: '“Tension with…” in the right panel, or switch dragging to “Tension” left of the board.' }],
       title: 'Value tensions',
       prompt:
         'Draw a tension between two stakeholders whose values pull against each other, and name the value at stake for each ' +
@@ -126,6 +138,7 @@ export const MOCK_LESSON: Lesson = {
       kind: 'stakeholder-tokens',
       stateKey: BOARD,
       config: { step: 9 },
+      guide: [{ target: 'organization', label: 'Owner and next action', where: 'Under each value, and in each tension.' }],
       title: 'Take it into the organization',
       prompt: 'For the key values and tensions, note who should own them and what they will do next.',
       objectives: [

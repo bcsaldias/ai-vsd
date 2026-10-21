@@ -67,6 +67,7 @@ export const STEP = {
   context: 1,
   direct: 2,
   indirect: 3,
+  excluded: 3,
   overlooked: 3,
   relationships: 4,
   impacts: 5,
@@ -79,6 +80,13 @@ export const LAST_STEP = 9;
 
 export type Tool = keyof typeof STEP;
 export const allows = (step: number, tool: Tool) => step >= STEP[tool];
+
+/** Marks where a tool lives: data-guide names it (the learning workspace can spotlight it from the
+    step card), and data-new flags it in the step that introduces it. */
+export const guide = (step: number, tool: Tool) => ({
+  'data-guide': tool,
+  'data-new': STEP[tool] === step ? '' : undefined,
+});
 
 // ---------- Geometry ----------
 

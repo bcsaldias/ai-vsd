@@ -86,7 +86,7 @@ Steps (each one adds tools to the board; earlier tools stay available, so studen
 The board:
   - Rings around the centre: core (inner), peripheral, and excluded (outside the peripheral ring).
     Where a token sits sets its ring; moving it re-classifies it.
-  - Tokens: filled = direct, outlined = indirect, dashed amber outline and "?" = hidden or overlooked
+  - Tokens: filled = direct, outlined = indirect, dotted plum outline and "?" = hidden or overlooked
     (Yoo's first goal: surfacing hidden, overlooked, or neglected stakeholders).
   - Relationships are arrows; tensions are dashed red curves labelled with the two values.
   - Harms (−), benefits (+), and values show as small chips under each token.
@@ -103,6 +103,11 @@ Interaction:
     the keyboard: ring select, "Connect to…", "Tension with…", harm/benefit editors, value tags.
   - Select + Backspace/Delete removes a token or connection.
   - The board stays mounted when the student moves between steps, keeping zoom and selection.
+  - Guidance: each step lists what it introduces under "New in this step" on the step card (label +
+    where to find it). The matching controls carry a dashed amber outline in that step only (the
+    excluded ring is drawn amber; in step 4 the token dots grow and turn amber). Hovering or focusing a
+    card item makes its controls pulse; clicking scrolls to them. The card finds controls through a
+    data-guide attribute, so it does not depend on how the activity is built.
 
 Saving: the board is one shared state for the lesson (shared stateKey). Each step still has its own
 report (status, plus a snapshot of the board when it was saved), so feedback and submissions can be
@@ -213,7 +218,9 @@ Defined once in frontend/src/types/contracts.ts and mirrored as Pydantic models 
 - Lesson: id, title, intro, activities[].
 - ActivityDefinition: id, kind (diagram | annotation | stakeholder-tokens), title, prompt, objectives,
   optional stateKey (activities with the same key share one state), optional config (activity-specific
-  settings, passed through untouched, e.g. { step: 3 }).
+  settings, passed through untouched, e.g. { step: 3 }), optional guide[] (what the activity introduces:
+  target, label, where; shown on the step card).
+- ActivityGuideItem: target (matches data-guide on activity elements), label, where.
 - ActivityProps (what an activity receives): prompt, config, savedState, onChange(state).
 - ActivityReport (what gets stored and sent for feedback): activityId, kind, status (in-progress | submitted), state, updatedAt.
 - Feedback: activityId, source (mock | ai), promptVersionId, generatedAt, summary, items[].

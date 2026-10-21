@@ -12,7 +12,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import type { ActivityProps } from '../../types/contracts';
 import {
-  CONTEXT_LABEL, CONTEXT_SIZE, LAST_STEP, RADIUS, RING_LABEL, TOKEN_SIZE, addLink, addToken, allows, hasLink,
+  CONTEXT_LABEL, CONTEXT_SIZE, LAST_STEP, RADIUS, RING_LABEL, TOKEN_SIZE, addLink, addToken, allows, guide, hasLink,
   linkLabel, moveToken, newId, normalize, removeLinks, removeTokens,
   type Link, type StakeholderTokensState, type Token,
 } from './model';
@@ -164,6 +164,7 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
       role="button"
       tabIndex={0}
       className={`palette-token ${kind}`}
+      {...guide(step, kind)}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData(DRAG_TYPE, kind);
@@ -199,7 +200,7 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
             <p className="hint">First, name what you’re designing: select the centre of the board.</p>
           )}
           {allows(step, 'tensions') && (
-            <fieldset className="field">
+            <fieldset className="field" {...guide(step, 'tensions')}>
               <legend>Dragging between tokens adds a…</legend>
               <div className="choices">
                 <label><input type="radio" name="connect-as" checked={connectAs === 'relationship'} onChange={() => setConnectAs('relationship')} /> Relationship</label>

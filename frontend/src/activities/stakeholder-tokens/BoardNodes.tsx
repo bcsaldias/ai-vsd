@@ -7,7 +7,7 @@ import {
   type Edge, type EdgeProps, type InternalNode, type NodeProps,
 } from '@xyflow/react';
 import {
-  CONTEXT_LABEL, RADIUS, allows, tokenValueIds, valueName,
+  CONTEXT_LABEL, RADIUS, allows, guide, tokenValueIds, valueName,
   type Link, type StakeholderTokensState,
 } from './model';
 
@@ -21,10 +21,11 @@ function useBoard() {
 
 /** The rings themselves: a non-interactive node, so fitView frames the whole board. */
 export function RingsNode() {
+  const { step } = useBoard();
   const r = RADIUS.board;
   return (
     <svg className="rings" width={r * 2} height={r * 2} viewBox={`${-r} ${-r} ${r * 2} ${r * 2}`} aria-hidden="true">
-      <circle className="ring excluded" r={RADIUS.board - 1} />
+      <circle className="ring excluded" r={RADIUS.board - 1} {...guide(step, 'excluded')} />
       <circle className="ring peripheral" r={RADIUS.peripheral} />
       <circle className="ring core" r={RADIUS.core} />
       <text y={-RADIUS.board + 32}>Excluded</text>
@@ -36,9 +37,9 @@ export function RingsNode() {
 
 /** What is being designed, fixed at the centre of the board. */
 export function ContextNode() {
-  const { board } = useBoard();
+  const { board, step } = useBoard();
   return (
-    <div className="context-token">
+    <div className="context-token" {...guide(step, 'context')}>
       <span className="context-type">{CONTEXT_LABEL[board.context.type]}</span>
       <span className={board.context.label ? undefined : 'placeholder'}>{board.context.label || 'Name what you’re designing'}</span>
     </div>
@@ -67,7 +68,7 @@ export function TokenNode({ id }: NodeProps) {
           {values.length > 2 && <span className="chip value">+{values.length - 2}</span>}
         </div>
       )}
-      <Handle type="source" position={Position.Bottom} isConnectable={allows(step, 'relationships')} />
+      <Handle type="source" position={Position.Bottom} isConnectable={allows(step, 'relationships')} {...guide(step, 'relationships')} />
     </div>
   );
 }

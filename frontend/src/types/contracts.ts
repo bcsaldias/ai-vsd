@@ -5,6 +5,15 @@
 
 export type ActivityKind = 'diagram' | 'annotation' | 'stakeholder-tokens';
 
+/** Something an activity introduces, listed on the step card so students know where to look. */
+export interface ActivityGuideItem {
+  /** Matches data-guide="<target>" on the activity's elements; the card can spotlight them. */
+  target: string;
+  label: string;
+  /** Where to find it, in the student's terms. */
+  where: string;
+}
+
 export interface ActivityDefinition {
   id: string;
   kind: ActivityKind;
@@ -16,6 +25,8 @@ export interface ActivityDefinition {
   stateKey?: string;
   /** Activity-specific settings, passed through to the activity untouched (e.g. { step: 3 }). */
   config?: Record<string, unknown>;
+  /** What is new in this activity and where to find it. */
+  guide?: ActivityGuideItem[];
 }
 
 export interface Lesson {

@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
-  CONTEXT_LABEL, RING_LABEL, addImpact, addLink, allows, linkLabel, moveToRing, newId, patchContext,
+  CONTEXT_LABEL, RING_LABEL, addImpact, addLink, allows, guide, linkLabel, moveToRing, newId, patchContext,
   patchImpact, patchLink, patchToken, patchValue, removeImpact, removeLinks, removeTokens, removeValue,
   tagImpact, tokenLabel, untagImpact,
   type ContextType, type Impact, type Link, type Ring, type StakeholderTokensState, type Token,
@@ -47,9 +47,9 @@ export function Inspector({ board, step, selection, update, select, nameRequest,
 
 type FormProps = Omit<Props, 'selection' | 'nameRequest' | 'onNameFocused'>;
 
-function ContextForm({ board, update }: FormProps) {
+function ContextForm({ board, step, update }: FormProps) {
   return (
-    <section>
+    <section {...guide(step, 'context')}>
       <h3>Starting point</h3>
       <fieldset className="field">
         <legend>Start from a…</legend>
@@ -150,14 +150,14 @@ function TokenForm({ token, board, step, update, select, focusName, onNameFocuse
         </select>
       </label>
       {allows(step, 'overlooked') && (
-        <label className="check">
+        <label className="check" {...guide(step, 'overlooked')}>
           <input type="checkbox" checked={token.overlooked} onChange={(e) => set({ overlooked: e.target.checked })} />
           Hidden or overlooked <span className="hint">easy to miss; you only found them by looking hard</span>
         </label>
       )}
 
       {allows(step, 'relationships') && others.length > 0 && (
-        <label className="field">
+        <label className="field" {...guide(step, 'relationships')}>
           <span>Connect to…</span>
           <select value="" onChange={(e) => connect('relationship', e.target.value)}>
             <option value="">Choose a stakeholder</option>
@@ -166,7 +166,7 @@ function TokenForm({ token, board, step, update, select, focusName, onNameFocuse
         </label>
       )}
       {allows(step, 'tensions') && others.length > 0 && (
-        <label className="field">
+        <label className="field" {...guide(step, 'tensions')}>
           <span>Tension with…</span>
           <select value="" onChange={(e) => connect('tension', e.target.value)}>
             <option value="">Choose a stakeholder</option>
@@ -180,7 +180,7 @@ function TokenForm({ token, board, step, update, select, focusName, onNameFocuse
           <h3>Harms &amp; benefits</h3>
           {impacts.length === 0 && <p className="hint">What could this stakeholder gain or lose?</p>}
           {impacts.map((impact) => <ImpactEditor key={impact.id} impact={impact} board={board} step={step} update={update} />)}
-          <div className="inline-buttons">
+          <div className="inline-buttons" {...guide(step, 'impacts')}>
             <button className="small" onClick={() => { const id = newId('i'); update((b) => addImpact(b, id, token.id, 'harm')); }}>+ Harm</button>
             <button className="small" onClick={() => { const id = newId('i'); update((b) => addImpact(b, id, token.id, 'benefit')); }}>+ Benefit</button>
           </div>
@@ -217,7 +217,7 @@ function ImpactEditor({ impact, board, step, update }: Omit<FormProps, 'select'>
         aria-label={`${impact.kind} description`}
       />
       {allows(step, 'values') && (
-        <div className="tags">
+        <div className="tags" {...guide(step, 'values')}>
           {impact.valueIds.map((vid) => {
             const name = board.values.find((v) => v.id === vid)?.name ?? '';
             return (
@@ -292,7 +292,7 @@ function LinkForm({ link, board, step, update, select }: FormProps & { link: Lin
         <textarea rows={3} value={link.label} onChange={(e) => set({ label: e.target.value })} />
       </label>
       {allows(step, 'organization') && (
-        <OwnerFields owner={link.owner ?? ''} action={link.action ?? ''} onChange={set} />
+        <OwnerFields step={step} owner={link.owner ?? ''} action={link.action ?? ''} onChange={set} />
       )}
       <button className="small danger" onClick={remove}>Remove</button>
     </section>
@@ -306,7 +306,7 @@ function ValuesList({ board, step, update }: FormProps) {
   };
 
   return (
-    <section>
+    <section {...guide(step, 'values')}>
       <h3>Values</h3>
       {board.values.length === 0 && <p className="hint">Values appear here once you tag harms and benefits with them.</p>}
       {board.values.map((v) => {
@@ -325,6 +325,7 @@ function ValuesList({ board, step, update }: FormProps) {
             <span className="meta">{users.length ? `At stake for ${users.join(', ')}` : 'Not linked to any stakeholder'}</span>
             {allows(step, 'definitions') && (
               <textarea
+                {...guide(step, 'definitions')}
                 rows={2}
                 value={v.definition}
                 onChange={(e) => update((b) => patchValue(b, v.id, { definition: e.target.value }))}
@@ -333,7 +334,7 @@ function ValuesList({ board, step, update }: FormProps) {
               />
             )}
             {allows(step, 'organization') && (
-              <OwnerFields owner={v.owner} action={v.action} onChange={(patch) => update((b) => patchValue(b, v.id, patch))} />
+              <OwnerFields step={step} owner={v.owner} action={v.action} onChange={(patch) => update((b) => patchValue(b, v.id, patch))} />
             )}
           </div>
         );
@@ -342,9 +343,14 @@ function ValuesList({ board, step, update }: FormProps) {
   );
 }
 
-function OwnerFields({ owner, action, onChange }: { owner: string; action: string; onChange: (p: { owner?: string; action?: string }) => void }) {
+function OwnerFields({ step, owner, action, onChange }: {
+  step: number;
+  owner: string;
+  action: string;
+  onChange: (p: { owner?: string; action?: string }) => void;
+}) {
   return (
-    <div className="owner-fields">
+    <div className="owner-fields" {...guide(step, 'organization')}>
       <label className="field">
         <span>Owner</span>
         <input value={owner} onChange={(e) => onChange({ owner: e.target.value })} placeholder="Who is responsible?" />

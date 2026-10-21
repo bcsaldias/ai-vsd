@@ -28,6 +28,19 @@ export function LearningWorkspace({ lesson, currentActivityId, onSelectActivity,
     if (offering) offerRef.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
   }, [offering]);
 
+  // Spotlight the activity's elements for a guide item. Elements are found by their data-guide
+  // attribute, so the card doesn't depend on how any activity is built.
+  const spotlight = (target: string | null) => {
+    document.querySelectorAll('[data-spotlight]').forEach((el) => el.removeAttribute('data-spotlight'));
+    if (target) document.querySelectorAll(`[data-guide="${target}"]`).forEach((el) => el.setAttribute('data-spotlight', ''));
+  };
+  const showMe = (target: string) => {
+    const el = document.querySelector(`[data-guide="${target}"]`);
+    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    spotlight(target);
+  };
+  useEffect(() => () => spotlight(null), [currentActivityId]);
+
   const next = () => {
     if (!onNext) return;
     if (checked) onNext();
@@ -48,6 +61,29 @@ export function LearningWorkspace({ lesson, currentActivityId, onSelectActivity,
               <span className="step-count">Step {index + 1} of {lesson.activities.length}</span>
               <h3 id="step-card-title" className="step-title">{current.title}</h3>
               <p>{current.prompt}</p>
+              {current.guide && current.guide.length > 0 && (
+                <>
+                  <h4>New in this step</h4>
+                  <ul className="guide-list">
+                    {current.guide.map((g) => (
+                      <li key={g.target}>
+                        <button
+                          className="guide-item"
+                          onMouseEnter={() => spotlight(g.target)}
+                          onMouseLeave={() => spotlight(null)}
+                          onFocus={() => spotlight(g.target)}
+                          onBlur={() => spotlight(null)}
+                          onClick={() => showMe(g.target)}
+                          title="Show me"
+                        >
+                          <span className="guide-label">{g.label}</span>
+                          <span className="guide-where">{g.where}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
               <h4>What you're aiming for</h4>
               <ul>
                 {current.objectives.map((o) => <li key={o}>{o}</li>)}

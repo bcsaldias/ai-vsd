@@ -232,6 +232,38 @@ body.resizing-row { cursor: row-resize; user-select: none; }
 .step-card h4 { margin: 0; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
 .step-card ul { margin: 0.35rem 0 0; padding-left: 1.1rem; }
 .step-card li + li { margin-top: 0.2rem; }
+.step-card h4 + ul { margin-bottom: 0.9rem; }
+.step-card ul:last-child { margin-bottom: 0; }
+
+/* "New in this step": each item matches the dashed amber marks on the new controls below. */
+.step-card .guide-list { list-style: none; padding-left: 0; display: grid; gap: 6px; }
+.guide-item {
+  width: 100%;
+  display: grid;
+  gap: 1px;
+  padding: 6px 10px;
+  border: 2px dashed var(--suggestion);
+  background: transparent;
+  text-align: left;
+  font-weight: 500;
+}
+.guide-item:hover:not(:disabled), .guide-item:focus-visible { background: #fdf6e7; }
+.guide-label { font-weight: 700; }
+.guide-where { font-size: 0.85rem; color: var(--ink-soft); }
+
+/* Controls introduced by the current step (data-new), and a pulse when spotlit from the card. */
+[data-new] { outline: 2px dashed var(--suggestion); outline-offset: 3px; }
+.rings .ring[data-new] { outline: none; stroke: var(--suggestion); stroke-width: 6; stroke-dasharray: 14 8; }
+.tokens-board .react-flow__handle[data-new] { width: 16px; height: 16px; background: var(--suggestion); outline: none; }
+[data-spotlight] { animation: spotlight 0.9s ease-in-out infinite alternate; }
+@keyframes spotlight {
+  from { outline: 3px solid var(--suggestion); outline-offset: 2px; }
+  to { outline: 3px solid var(--suggestion); outline-offset: 7px; }
+}
+.rings .ring[data-spotlight] { animation: none; stroke: var(--suggestion); stroke-width: 10; }
+@media (prefers-reduced-motion: reduce) {
+  [data-spotlight] { animation: none; outline: 3px solid var(--suggestion); outline-offset: 4px; }
+}
 .step-count { display: block; font-size: 0.68rem; font-weight: 700; line-height: 1; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-soft); }
 .step-title { margin: 8px 0 0; font-size: 1.25rem; font-weight: 700; line-height: 1.2; text-transform: none; letter-spacing: 0; }
 .activity-list { padding-left: 1.2rem; margin: 0.4rem 0; }
@@ -321,7 +353,8 @@ button.link.active { color: var(--ink); font-weight: 700; text-decoration: under
   flex: 1;
   min-height: 0;
 }
-.token-palette, .token-inspector { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: auto; }
+/* Padding leaves room for the outlines that mark new controls (they'd be clipped by the scroll box). */
+.token-palette, .token-inspector { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: auto; padding: 6px; }
 .token-palette .hint, .token-inspector .hint { font-size: 0.8rem; margin: 0; }
 .tokens-board { min-height: 220px; overflow: hidden; }
 
@@ -369,7 +402,8 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 }
 .palette-token.direct::before, .swatch.direct { background: var(--plum); }
 .palette-token.indirect::before, .swatch.indirect { background: #fff; }
-.swatch.overlooked { background: #fff; border-color: var(--ink-line); outline: 2px dashed var(--suggestion); outline-offset: 1px; }
+/* Dotted plum, so it doesn't read as the dashed amber "new in this step" marker. */
+.swatch.overlooked { background: #fff; border-color: var(--ink-line); outline: 2px dotted var(--plum); outline-offset: 1px; }
 .token-legend { list-style: none; margin: auto 0 0; padding: 0; display: grid; gap: 4px; font-size: 0.8rem; }
 .token-legend li { display: flex; align-items: center; gap: 6px; }
 
@@ -427,7 +461,7 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 }
 .token.direct { background: var(--plum); color: #fff; }
 .token.indirect { background: #fff; color: var(--ink); }
-.token.overlooked { outline: 2px dashed var(--suggestion); outline-offset: 3px; }
+.token.overlooked { outline: 3px dotted var(--plum); outline-offset: 3px; }
 .token-label.unnamed { font-style: italic; font-weight: 500; }
 .token-label { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .token-flag {
@@ -437,7 +471,7 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--suggestion);
+  background: var(--plum);
   color: #fff;
   font-size: 15px;
   line-height: 22px;

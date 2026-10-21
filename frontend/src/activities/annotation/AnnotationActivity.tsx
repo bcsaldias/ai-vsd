@@ -15,7 +15,7 @@ const REGIONS = [
   { id: 'lake', name: 'Lake', shape: <ellipse cx="200" cy="215" rx="170" ry="30" /> },
 ];
 
-export function AnnotationActivity({ prompt, savedState, onChange }: ActivityProps<AnnotationState>) {
+export function AnnotationActivity({ savedState, onChange }: ActivityProps<AnnotationState>) {
   const [state, setState] = useState<AnnotationState>(savedState ?? { annotations: {} });
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -30,7 +30,6 @@ export function AnnotationActivity({ prompt, savedState, onChange }: ActivityPro
 
   return (
     <div className="activity">
-      <p className="activity-prompt">{prompt}</p>
       <div className="annotation-layout">
         <svg className="canvas" viewBox="0 0 460 260" role="img" aria-label="Water cycle picture">
           {REGIONS.map((r) => (

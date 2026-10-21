@@ -27,7 +27,8 @@ export interface Lesson {
 
 export type ActivityStatus = 'in-progress' | 'submitted';
 
-/** What every activity component receives. */
+/** What every activity component receives. The learning workspace shows the prompt to the
+    student; activities get it too in case their behavior depends on it. */
 export interface ActivityProps<S> {
   prompt: string;
   config?: Record<string, unknown>;

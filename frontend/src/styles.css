@@ -217,6 +217,23 @@ body.resizing-row { cursor: row-resize; user-select: none; }
   .resize-handle:hover::after, .resize-handle:focus-visible::after { background: Highlight; }
 }
 
+.lesson-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px 20px;
+  align-items: start;
+  margin-top: 0.8rem;
+}
+.lesson-steps > nav > h3 { margin-top: 0; }
+/* The current step, as a flat white card (no shadow, per the site's style). */
+/* Even padding on all sides; the first and last lines carry no extra margin of their own. */
+.step-card { background: #fff; padding: 20px 24px; }
+.step-card p { margin: 0.5rem 0 0.9rem; }
+.step-card h4 { margin: 0; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+.step-card ul { margin: 0.35rem 0 0; padding-left: 1.1rem; }
+.step-card li + li { margin-top: 0.2rem; }
+.step-count { display: block; font-size: 0.68rem; font-weight: 700; line-height: 1; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-soft); }
+.step-title { margin: 8px 0 0; font-size: 1.25rem; font-weight: 700; line-height: 1.2; text-transform: none; letter-spacing: 0; }
 .activity-list { padding-left: 1.2rem; margin: 0.4rem 0; }
 li::marker { font-variant-numeric: lining-nums; }
 button.link {
@@ -244,7 +261,6 @@ button.link.active { color: var(--ink); font-weight: 700; text-decoration: under
 /* ---------- Activities ---------- */
 
 .activity { display: flex; flex-direction: column; gap: 8px; height: 100%; min-height: 0; }
-.activity-prompt { margin: 0; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .canvas {
   width: 100%;
@@ -349,7 +365,7 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 }
 .palette-token.direct::before, .swatch.direct { background: var(--plum); }
 .palette-token.indirect::before, .swatch.indirect { background: #fff; }
-.swatch.difficult { background: #fff; border-color: var(--ink-line); outline: 2px dashed var(--issue); outline-offset: 1px; }
+.swatch.overlooked { background: #fff; border-color: var(--ink-line); outline: 2px dashed var(--suggestion); outline-offset: 1px; }
 .token-legend { list-style: none; margin: auto 0 0; padding: 0; display: grid; gap: 4px; font-size: 0.8rem; }
 .token-legend li { display: flex; align-items: center; gap: 6px; }
 
@@ -407,7 +423,7 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 }
 .token.direct { background: var(--plum); color: #fff; }
 .token.indirect { background: #fff; color: var(--ink); }
-.token.difficult { outline: 2px dashed var(--issue); outline-offset: 3px; }
+.token.overlooked { outline: 2px dashed var(--suggestion); outline-offset: 3px; }
 .token-label { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .token-flag {
   position: absolute;
@@ -416,7 +432,7 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--issue);
+  background: var(--suggestion);
   color: #fff;
   font-size: 15px;
   line-height: 22px;

@@ -39,7 +39,7 @@ function toNodes(prev: BoardNode[], board: Board, selection: Selection): BoardNo
     return old ? { ...old, ...next, position: old.dragging ? old.position : next.position } : next;
   };
   const describe = (t: Token) =>
-    `${t.label || 'Unnamed'}: ${t.kind} stakeholder, ${RING_LABEL[t.ring].toLowerCase()}${t.difficult ? ', difficult' : ''}`;
+    `${t.label || 'Unnamed'}: ${t.kind} stakeholder, ${RING_LABEL[t.ring].toLowerCase()}${t.overlooked ? ', hidden or overlooked' : ''}`;
 
   return [
     keep({
@@ -73,7 +73,7 @@ function toEdges(board: Board, selection: Selection): Edge[] {
   }));
 }
 
-export function StakeholderTokensActivity({ prompt, savedState, onChange, config }: ActivityProps<Board>) {
+export function StakeholderTokensActivity({ savedState, onChange, config }: ActivityProps<Board>) {
   const step = typeof config?.step === 'number' ? config.step : LAST_STEP;
   const [board, setBoard] = useState<Board>(() => normalize(savedState));
   const [selection, setSelection] = useState<Selection>(null);
@@ -184,7 +184,6 @@ export function StakeholderTokensActivity({ prompt, savedState, onChange, config
 
   return (
     <div className="activity">
-      <p className="activity-prompt">{prompt}</p>
       <div className="tokens-layout">
         <div className="token-palette">
           {allows(step, 'direct') ? (
@@ -220,7 +219,7 @@ export function StakeholderTokensActivity({ prompt, savedState, onChange, config
           <ul className="token-legend" aria-label="Legend">
             <li><span className="swatch direct" /> Direct</li>
             <li><span className="swatch indirect" /> Indirect</li>
-            {allows(step, 'difficult') && <li><span className="swatch difficult" /> Difficult</li>}
+            {allows(step, 'overlooked') && <li><span className="swatch overlooked" /> Hidden or overlooked</li>}
           </ul>
         </div>
 

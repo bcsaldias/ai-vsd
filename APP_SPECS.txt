@@ -19,7 +19,10 @@ Three coordinated areas:
 1. Learning workspace on the left
    - Hosts learning and activity modules.
    - Owns the current lesson or activity content.
-   - Shows the lesson introduction, the list of activities, and the learning objectives for the current activity.
+   - Shows the lesson introduction, a card for the current activity, and the list of activities.
+   - The card is a flat white box beside the activity list (stacked above it when the panel is narrow).
+     It shows "Step N of M", the activity title, its description (the prompt), and its learning objectives.
+     Activities do not repeat the prompt in the activity panel; the panel header keeps the activity title.
    - The current lesson is VSD stakeholder analysis: each activity is one step of the process (see
      STAKEHOLDER TOKENS LESSON below).
 
@@ -67,7 +70,8 @@ holds one token board that all steps share, so the student builds a single map a
 Steps (each one adds tools to the board; earlier tools stay available, so students can revise):
   1. Choose a starting point — name the technology, value, or context of use at the centre of the board.
   2. Direct stakeholders — people who interact with the technology or its outputs.
-  3. Indirect stakeholders — people affected without using it; mark excluded and difficult stakeholders.
+  3. Indirect stakeholders — people affected without using it; mark excluded stakeholders and flag
+     hidden or overlooked ones.
   4. Relationships — connect stakeholders who affect one another, with a label ("cares for").
   5. Harms and benefits — what each stakeholder could gain or lose.
   6. Map to values — tag each harm and benefit with the values it touches (privacy, trust, ...).
@@ -78,7 +82,8 @@ Steps (each one adds tools to the board; earlier tools stay available, so studen
 The board:
   - Rings around the centre: core (inner), peripheral, and excluded (outside the peripheral ring).
     Where a token sits sets its ring; moving it re-classifies it.
-  - Tokens: filled = direct, outlined = indirect, dashed red outline and "!" = difficult.
+  - Tokens: filled = direct, outlined = indirect, dashed amber outline and "?" = hidden or overlooked
+    (Yoo's first goal: surfacing hidden, overlooked, or neglected stakeholders).
   - Relationships are arrows; tensions are dashed red curves labelled with the two values.
   - Harms (−), benefits (+), and values show as small chips under each token.
 

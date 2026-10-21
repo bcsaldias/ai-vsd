@@ -30,7 +30,7 @@ const toState = (nodes: FlowNode[], edges: Edge[]): DiagramState => ({
 
 const EDGE_OPTIONS = { markerEnd: { type: MarkerType.ArrowClosed } };
 
-export function DiagramActivity({ prompt, savedState, onChange }: ActivityProps<DiagramState>) {
+export function DiagramActivity({ savedState, onChange }: ActivityProps<DiagramState>) {
   const [nodes, setNodes] = useState<FlowNode[]>(() => toFlowNodes(savedState ?? { nodes: [], edges: [] }));
   const [edges, setEdges] = useState<Edge[]>(() => toFlowEdges(savedState ?? { nodes: [], edges: [] }));
   const [label, setLabel] = useState('');
@@ -80,7 +80,6 @@ export function DiagramActivity({ prompt, savedState, onChange }: ActivityProps<
 
   return (
     <div className="activity">
-      <p className="activity-prompt">{prompt}</p>
       <div className="toolbar">
         <input
           value={label}

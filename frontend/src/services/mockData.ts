@@ -48,10 +48,10 @@ export const MOCK_LESSON: Lesson = {
       title: 'Indirect stakeholders',
       prompt:
         'Add the people affected by the technology who never use it. Look for those who are easy to miss: ' +
-        'move anyone currently left out of the design into the outer “excluded” area, and flag stakeholders who may be difficult.',
+        'move anyone currently left out of the design into the outer “excluded” area, and flag stakeholders who are hidden or easily overlooked.',
       objectives: [
         'Identifies at least two indirect stakeholder groups',
-        'Considers excluded or vulnerable groups',
+        'Surfaces hidden, overlooked, or excluded groups',
         'Distinguishes direct from indirect stakeholders correctly',
       ],
     },

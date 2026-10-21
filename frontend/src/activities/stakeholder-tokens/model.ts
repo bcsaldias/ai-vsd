@@ -11,8 +11,8 @@ export interface Token {
   kind: 'direct' | 'indirect';
   /** Which ring the token sits in; follows from its position on the board. */
   ring: Ring;
-  /** Hostile, hard to reach, or in conflict with others. */
-  difficult: boolean;
+  /** Easy to miss: hidden, overlooked, or neglected (Yoo 2018). */
+  overlooked: boolean;
   /** Centre of the token in board coordinates. The board's centre is (0, 0). */
   x: number;
   y: number;
@@ -67,7 +67,7 @@ export const STEP = {
   context: 1,
   direct: 2,
   indirect: 3,
-  difficult: 3,
+  overlooked: 3,
   relationships: 4,
   impacts: 5,
   values: 6,
@@ -123,7 +123,8 @@ export function normalize(saved: Partial<StakeholderTokensState> | null): Stakeh
   const base = emptyBoard();
   return {
     context: { ...base.context, ...saved?.context },
-    tokens: saved?.tokens ?? [],
+    // `overlooked` was called `difficult` in earlier saves.
+    tokens: (saved?.tokens ?? []).map((t) => ({ ...t, overlooked: t.overlooked ?? (t as { difficult?: boolean }).difficult ?? false })),
     links: saved?.links ?? [],
     impacts: saved?.impacts ?? [],
     values: saved?.values ?? [],
@@ -150,7 +151,7 @@ export const patchValue = (b: Board, id: string, patch: Partial<Value>): Board =
 export function addToken(b: Board, token: Pick<Token, 'id' | 'label' | 'kind'>, at?: { x: number; y: number }): Board {
   // Golden-angle spacing keeps successive tokens apart; the offset keeps them clear of the ring labels at the top.
   const p = at ?? pointInRing(-Math.PI / 2 + 0.6 + b.tokens.length * 2.39996, 'peripheral');
-  return { ...b, tokens: [...b.tokens, { ...token, difficult: false, x: Math.round(p.x), y: Math.round(p.y), ring: ringAt(p.x, p.y) }] };
+  return { ...b, tokens: [...b.tokens, { ...token, overlooked: false, x: Math.round(p.x), y: Math.round(p.y), ring: ringAt(p.x, p.y) }] };
 }
 
 export function moveToken(b: Board, id: string, x: number, y: number): Board {

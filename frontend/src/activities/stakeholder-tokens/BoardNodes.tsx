@@ -56,9 +56,9 @@ export function TokenNode({ id }: NodeProps) {
   const values = tokenValueIds(board, id).map((v) => valueName(board, v)).filter(Boolean);
 
   return (
-    <div className={`token ${token.kind}${token.difficult ? ' difficult' : ''}`} title={token.label || undefined}>
+    <div className={`token ${token.kind}${token.overlooked ? ' overlooked' : ''}`} title={token.label || undefined}>
       <span className="token-label">{token.label || 'Unnamed'}</span>
-      {token.difficult && <span className="token-flag" aria-hidden="true">!</span>}
+      {token.overlooked && <span className="token-flag" aria-hidden="true">?</span>}
       {(impacts.length > 0 || values.length > 0) && (
         <div className="token-notes" aria-hidden="true">
           {harms > 0 && <span className="chip harm">−{harms}</span>}

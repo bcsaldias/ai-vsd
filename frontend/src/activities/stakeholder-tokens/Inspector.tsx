@@ -107,10 +107,10 @@ function TokenForm({ token, board, step, update, select }: FormProps & { token: 
           {(Object.keys(RING_LABEL) as Ring[]).map((r) => <option key={r} value={r}>{RING_LABEL[r]}</option>)}
         </select>
       </label>
-      {allows(step, 'difficult') && (
+      {allows(step, 'overlooked') && (
         <label className="check">
-          <input type="checkbox" checked={token.difficult} onChange={(e) => set({ difficult: e.target.checked })} />
-          Difficult stakeholder <span className="hint">hostile, hard to reach, or in conflict</span>
+          <input type="checkbox" checked={token.overlooked} onChange={(e) => set({ overlooked: e.target.checked })} />
+          Hidden or overlooked <span className="hint">easy to miss; you only found them by looking hard</span>
         </label>
       )}
 

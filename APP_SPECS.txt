@@ -5,8 +5,8 @@ PRODUCT
 Build a learning application organized into three tabs:
 
 A. Workspace tab (student-facing)
-B. Prompts tab (instructor / researcher)
-C. Versions tab (instructor / researcher)
+B. Prompts tab (student / instructor / researcher)
+C. Versions tab (student / instructor / researcher)
 
 The Prompts and Versions tabs are for the people designing the learning experience, not for students.
 Placeholders are acceptable for the initial version, but each tab should have its basic structure in place.

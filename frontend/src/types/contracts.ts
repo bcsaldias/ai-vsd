@@ -3,7 +3,7 @@
 
 // ---------- Lessons & activities ----------
 
-export type ActivityKind = 'diagram' | 'annotation';
+export type ActivityKind = 'diagram' | 'annotation' | 'stakeholder-tokens';
 
 export interface ActivityDefinition {
   id: string;
@@ -12,6 +12,10 @@ export interface ActivityDefinition {
   prompt: string;
   /** What the student should demonstrate; also given to the AI as rubric context. */
   objectives: string[];
+  /** Activities with the same stateKey work on one shared state (e.g. the steps of one board). */
+  stateKey?: string;
+  /** Activity-specific settings, passed through to the activity untouched (e.g. { step: 3 }). */
+  config?: Record<string, unknown>;
 }
 
 export interface Lesson {
@@ -26,6 +30,7 @@ export type ActivityStatus = 'in-progress' | 'submitted';
 /** What every activity component receives. */
 export interface ActivityProps<S> {
   prompt: string;
+  config?: Record<string, unknown>;
   savedState: S | null;
   onChange: (state: S) => void;
 }

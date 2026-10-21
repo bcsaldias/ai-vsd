@@ -48,7 +48,7 @@ p { margin: 0.6rem 0; }
 pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; }
 code { font-family: var(--mono); font-size: 0.72rem; background: var(--surface-strong); padding: 1px 6px; }
 
-button, input, textarea { font: inherit; color: inherit; }
+button, input, textarea, select { font: inherit; color: inherit; }
 button {
   border: 1px solid var(--ink);
   background: transparent;
@@ -61,11 +61,11 @@ button:hover:not(:disabled) { background: var(--surface-strong); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 button.primary { background: var(--plum); border-color: var(--plum); color: #fff; }
 button.primary:hover:not(:disabled) { background: var(--plum-dark); }
-button:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible {
   outline: 2px solid var(--plum);
   outline-offset: 2px;
 }
-input, textarea {
+input, textarea, select {
   border: 1px solid var(--ink-line);
   background: var(--paper);
   padding: 4px 10px;
@@ -165,7 +165,8 @@ textarea { width: 100%; resize: vertical; font-family: var(--mono); font-size: 0
 
 /* The workspace scrolls like a page: the top panels take their full content height,
    and the activity panel below has its own height (--activity-height, set inline by
-   WorkspaceTab), resized from the handle along its bottom edge.
+   WorkspaceTab), resized from the handle along its bottom edge. The handle above it sets
+   --top-height; without it the top panels fit their content, with it they scroll inside.
    --feedback-size is the feedback panel's share of the width. */
 .workspace-grid {
   --feedback-size: 0.28;
@@ -174,10 +175,10 @@ textarea { width: 100%; resize: vertical; font-family: var(--mono); font-size: 0
   display: grid;
   padding: 14px 24px 20px;
   grid-template-columns: minmax(0, 1fr) var(--handle) max(220px, calc(var(--feedback-size) * 100%));
-  grid-template-rows: minmax(200px, auto) var(--handle) var(--activity-height) var(--handle);
+  grid-template-rows: var(--top-height, minmax(200px, auto)) var(--handle) var(--activity-height) var(--handle);
   grid-template-areas:
     'workspace vsplit   feedback'
-    '.         .        .'
+    'tsplit    tsplit   tsplit'
     'activity  activity activity'
     'hsplit    hsplit   hsplit';
 }
@@ -190,6 +191,7 @@ textarea { width: 100%; resize: vertical; font-family: var(--mono); font-size: 0
 .resize-handle:focus-visible { outline: 2px solid var(--plum); outline-offset: -2px; }
 .resize-handle.vertical { grid-area: vsplit; cursor: col-resize; }
 .resize-handle.horizontal { grid-area: hsplit; cursor: row-resize; }
+.resize-handle.horizontal.top-split { grid-area: tsplit; }
 /* Always-visible grip so the handle is discoverable (plum: ≥3:1 on every ground). */
 .resize-handle::before {
   content: '';
@@ -254,7 +256,8 @@ button.link.active { color: var(--ink); font-weight: 700; text-decoration: under
 }
 
 .diagram-canvas { min-height: 140px; overflow: hidden; }
-.diagram-canvas .react-flow {
+.diagram-canvas .react-flow,
+.tokens-board .react-flow {
   --xy-background-color: var(--paper);
   --xy-background-pattern-dots-color: rgba(0, 0, 28, 0.25);
   --xy-node-background-color: #fff;
@@ -288,6 +291,183 @@ button.link.active { color: var(--ink); font-weight: 700; text-decoration: under
 .region.annotated > * { fill: var(--mustard); }
 .region.hovered > *, .region:focus-visible > * { stroke: var(--plum); }
 .region.selected > * { stroke: var(--plum); stroke-width: 3; }
+
+/* ---------- Stakeholder tokens ---------- */
+
+/* Palette | board | inspector. The board takes the remaining width. */
+.tokens-layout {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr) minmax(240px, 300px);
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+.token-palette, .token-inspector { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: auto; }
+.token-palette .hint, .token-inspector .hint { font-size: 0.8rem; margin: 0; }
+.tokens-board { min-height: 220px; overflow: hidden; }
+
+.field { display: grid; gap: 3px; margin: 0; padding: 0; border: none; min-width: 0; }
+.field > span, .field > legend {
+  padding: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.field input:not([type='radio']):not([type='checkbox']), .field select, .token-inspector textarea { width: 100%; }
+.choices input, .check input { margin: 0; padding: 0; flex-shrink: 0; accent-color: var(--plum); }
+.choices { display: grid; gap: 2px; font-size: 0.9rem; }
+.choices label, .check { display: flex; align-items: baseline; gap: 6px; font-size: 0.9rem; }
+.check { flex-wrap: wrap; }
+.check .hint { font-size: 0.75rem; }
+.token-inspector textarea { font-family: var(--serif); font-size: 0.9rem; line-height: 1.3; }
+.inline-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+button.small { padding: 1px 10px; font-size: 0.85rem; }
+button.danger { color: var(--issue); border-color: var(--issue); justify-self: start; }
+button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
+
+/* Palette tokens: a mini token plus its name. Draggable, and clickable for keyboard users. */
+.palette-token {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px;
+  border: 1px solid var(--ink);
+  font-weight: 600;
+  cursor: grab;
+  user-select: none;
+}
+.palette-token:hover { background: var(--surface-strong); }
+.palette-token::before, .swatch {
+  content: '';
+  display: inline-block;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--plum);
+}
+.palette-token.direct::before, .swatch.direct { background: var(--plum); }
+.palette-token.indirect::before, .swatch.indirect { background: #fff; }
+.swatch.difficult { background: #fff; border-color: var(--ink-line); outline: 2px dashed var(--issue); outline-offset: 1px; }
+.token-legend { list-style: none; margin: auto 0 0; padding: 0; display: grid; gap: 4px; font-size: 0.8rem; }
+.token-legend li { display: flex; align-items: center; gap: 6px; }
+
+/* The board: rings are a background node and must not catch clicks or drags. */
+.tokens-board .react-flow__node-rings { pointer-events: none; }
+.rings { display: block; overflow: visible; }
+.rings .ring { stroke: var(--ink-line); stroke-width: 1.5; }
+.rings .ring.core { fill: rgba(214, 140, 69, 0.3); }
+.rings .ring.peripheral { fill: rgba(214, 140, 69, 0.13); }
+.rings .ring.excluded { fill: none; stroke-dasharray: 6 6; }
+.rings text {
+  font: 700 16px var(--serif);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  text-anchor: middle;
+  fill: var(--ink-soft);
+}
+
+.context-token {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  border: 3px double var(--ink);
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.context-type { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); overflow-wrap: normal; }
+.context-token .placeholder { font-weight: 500; font-style: italic; color: var(--ink-soft); }
+
+/* Tokens are fixed-size discs so edges can meet them at the centre; notes hang below. */
+.token {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 2px solid var(--plum);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+.token.direct { background: var(--plum); color: #fff; }
+.token.indirect { background: #fff; color: var(--ink); }
+.token.difficult { outline: 2px dashed var(--issue); outline-offset: 3px; }
+.token-label { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.token-flag {
+  position: absolute;
+  top: -6px;
+  right: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--issue);
+  color: #fff;
+  font-size: 15px;
+  line-height: 22px;
+}
+.token-notes {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 3px;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+}
+.chip { padding: 0 5px; border: 1px solid var(--ink-line); background: #fff; color: var(--ink); }
+.chip.harm { color: var(--issue); }
+.chip.benefit { color: var(--praise); }
+.chip.value { background: var(--mustard); border-color: var(--mustard); }
+.react-flow__node.selected .context-token,
+.react-flow__node.selected .token,
+.react-flow__node:focus-visible .context-token,
+.react-flow__node:focus-visible .token { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink); }
+.react-flow__node:focus-visible { outline: none; }
+
+.tokens-board .react-flow__handle { width: 12px; height: 12px; background: var(--plum); border: 2px solid #fff; }
+.tokens-board:not(.can-connect) .react-flow__handle { display: none; }
+.tokens-board .react-flow__edge.tension .react-flow__edge-path { stroke: var(--issue); stroke-width: 2; stroke-dasharray: 7 4; }
+.tokens-board .react-flow__edge.selected .react-flow__edge-path { stroke-width: 3; }
+.tokens-board .react-flow__edge-textbg { fill: var(--paper); }
+.tokens-board .react-flow__edge-text { font: 600 16px var(--serif); fill: var(--ink); }
+
+/* Inspector */
+.token-inspector section { display: grid; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); }
+.token-inspector section:last-child { border-bottom: none; }
+.token-inspector h3 { margin: 4px 0 0; }
+.link-ends { margin: 0; font-weight: 700; }
+.impact, .value-entry { display: grid; gap: 4px; padding: 6px 8px; background: var(--paper); border-left: 3px solid var(--ink-line); }
+.impact.harm { border-color: var(--issue); }
+.impact.benefit { border-color: var(--praise); }
+.value-entry { border-color: var(--mustard); }
+.impact-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.impact-kind { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+.impact.harm .impact-kind { color: var(--issue); }
+.impact.benefit .impact-kind { color: var(--praise); }
+.value-name { flex: 1; min-width: 0; font-weight: 700; }
+.tags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.tag { display: inline-flex; align-items: center; padding-left: 8px; background: var(--mustard); font-size: 0.85rem; font-weight: 600; }
+.tag button { border: none; padding: 0 6px; }
+.tag-input { flex: 1 1 110px; min-width: 0; padding: 1px 6px; font-size: 0.85rem; }
+.owner-fields { display: grid; gap: 6px; }
 
 /* ---------- Prompts & versions tabs ---------- */
 
@@ -347,12 +527,15 @@ button.link.active { color: var(--ink); font-weight: 700; text-decoration: under
   .workspace-grid {
     padding: 14px 16px 20px;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto var(--handle) var(--activity-height) var(--handle) auto;
-    grid-template-areas: 'workspace' '.' 'activity' 'hsplit' 'feedback';
+    grid-template-rows: var(--top-height, auto) var(--handle) var(--activity-height) var(--handle) auto;
+    grid-template-areas: 'workspace' 'tsplit' 'activity' 'hsplit' 'feedback';
   }
   .resize-handle.vertical, .expand-toggle { display: none; }
   .annotation-layout { flex-wrap: wrap; }
   .annotation-layout .canvas { height: auto; }
+  /* Palette, board, inspector stack; the activity panel body scrolls. */
+  .tokens-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 380px auto; }
+  .token-legend { margin-top: 0; }
   .prompts-grid, .versions-grid { grid-template-columns: minmax(0, 1fr); }
   .tab-bar { padding: 14px 16px 10px; }
   .app > .rules { margin: 0 16px; }

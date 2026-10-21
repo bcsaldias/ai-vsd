@@ -8,12 +8,15 @@ export interface WorkspaceLayout {
   feedback: number;
   /** Activity panel height in pixels. The page scrolls, so it can be taller than the window. */
   activityHeight: number;
+  /** Height of the top panels in pixels, or null to fit their content. Shorter panels scroll inside. */
+  topHeight: number | null;
 }
 
 /** feedback.minPx must match the max(…px, …) floor in .workspace-grid (styles.css). */
 export const LAYOUT_LIMITS = {
   feedback: { min: 0.15, max: 0.6, minPx: 220, default: 0.28 },
   activityHeight: { min: 240, max: 4000, default: 520 },
+  topHeight: { min: 120, max: 4000, default: 0 }, // default unused: the top panels fit their content
 } satisfies Record<keyof WorkspaceLayout, { min: number; max: number; minPx?: number; default: number }>;
 
 const STORAGE_KEY = 'workspace-layout';
@@ -33,6 +36,7 @@ function load(): WorkspaceLayout {
   return {
     feedback: sanitize('feedback', saved.feedback),
     activityHeight: sanitize('activityHeight', saved.activityHeight),
+    topHeight: saved.topHeight == null ? null : sanitize('topHeight', saved.topHeight),
   };
 }
 

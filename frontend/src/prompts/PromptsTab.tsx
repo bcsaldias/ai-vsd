@@ -12,7 +12,16 @@ const ROLES: { role: PromptRole; label: string; help: string }[] = [
 ];
 
 const SAMPLE_STUDENT_WORK = JSON.stringify(
-  { nodes: [{ id: 'n1', label: 'Evaporation' }, { id: 'n2', label: 'Rain' }], edges: [{ source: 'n1', target: 'n2' }] },
+  {
+    context: { type: 'technology', label: 'Reading app that shares progress with parents' },
+    tokens: [
+      { id: 't1', label: 'Students', kind: 'direct', ring: 'core' },
+      { id: 't2', label: 'Parents', kind: 'indirect', ring: 'peripheral' },
+    ],
+    links: [{ source: 't2', target: 't1', type: 'relationship', label: 'cares for' }],
+    impacts: [{ tokenId: 't1', kind: 'harm', text: 'Struggles are visible to others', valueIds: ['v1'] }],
+    values: [{ id: 'v1', name: 'Privacy', definition: '' }],
+  },
   null,
   2,
 );

@@ -20,6 +20,8 @@ Three coordinated areas:
    - Hosts learning and activity modules.
    - Owns the current lesson or activity content.
    - Shows the lesson introduction, the list of activities, and the learning objectives for the current activity.
+   - The current lesson is VSD stakeholder analysis: each activity is one step of the process (see
+     STAKEHOLDER TOKENS LESSON below).
 
 2. AI feedback panel on the right
    - Reserved for feedback about the student's work in the learning workspace.
@@ -37,10 +39,13 @@ Three coordinated areas:
    - Treat this as a host for activity-specific components, not as one universal canvas.
 
 Scrolling layout and resizable panels:
-   - The workspace scrolls like a page. The learning workspace and feedback panels always show their
+   - The workspace scrolls like a page. By default the learning workspace and feedback panels show their
      full content; the activity panel sits below them and is reached by scrolling.
    - Students can resize panels by dragging dividers:
      - A vertical divider between the learning workspace and the feedback panel (feedback width).
+     - A horizontal divider between the top panels and the activity panel (top panels' height, min 120px).
+       By default the top panels fit their content; dragging up makes them shorter (they scroll inside)
+       and moves the activity panel up. Resetting returns to fitting their content.
      - A horizontal divider along the bottom edge of the activity panel (activity height, 240–4000px,
        default 520px). Making it taller makes the page longer.
    - Dividers are keyboard accessible: focus with Tab, Arrow keys resize, Enter resets.
@@ -51,6 +56,46 @@ Scrolling layout and resizable panels:
    - Panel sizes are remembered per browser (a UI preference, not student data).
    - On narrow screens (800px wide or less) the panels stack vertically; the feedback width can't be
      resized there, but the activity height still can.
+
+
+STAKEHOLDER TOKENS LESSON
+
+The lesson walks through VSD stakeholder analysis (Friedman, Kahn & Borning) using a digital version of
+Stakeholder Tokens (Yoo, 2018). Each activity in the learning workspace is one step; the activity panel
+holds one token board that all steps share, so the student builds a single map across the lesson.
+
+Steps (each one adds tools to the board; earlier tools stay available, so students can revise):
+  1. Choose a starting point — name the technology, value, or context of use at the centre of the board.
+  2. Direct stakeholders — people who interact with the technology or its outputs.
+  3. Indirect stakeholders — people affected without using it; mark excluded and difficult stakeholders.
+  4. Relationships — connect stakeholders who affect one another, with a label ("cares for").
+  5. Harms and benefits — what each stakeholder could gain or lose.
+  6. Map to values — tag each harm and benefit with the values it touches (privacy, trust, ...).
+  7. Define the key values — what each value means in this context.
+  8. Value tensions — connect two stakeholders whose values conflict and name the value on each side.
+  9. Take it into the organization — an owner and next action for each key value and tension.
+
+The board:
+  - Rings around the centre: core (inner), peripheral, and excluded (outside the peripheral ring).
+    Where a token sits sets its ring; moving it re-classifies it.
+  - Tokens: filled = direct, outlined = indirect, dashed red outline and "!" = difficult.
+  - Relationships are arrows; tensions are dashed red curves labelled with the two values.
+  - Harms (−), benefits (+), and values show as small chips under each token.
+
+Interaction:
+  - A palette on the left: type a stakeholder name, then drag a Direct / Indirect token onto the rings,
+    or click it (or press Enter) to add it to the peripheral ring.
+  - Drag from a token's dot to another token to connect them. From step 8, a toggle chooses whether a
+    new connection is a relationship or a tension.
+  - An inspector on the right edits whatever is selected (centre, token, or connection) and lists the
+    values. Every board action is also available here as a form control, so the activity works from
+    the keyboard: ring select, "Connect to…", "Tension with…", harm/benefit editors, value tags.
+  - Select + Backspace/Delete removes a token or connection.
+  - The board stays mounted when the student moves between steps, keeping zoom and selection.
+
+Saving: the board is one shared state for the lesson (shared stateKey). Each step still has its own
+report (status, plus a snapshot of the board when it was saved), so feedback and submissions can be
+traced to a step. A step that was submitted shows as in-progress again once the board changes elsewhere.
 
 
 B. PROMPTS TAB
@@ -96,7 +141,7 @@ RECOMMENDED TECHNOLOGY
 - Frontend: React with TypeScript, built with Vite.
 - Layout: CSS Grid for the main three-panel arrangement.
 - Backend: Python with FastAPI.
-- Diagram activities: React Flow for node-and-connection diagrams.
+- Diagram activities: React Flow for node-and-connection diagrams (also used for the stakeholder token board).
 - Freeform canvas activities: React Konva when students need to draw, move, or resize shapes.
 - Region highlighting and annotation: Prefer SVG overlays when the visual consists of selectable shapes or regions.
 - Backend communication: Use HTTP endpoints for loading activities and saving student work. Add streaming for AI feedback later; use WebSockets only if ongoing two-way interaction is needed.
@@ -112,7 +157,7 @@ ai-vsd/
       types/         Shared data contracts
       services/      The only code that talks to data sources (mock now, backend later)
       workspace/     Workspace tab: WorkspaceTab, LearningWorkspace, FeedbackPanel, ActivityHost
-      activities/    One folder per activity (diagram/, annotation/)
+      activities/    One folder per activity (diagram/, annotation/, stakeholder-tokens/)
       prompts/       Prompts tab
       versions/      Versions tab
   backend/         Self-contained FastAPI project (requirements.txt, app/)
@@ -136,8 +181,8 @@ BACKEND RESPONSIBILITIES
 
 Placeholder phase:
 - GET  /lessons/{id}                    Lesson and activity definitions
-- GET  /activities/{id}/report          Load a student's saved work
-- PUT  /activities/{id}/report          Save a student's work
+- GET  /activities/{id}/report          Load a student's saved work (with the shared state, if the activity has a stateKey)
+- PUT  /activities/{id}/report          Save a student's work (and update the shared state, if any)
 - POST /feedback                        Return a Feedback object (mock for now)
 - GET  /prompts/versions                Prompt version history
 - POST /prompts/versions                Save a new prompt version
@@ -154,8 +199,11 @@ DATA CONTRACTS
 
 Defined once in frontend/src/types/contracts.ts and mirrored as Pydantic models in the backend.
 
-- ActivityDefinition: id, kind (diagram | annotation), title, prompt, objectives.
-- ActivityProps (what an activity receives): prompt, savedState, onChange(state).
+- Lesson: id, title, intro, activities[].
+- ActivityDefinition: id, kind (diagram | annotation | stakeholder-tokens), title, prompt, objectives,
+  optional stateKey (activities with the same key share one state), optional config (activity-specific
+  settings, passed through untouched, e.g. { step: 3 }).
+- ActivityProps (what an activity receives): prompt, config, savedState, onChange(state).
 - ActivityReport (what gets stored and sent for feedback): activityId, kind, status (in-progress | submitted), state, updatedAt.
 - Feedback: activityId, source (mock | ai), promptVersionId, generatedAt, summary, items[].
 - FeedbackItem: id, tone (praise | suggestion | issue), message, optional targetId.
@@ -207,6 +255,7 @@ Phase 1 — Frontend with mock data (current)
 - Diagram activity uses React Flow: add nodes, drag them to arrange, drag between node handles to connect,
   select and press Backspace to delete. Saved state stays library-independent (nodes with x/y, edges).
 - Persist activity state as structured data (localStorage for now) that can later be sent to the FastAPI backend.
+- Stakeholder Tokens lesson: nine steps sharing one ring board (see STAKEHOLDER TOKENS LESSON).
 - Prompts and Versions tabs with basic structure; versions are kept in memory.
 
 Phase 2 — Minimal backend

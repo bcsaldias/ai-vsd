@@ -5,6 +5,9 @@ import { useState, type ReactNode } from 'react';
 import type { ActivityDefinition, ActivityReport, ActivityStatus } from '../types/contracts';
 import { DiagramActivity, type DiagramState } from '../activities/diagram/DiagramActivity';
 import { AnnotationActivity, type AnnotationState } from '../activities/annotation/AnnotationActivity';
+import {
+  StakeholderTokensActivity, type StakeholderTokensState,
+} from '../activities/stakeholder-tokens/StakeholderTokensActivity';
 
 interface Props {
   definition: ActivityDefinition;
@@ -29,7 +32,7 @@ export function ActivityHost({ definition, savedReport, onReport, headerActions 
   };
   const onChange = (state: unknown) => report(state, 'in-progress');
 
-  const common = { prompt: definition.prompt, onChange };
+  const common = { prompt: definition.prompt, config: definition.config, onChange };
 
   let activity;
   switch (definition.kind) {
@@ -38,6 +41,9 @@ export function ActivityHost({ definition, savedReport, onReport, headerActions 
       break;
     case 'annotation':
       activity = <AnnotationActivity {...common} savedState={savedReport?.state as AnnotationState | null} />;
+      break;
+    case 'stakeholder-tokens':
+      activity = <StakeholderTokensActivity {...common} savedState={savedReport?.state as StakeholderTokensState | null} />;
       break;
   }
 

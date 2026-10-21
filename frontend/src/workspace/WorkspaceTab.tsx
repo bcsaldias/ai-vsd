@@ -23,6 +23,17 @@ export function WorkspaceTab() {
   // Expanded = activity panel fills the visible area; Restore returns to the previous height.
   const [expanded, setExpanded] = useState(false);
   const restoreActivityTo = useRef<number>(LAYOUT_LIMITS.activityHeight.default);
+  // Rendered height of the top panels, so the divider above the activity panel can start
+  // a drag from "fit content" (topHeight null).
+  const [measuredTop, setMeasuredTop] = useState<number>(LAYOUT_LIMITS.topHeight.min);
+
+  useEffect(() => {
+    const top = gridRef.current?.querySelector<HTMLElement>('.workspace-panel');
+    if (!top) return;
+    const observer = new ResizeObserver(() => setMeasuredTop(Math.round(top.getBoundingClientRect().height)));
+    observer.observe(top);
+    return () => observer.disconnect();
+  }, [lesson]);
 
   useEffect(() => {
     getLesson().then((l) => {
@@ -33,13 +44,18 @@ export function WorkspaceTab() {
 
   useEffect(() => {
     currentId.current = activityId;
-    if (!activityId) return;
+    const definition = lesson?.activities.find((a) => a.id === activityId);
+    if (!activityId || !definition) return;
     setFeedback(null);
-    loadReport(activityId).then((report) => setSaved({ activityId, report }));
-  }, [activityId]);
+    loadReport(definition).then((report) => {
+      if (currentId.current === activityId) setSaved({ activityId, report });
+    });
+  }, [activityId, lesson]);
 
   const handleReport = async (report: ActivityReport) => {
-    await saveReport(report);
+    const definition = lesson?.activities.find((a) => a.id === report.activityId);
+    if (!definition) return;
+    await saveReport(definition, report);
     if (report.status !== 'submitted') return;
     setLoadingFeedback(true);
     try {
@@ -53,10 +69,15 @@ export function WorkspaceTab() {
 
   if (!lesson || !activityId) return <p className="hint">Loading lesson…</p>;
   const definition = lesson.activities.find((a) => a.id === activityId)!;
+  // Activities that share state (the steps of one board) share one host, so the board
+  // stays mounted — with its zoom and selection — when the student moves between steps.
+  const hostKey = (id: string) => lesson.activities.find((a) => a.id === id)?.stateKey ?? id;
+  const hostReady = saved !== null && hostKey(saved.activityId) === hostKey(activityId);
 
   const gridStyle = {
     '--feedback-size': layout.feedback,
     '--activity-height': `${layout.activityHeight}px`,
+    ...(layout.topHeight != null && { '--top-height': `${layout.topHeight}px` }),
   } as CSSProperties;
 
   const setActivityHeight = (activityHeight: number) => {
@@ -101,9 +122,23 @@ export function WorkspaceTab() {
         onChange={(feedback) => setLayout((l) => ({ ...l, feedback }))}
       />
       <FeedbackPanel feedback={feedback} loading={loadingFeedback} />
-      {saved?.activityId === activityId ? (
+      <ResizeHandle
+        orientation="horizontal"
+        label="Resize top panels"
+        controls="workspace-panel feedback-panel"
+        pane="before"
+        unit="px"
+        value={layout.topHeight ?? measuredTop}
+        min={LAYOUT_LIMITS.topHeight.min}
+        max={LAYOUT_LIMITS.topHeight.max}
+        defaultValue={measuredTop}
+        onChange={(topHeight) => setLayout((l) => ({ ...l, topHeight }))}
+        onReset={() => setLayout((l) => ({ ...l, topHeight: null }))}
+        className="top-split"
+      />
+      {hostReady ? (
         <ActivityHost
-          key={activityId}
+          key={hostKey(activityId)}
           definition={definition}
           savedReport={saved.report}
           onReport={handleReport}

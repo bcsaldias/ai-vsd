@@ -22,6 +22,8 @@ interface Props {
   /** Required for the fraction unit. */
   containerRef?: RefObject<HTMLElement | null>;
   onChange: (value: number) => void;
+  /** Overrides resetting to defaultValue (Enter / double-click), e.g. to go back to an automatic size. */
+  onReset?: () => void;
   className?: string;
 }
 
@@ -29,7 +31,7 @@ const KEY_STEP = { fraction: 0.02, px: 24 };
 const BODY_CLASSES = ['resizing-col', 'resizing-row'];
 
 export function ResizeHandle({
-  orientation, label, controls, pane, unit, value, min, max, defaultValue, minPx = 0, containerRef, onChange, className = '',
+  orientation, label, controls, pane, unit, value, min, max, defaultValue, minPx = 0, containerRef, onChange, onReset, className = '',
 }: Props) {
   const drag = useRef<{ start: number; startValue: number; unitPx: number } | null>(null);
   const vertical = orientation === 'vertical';
@@ -86,13 +88,18 @@ export function ResizeHandle({
     const [back, forward] = vertical ? ['ArrowLeft', 'ArrowRight'] : ['ArrowUp', 'ArrowDown'];
     const sign = pane === 'before' ? 1 : -1;
     const keys: Record<string, number> = { [back]: current - sign * step, [forward]: current + sign * step };
+    if (e.key === 'Enter' && onReset) {
+      e.preventDefault();
+      onReset();
+      return;
+    }
     const next = e.key === 'Enter' ? defaultValue : keys[e.key];
     if (next === undefined) return;
     e.preventDefault();
     onChange(clamp(next, perUnit));
   };
 
-  const reset = () => onChange(clamp(defaultValue, unitPx()));
+  const reset = () => (onReset ? onReset() : onChange(clamp(defaultValue, unitPx())));
 
   const toAria = (v: number) => Math.round(unit === 'fraction' ? v * 100 : v);
 

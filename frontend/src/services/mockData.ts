@@ -1,28 +1,137 @@
 import type { Lesson, PromptVersion } from '../types/contracts';
 
+/** Every step works on the same stakeholder token board (shared stateKey); config.step unlocks its tools. */
+const BOARD = 'stakeholder-board';
+
 export const MOCK_LESSON: Lesson = {
-  id: 'water-cycle',
-  title: 'The Water Cycle',
+  id: 'vsd-stakeholder-analysis',
+  title: 'Stakeholder Analysis',
   intro:
-    'Water moves continuously between the ground, the air, and the sky. ' +
-    'In this lesson you will map the stages of the water cycle and identify them in a picture.',
+    'Value Sensitive Design asks you to account for everyone a technology affects — not only the people who use it. ' +
+    'In this lesson you will build a stakeholder map with tokens: place stakeholders on rings around what you are designing, ' +
+    'connect them, note what each could gain or lose, and trace those harms and benefits to the values at stake. ' +
+    'The board carries over from step to step, so you can go back and revise at any point. ' +
+    'No project of your own? Use a reading app that tracks each student’s progress and shares it with teachers and parents.',
   activities: [
     {
-      id: 'water-cycle-diagram',
-      kind: 'diagram',
-      title: 'Build the cycle',
-      prompt: 'Add the stages of the water cycle and connect them in the order they happen.',
+      id: 'stakeholders-start',
+      kind: 'stakeholder-tokens',
+      stateKey: BOARD,
+      config: { step: 1 },
+      title: 'Choose a starting point',
+      prompt: 'Start from a technology, a value, or a context of use. Select the centre of the board and name what you are designing.',
       objectives: [
-        'Names evaporation, condensation, precipitation, and collection',
-        'Connects the stages in a closed loop',
+        'Names a specific technology, value, or context of use',
+        'Says which of the three it is',
       ],
     },
     {
-      id: 'water-cycle-annotation',
-      kind: 'annotation',
-      title: 'Label the picture',
-      prompt: 'Hover over each part of the picture, select it, and write which stage it shows.',
-      objectives: ['Links each visual element to the correct stage'],
+      id: 'stakeholders-direct',
+      kind: 'stakeholder-tokens',
+      stateKey: BOARD,
+      config: { step: 2 },
+      title: 'Direct stakeholders',
+      prompt:
+        'Add the people who will interact with the technology or its outputs. Drag each token onto the rings: ' +
+        'the closer to the centre, the more central they are to the design.',
+      objectives: [
+        'Identifies the groups who interact with the technology directly',
+        'Names stakeholders as roles (e.g. “teachers”), not individuals',
+        'Places core stakeholders nearer the centre than peripheral ones',
+      ],
+    },
+    {
+      id: 'stakeholders-indirect',
+      kind: 'stakeholder-tokens',
+      stateKey: BOARD,
+      config: { step: 3 },
+      title: 'Indirect stakeholders',
+      prompt:
+        'Add the people affected by the technology who never use it. Look for those who are easy to miss: ' +
+        'move anyone currently left out of the design into the outer “excluded” area, and flag stakeholders who may be difficult.',
+      objectives: [
+        'Identifies at least two indirect stakeholder groups',
+        'Considers excluded or vulnerable groups',
+        'Distinguishes direct from indirect stakeholders correctly',
+      ],
+    },
+    {
+      id: 'stakeholders-relationships',
+      kind: 'stakeholder-tokens',
+      stateKey: BOARD,
+      config: { step: 4 },
+      title: 'Relationships between stakeholders',
+      prompt:
+        'Connect stakeholders who affect one another: drag from a token’s dot to another token, ' +
+        'then label how one affects the other (e.g. “reports to”, “cares for”, “pays for”).',
+      objectives: [
+        'Connects stakeholders whose interests are linked',
+        'Labels each relationship with how one affects the other',
+      ],
+    },
+    {
+      id: 'stakeholders-impacts',
+      kind: 'stakeholder-tokens',
+      stateKey: BOARD,
+      config: { step: 5 },
+      title: 'Harms and benefits',
+      prompt: 'Select each stakeholder and note what they could gain or lose from the technology.',
+      objectives: [
+        'Lists at least one harm or benefit for each stakeholder',
+        'Includes harms for indirect stakeholders, not only for users',
+      ],
+    },
+    {
+      id: 'stakeholders-values',
+      kind: 'stakeholder-tokens',
+      stateKey: BOARD,
+      config: { step: 6 },
+      title: 'Map to values',
+      prompt: 'For each harm and benefit, name the human values it touches (e.g. privacy, autonomy, trust, fairness).',
+      objectives: [
+        'Links each harm and benefit to one or more values',
+        'Chooses values with ethical import, not only usability features',
+      ],
+    },
+    {
+      id: 'stakeholders-definitions',
+      kind: 'stakeholder-tokens',
+      stateKey: BOARD,
+      config: { step: 7 },
+      title: 'Define the key values',
+      prompt:
+        'For the values that matter most, write what each one means in this context. ' +
+        'Different stakeholders may understand the same value differently.',
+      objectives: [
+        'Defines key values in terms of this technology and its stakeholders',
+        'Notes where stakeholders would understand a value differently',
+      ],
+    },
+    {
+      id: 'stakeholders-tensions',
+      kind: 'stakeholder-tokens',
+      stateKey: BOARD,
+      config: { step: 8 },
+      title: 'Value tensions',
+      prompt:
+        'Draw a tension between two stakeholders whose values pull against each other, and name the value at stake for each ' +
+        '(e.g. a student’s privacy vs a parent’s wish to stay informed).',
+      objectives: [
+        'Identifies at least one tension between stakeholders’ values',
+        'Names the specific value in conflict on each side',
+      ],
+    },
+    {
+      id: 'stakeholders-organization',
+      kind: 'stakeholder-tokens',
+      stateKey: BOARD,
+      config: { step: 9 },
+      title: 'Take it into the organization',
+      prompt: 'For the key values and tensions, note who should own them and what they will do next.',
+      objectives: [
+        'Assigns an owner to each key value or tension',
+        'Proposes a concrete next action for each',
+      ],
     },
   ],
 };

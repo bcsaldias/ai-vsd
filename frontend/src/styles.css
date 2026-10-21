@@ -1,0 +1,252 @@
+:root {
+  --bg: #f6f6f4;
+  --surface: #ffffff;
+  --border: #dddcd7;
+  --text: #1f1f1d;
+  --muted: #6b6a65;
+  --accent: #2f5fd0;
+  --accent-soft: #e6edfb;
+  --praise: #2e7d4f;
+  --suggestion: #9a6a00;
+  --issue: #b3261e;
+  --radius: 8px;
+  color-scheme: light;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161615;
+    --surface: #20201e;
+    --border: #3a3a37;
+    --text: #ecebe6;
+    --muted: #a09f99;
+    --accent: #7ea2ff;
+    --accent-soft: #24304d;
+    --praise: #6cc893;
+    --suggestion: #e0b44c;
+    --issue: #f08a80;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); }
+h2, h3 { margin: 0; font-size: 1rem; }
+h3 { margin-top: 1rem; font-size: 0.9rem; }
+pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 0.85rem; }
+code { font-size: 0.85rem; background: var(--accent-soft); padding: 1px 6px; border-radius: 4px; }
+
+button, input, textarea {
+  font: inherit;
+  color: inherit;
+}
+button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+input, textarea {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+textarea { width: 100%; resize: vertical; font-family: ui-monospace, Menlo, monospace; font-size: 0.85rem; }
+
+.hint { color: var(--muted); font-size: 0.85rem; }
+.meta { color: var(--muted); font-size: 0.75rem; }
+.badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ---------- App shell & tabs ---------- */
+
+.app { display: flex; flex-direction: column; height: 100vh; }
+.tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-wrap: wrap;
+}
+.app-title { font-weight: 700; margin-right: 16px; }
+.tab { border: none; background: transparent; color: var(--muted); }
+.tab.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.tab-content { flex: 1; min-height: 0; overflow: auto; }
+.tab-content > [role='tabpanel'] { height: 100%; }
+
+/* ---------- Panels ---------- */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-body { padding: 12px 14px; overflow: auto; flex: 1; min-height: 0; }
+
+/* ---------- Workspace tab ---------- */
+
+/* Panel sizes come from --feedback-size / --activity-size (fractions, set inline by
+   WorkspaceTab). The resize handles sit in their own tracks and double as the gaps. */
+.workspace-grid {
+  --feedback-size: 0.28;
+  --activity-size: 0.45;
+  --handle: 12px;
+  display: grid;
+  height: 100%;
+  padding: 12px 16px;
+  grid-template-columns: minmax(0, 1fr) var(--handle) max(220px, calc(var(--feedback-size) * 100%));
+  grid-template-rows: minmax(0, 1fr) var(--handle) max(160px, calc(var(--activity-size) * 100%));
+  grid-template-areas:
+    'workspace vsplit   feedback'
+    'hsplit    hsplit   hsplit'
+    'activity  activity activity';
+}
+.workspace-panel { grid-area: workspace; }
+.feedback-panel { grid-area: feedback; }
+.activity-panel { grid-area: activity; }
+
+.resize-handle { position: relative; touch-action: none; border-radius: 4px; }
+.resize-handle:focus { outline: none; }
+.resize-handle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.resize-handle.vertical { grid-area: vsplit; cursor: col-resize; }
+.resize-handle.horizontal { grid-area: hsplit; cursor: row-resize; }
+/* Always-visible grip so the handle is discoverable. */
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: var(--muted);
+}
+@media (forced-colors: active) {
+  .resize-handle::before { background: CanvasText; }
+  .resize-handle:hover::after, .resize-handle:focus-visible::after { background: Highlight; }
+}
+.resize-handle.vertical::before { width: 4px; height: 36px; }
+.resize-handle.horizontal::before { width: 36px; height: 4px; }
+/* Full-length accent line while hovered, focused, or dragging. */
+.resize-handle::after { content: ''; position: absolute; border-radius: 2px; }
+.resize-handle.vertical::after { inset: 0 auto 0 calc(50% - 1px); width: 2px; }
+.resize-handle.horizontal::after { inset: calc(50% - 1px) 0 auto 0; height: 2px; }
+.resize-handle:hover::after,
+.resize-handle:focus-visible::after,
+body.resizing-col .resize-handle.vertical::after,
+body.resizing-row .resize-handle.horizontal::after { background: var(--accent); }
+body.resizing-col { cursor: col-resize; user-select: none; }
+body.resizing-row { cursor: row-resize; user-select: none; }
+
+.activity-list { padding-left: 1.2rem; }
+button.link { border: none; background: none; padding: 2px 0; color: var(--accent); text-align: left; }
+button.link.active { font-weight: 700; text-decoration: underline; }
+
+.feedback-items { list-style: none; padding: 0; display: grid; gap: 8px; }
+.feedback-item { padding: 8px 10px; border-radius: 6px; border-left: 3px solid var(--border); background: var(--bg); }
+.feedback-item .tone { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+.feedback-item.praise { border-color: var(--praise); }
+.feedback-item.praise .tone { color: var(--praise); }
+.feedback-item.suggestion { border-color: var(--suggestion); }
+.feedback-item.suggestion .tone { color: var(--suggestion); }
+.feedback-item.issue { border-color: var(--issue); }
+.feedback-item.issue .tone { color: var(--issue); }
+.rating { display: flex; align-items: center; gap: 6px; }
+
+/* ---------- Activities ---------- */
+
+.activity { display: flex; flex-direction: column; gap: 8px; height: 100%; }
+.activity-prompt { margin: 0; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.canvas {
+  width: 100%;
+  flex: 1;
+  min-height: 180px;
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.node { cursor: pointer; }
+.node rect { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+.node text { fill: var(--text); font-size: 13px; pointer-events: none; }
+.node.selected rect { stroke: var(--accent); stroke-width: 2.5; }
+.edge { stroke: var(--muted); stroke-width: 1.5; }
+
+.annotation-layout { display: flex; gap: 12px; flex: 1; min-height: 0; flex-wrap: wrap; }
+.annotation-layout .canvas { flex: 2 1 320px; }
+.annotation-editor { flex: 1 1 220px; }
+.annotation-editor label { display: grid; gap: 6px; }
+.region { cursor: pointer; outline: none; }
+.region > * { fill: var(--surface); stroke: var(--border); stroke-width: 2; transition: fill 0.15s; }
+.region.annotated > * { fill: var(--accent-soft); }
+.region.hovered > *, .region:focus-visible > * { stroke: var(--accent); }
+.region.selected > * { stroke: var(--accent); stroke-width: 3; }
+
+/* ---------- Prompts & versions tabs ---------- */
+
+.tab-page { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.page-header p { margin: 4px 0 0; }
+.save-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.prompts-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.prompt-editors { display: grid; gap: 14px; align-content: start; }
+.prompt-editor { display: grid; gap: 4px; }
+.role-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.variables { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.preview-message { display: grid; gap: 4px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.preview-message:last-child { border-bottom: none; }
+
+.versions-grid { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 16px; }
+.version-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; align-content: start; }
+.version { width: 100%; display: grid; gap: 2px; text-align: left; }
+.version.active { border-color: var(--accent); background: var(--accent-soft); }
+.version-note { font-size: 0.85rem; }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ---------- Narrow screens: stack everything ---------- */
+
+@media (max-width: 800px) {
+  /* Stacked layout: panels flow vertically, so resizing is disabled. */
+  .workspace-grid {
+    height: auto;
+    gap: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas: 'workspace' 'activity' 'feedback';
+  }
+  .resize-handle { display: none; }
+  .activity-panel { min-height: 420px; }
+  .prompts-grid, .versions-grid { grid-template-columns: minmax(0, 1fr); }
+}

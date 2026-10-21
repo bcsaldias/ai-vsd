@@ -183,6 +183,8 @@ Phase 1 — Frontend with mock data (current)
 - Implement the feedback panel with clearly marked placeholder content.
 - Define the activity input/output contract and render an activity through ActivityHost.
 - Keep the diagram and annotation activity implementations separate so either can evolve independently.
+- Diagram activity uses React Flow: add nodes, drag them to arrange, drag between node handles to connect,
+  select and press Backspace to delete. Saved state stays library-independent (nodes with x/y, edges).
 - Persist activity state as structured data (localStorage for now) that can later be sent to the FastAPI backend.
 - Prompts and Versions tabs with basic structure; versions are kept in memory.
 

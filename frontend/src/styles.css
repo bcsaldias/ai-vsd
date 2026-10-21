@@ -197,11 +197,8 @@ button.link.active { font-weight: 700; text-decoration: underline; }
   color: var(--muted);
 }
 
-.node { cursor: pointer; }
-.node rect { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
-.node text { fill: var(--text); font-size: 13px; pointer-events: none; }
-.node.selected rect { stroke: var(--accent); stroke-width: 2.5; }
-.edge { stroke: var(--muted); stroke-width: 1.5; }
+.diagram-canvas { min-height: 220px; overflow: hidden; }
+.diagram-canvas .react-flow { --xy-background-color: var(--bg); }
 
 .annotation-layout { display: flex; gap: 12px; flex: 1; min-height: 0; flex-wrap: wrap; }
 .annotation-layout .canvas { flex: 2 1 320px; }

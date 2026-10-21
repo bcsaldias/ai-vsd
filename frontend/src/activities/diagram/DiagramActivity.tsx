@@ -1,7 +1,13 @@
-// Placeholder diagram activity: plain SVG. State shape mirrors React Flow's
-// nodes/edges so it can be swapped for React Flow without changing the contract.
+// Diagram activity built on React Flow: drag nodes to move them, drag from a
+// node's bottom handle to another node to connect, Backspace deletes the selection.
+// Saved state stays library-agnostic (plain nodes/edges) and is mapped to React Flow here.
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ReactFlow, Background, Controls, MarkerType, addEdge, applyEdgeChanges, applyNodeChanges,
+  type Connection, type Edge, type EdgeChange, type Node, type NodeChange,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import type { ActivityProps } from '../../types/contracts';
 
 export interface DiagramState {
@@ -9,38 +15,68 @@ export interface DiagramState {
   edges: { id: string; source: string; target: string }[];
 }
 
-const EMPTY: DiagramState = { nodes: [], edges: [] };
-const NODE_W = 120;
-const NODE_H = 40;
+type FlowNode = Node<{ label: string }>;
+
+const toFlowNodes = (s: DiagramState): FlowNode[] =>
+  s.nodes.map((n) => ({ id: n.id, position: { x: n.x, y: n.y }, data: { label: n.label } }));
+
+const toFlowEdges = (s: DiagramState): Edge[] =>
+  s.edges.map((e) => ({ id: e.id, source: e.source, target: e.target }));
+
+const toState = (nodes: FlowNode[], edges: Edge[]): DiagramState => ({
+  nodes: nodes.map((n) => ({ id: n.id, label: n.data.label, x: Math.round(n.position.x), y: Math.round(n.position.y) })),
+  edges: edges.map((e) => ({ id: e.id, source: e.source, target: e.target })),
+});
+
+const EDGE_OPTIONS = { markerEnd: { type: MarkerType.ArrowClosed } };
 
 export function DiagramActivity({ prompt, savedState, onChange }: ActivityProps<DiagramState>) {
-  const [state, setState] = useState<DiagramState>(savedState ?? EMPTY);
+  const [nodes, setNodes] = useState<FlowNode[]>(() => toFlowNodes(savedState ?? { nodes: [], edges: [] }));
+  const [edges, setEdges] = useState<Edge[]>(() => toFlowEdges(savedState ?? { nodes: [], edges: [] }));
   const [label, setLabel] = useState('');
-  const [pendingSource, setPendingSource] = useState<string | null>(null);
 
-  const update = (next: DiagramState) => {
-    setState(next);
-    onChange(next);
+  // Report after state settles, and only for changes to the student's work —
+  // not selection, measurement, or every pixel of an in-progress drag.
+  const pendingReport = useRef(false);
+  useEffect(() => {
+    if (!pendingReport.current) return;
+    pendingReport.current = false;
+    onChange(toState(nodes, edges));
+  }, [nodes, edges]);
+
+  const onNodesChange = (changes: NodeChange<FlowNode>[]) => {
+    if (changes.some((c) => c.type === 'remove' || (c.type === 'position' && c.dragging === false))) {
+      pendingReport.current = true;
+    }
+    setNodes((ns) => applyNodeChanges(changes, ns));
+  };
+
+  const onEdgesChange = (changes: EdgeChange[]) => {
+    if (changes.some((c) => c.type === 'remove')) pendingReport.current = true;
+    setEdges((es) => applyEdgeChanges(changes, es));
+  };
+
+  const onConnect = (connection: Connection) => {
+    pendingReport.current = true;
+    setEdges((es) => addEdge({ ...connection, id: `e${Date.now()}` }, es));
   };
 
   const addNode = () => {
     if (!label.trim()) return;
-    const i = state.nodes.length;
-    const node = { id: `n${Date.now()}`, label: label.trim(), x: 20 + (i % 4) * 160, y: 20 + Math.floor(i / 4) * 80 };
-    update({ ...state, nodes: [...state.nodes, node] });
+    const i = nodes.length;
+    pendingReport.current = true;
+    setNodes((ns) => [
+      ...ns,
+      { id: `n${Date.now()}`, position: { x: 40 + (i % 4) * 180, y: 40 + Math.floor(i / 4) * 100 }, data: { label: label.trim() } },
+    ]);
     setLabel('');
   };
 
-  const clickNode = (id: string) => {
-    if (!pendingSource) return setPendingSource(id);
-    if (pendingSource !== id) {
-      const edge = { id: `e${Date.now()}`, source: pendingSource, target: id };
-      update({ ...state, edges: [...state.edges, edge] });
-    }
-    setPendingSource(null);
+  const clear = () => {
+    pendingReport.current = true;
+    setNodes([]);
+    setEdges([]);
   };
-
-  const byId = new Map(state.nodes.map((n) => [n.id, n]));
 
   return (
     <div className="activity">
@@ -54,39 +90,28 @@ export function DiagramActivity({ prompt, savedState, onChange }: ActivityProps<
           aria-label="New node label"
         />
         <button onClick={addNode}>Add node</button>
-        <button onClick={() => update(EMPTY)} disabled={!state.nodes.length}>Clear</button>
+        <button onClick={clear} disabled={!nodes.length}>Clear</button>
         <span className="hint">
-          {pendingSource ? 'Click a second node to connect it.' : 'Click two nodes to connect them.'}
+          Drag nodes to move them. Drag from a node’s bottom dot to another node to connect. Select + Backspace deletes.
         </span>
       </div>
-      <svg className="canvas" viewBox="0 0 660 260" role="img" aria-label="Diagram canvas">
-        <defs>
-          <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-            <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
-          </marker>
-        </defs>
-        {state.edges.map((e) => {
-          const s = byId.get(e.source);
-          const t = byId.get(e.target);
-          if (!s || !t) return null;
-          return (
-            <line
-              key={e.id}
-              x1={s.x + NODE_W / 2} y1={s.y + NODE_H / 2}
-              x2={t.x + NODE_W / 2} y2={t.y + NODE_H / 2}
-              className="edge" markerEnd="url(#arrow)"
-            />
-          );
-        })}
-        {state.nodes.map((n) => (
-          <g key={n.id} className={`node ${pendingSource === n.id ? 'selected' : ''}`} onClick={() => clickNode(n.id)}>
-            <rect x={n.x} y={n.y} width={NODE_W} height={NODE_H} rx={8} />
-            <text x={n.x + NODE_W / 2} y={n.y + NODE_H / 2} dominantBaseline="middle" textAnchor="middle">
-              {n.label}
-            </text>
-          </g>
-        ))}
-      </svg>
+      <div className="canvas diagram-canvas">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          isValidConnection={(c) => c.source !== c.target}
+          defaultEdgeOptions={EDGE_OPTIONS}
+          colorMode="system"
+          fitView
+          fitViewOptions={{ maxZoom: 1 }}
+        >
+          <Background />
+          <Controls showInteractive={false} />
+        </ReactFlow>
+      </div>
     </div>
   );
 }

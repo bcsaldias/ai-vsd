@@ -8,7 +8,7 @@ A. Workspace tab (student-facing)
 B. Prompts tab (student / instructor / researcher)
 C. Versions tab (student / instructor / researcher)
 
-The Prompts and Versions tabs are for the people designing the learning experience, not for students.
+The Prompts and Versions tabs are for the people participating in the learning experience, and for students.
 Placeholders are acceptable for the initial version, but each tab should have its basic structure in place.
 
 

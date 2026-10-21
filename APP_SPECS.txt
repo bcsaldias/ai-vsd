@@ -88,8 +88,10 @@ The board:
   - Harms (−), benefits (+), and values show as small chips under each token.
 
 Interaction:
-  - A palette on the left: type a stakeholder name, then drag a Direct / Indirect token onto the rings,
-    or click it (or press Enter) to add it to the peripheral ring.
+  - A palette on the left: drag a Direct / Indirect token onto the rings, or click it (or press Enter)
+    to add it to the peripheral ring. Add first, then name (as with physical tokens, which participants
+    label themselves): the new token is selected, the cursor goes to its Name field in the inspector,
+    and Enter returns to the token on the board. Unnamed tokens read "Name me".
   - Drag from a token's dot to another token to connect them. From step 8, a toggle chooses whether a
     new connection is a relationship or a tension.
   - An inspector on the right edits whatever is selected (centre, token, or connection) and lists the

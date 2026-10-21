@@ -2,7 +2,7 @@
 // plus the shared list of values. Every board edit has a form control here, so the
 // activity can be done from the keyboard as well as by dragging.
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   CONTEXT_LABEL, RING_LABEL, addImpact, addLink, allows, linkLabel, moveToRing, newId, patchContext,
   patchImpact, patchLink, patchToken, patchValue, removeImpact, removeLinks, removeTokens, removeValue,
@@ -19,22 +19,33 @@ interface Props {
   selection: Selection;
   update: (fn: (b: Board) => Board) => void;
   select: (s: Selection) => void;
+  /** Id of a token that was just added and needs a name; its Name field takes focus. */
+  nameRequest?: string | null;
+  onNameFocused?: () => void;
 }
 
-export function Inspector({ board, step, selection, update, select }: Props) {
+export function Inspector({ board, step, selection, update, select, nameRequest, onNameFocused }: Props) {
   const token = selection?.kind === 'token' ? board.tokens.find((t) => t.id === selection.id) : undefined;
   const link = selection?.kind === 'link' ? board.links.find((l) => l.id === selection.id) : undefined;
   const common = { board, step, update, select };
 
   return (
     <aside className="token-inspector" aria-label="Inspector">
-      {token ? <TokenForm token={token} {...common} /> : link ? <LinkForm link={link} {...common} /> : <ContextForm {...common} />}
+      {token ? (
+        <TokenForm
+          key={token.id}
+          token={token}
+          {...common}
+          focusName={nameRequest === token.id}
+          onNameFocused={onNameFocused}
+        />
+      ) : link ? <LinkForm link={link} {...common} /> : <ContextForm {...common} />}
       {allows(step, 'values') && <ValuesList {...common} />}
     </aside>
   );
 }
 
-type FormProps = Omit<Props, 'selection'>;
+type FormProps = Omit<Props, 'selection' | 'nameRequest' | 'onNameFocused'>;
 
 function ContextForm({ board, update }: FormProps) {
   return (
@@ -69,8 +80,26 @@ function ContextForm({ board, update }: FormProps) {
   );
 }
 
-function TokenForm({ token, board, step, update, select }: FormProps & { token: Token }) {
+function TokenForm({ token, board, step, update, select, focusName, onNameFocused }: FormProps & {
+  token: Token;
+  focusName?: boolean;
+  onNameFocused?: () => void;
+}) {
   const set = (patch: Partial<Token>) => update((b) => patchToken(b, token.id, patch));
+  const nameRef = useRef<HTMLInputElement>(null);
+  const [prompting, setPrompting] = useState(false);
+
+  // A token the student just added: put the cursor in its Name field and highlight it briefly.
+  useEffect(() => {
+    if (!focusName || !nameRef.current) return;
+    nameRef.current.focus({ preventScroll: true });
+    nameRef.current.scrollIntoView({ block: 'nearest' });
+    setPrompting(true);
+    onNameFocused?.();
+  }, [focusName]);
+
+  // Enter (or Escape) finishes naming and returns to the token on the board.
+  const finishNaming = () => document.querySelector<HTMLElement>(`.react-flow__node[data-id="${token.id}"]`)?.focus();
   const others = board.tokens.filter((t) => t.id !== token.id);
   const impacts = board.impacts.filter((i) => i.tokenId === token.id);
 
@@ -86,7 +115,20 @@ function TokenForm({ token, board, step, update, select }: FormProps & { token: 
       <h3>Stakeholder</h3>
       <label className="field">
         <span>Name</span>
-        <input value={token.label} onChange={(e) => set({ label: e.target.value })} placeholder="A role, e.g. “Teachers”" />
+        <input
+          ref={nameRef}
+          className={prompting ? 'name-prompt' : undefined}
+          onAnimationEnd={() => setPrompting(false)}
+          value={token.label}
+          onChange={(e) => set({ label: e.target.value })}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              e.preventDefault();
+              finishNaming();
+            }
+          }}
+          placeholder="Who is this? e.g. Teachers"
+        />
       </label>
       <fieldset className="field">
         <legend>Relationship to the technology</legend>

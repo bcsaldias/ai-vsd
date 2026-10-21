@@ -343,6 +343,7 @@ button.danger { color: var(--issue); border-color: var(--issue); justify-self: s
 button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 
 /* Palette tokens: a mini token plus its name. Draggable, and clickable for keyboard users. */
+.palette-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
 .palette-token {
   display: flex;
   align-items: center;
@@ -424,6 +425,7 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 .token.direct { background: var(--plum); color: #fff; }
 .token.indirect { background: #fff; color: var(--ink); }
 .token.overlooked { outline: 2px dashed var(--suggestion); outline-offset: 3px; }
+.token-label.unnamed { font-style: italic; font-weight: 500; }
 .token-label { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .token-flag {
   position: absolute;
@@ -459,7 +461,9 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 .react-flow__node:focus-visible { outline: none; }
 
 .tokens-board .react-flow__handle { width: 12px; height: 12px; background: var(--plum); border: 2px solid #fff; }
-.tokens-board:not(.can-connect) .react-flow__handle { display: none; }
+/* Hidden, not display:none — React Flow measures handle positions when a token first renders,
+   and a display:none handle measures at the page origin, so connection lines would start there. */
+.tokens-board:not(.can-connect) .react-flow__handle { visibility: hidden; pointer-events: none; }
 .tokens-board .react-flow__edge.tension .react-flow__edge-path { stroke: var(--issue); stroke-width: 2; stroke-dasharray: 7 4; }
 .tokens-board .react-flow__edge.selected .react-flow__edge-path { stroke-width: 3; }
 .tokens-board .react-flow__edge-textbg { fill: var(--paper); }
@@ -484,6 +488,15 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 .tag button { border: none; padding: 0 6px; }
 .tag-input { flex: 1 1 110px; min-width: 0; padding: 1px 6px; font-size: 0.85rem; }
 .owner-fields { display: grid; gap: 6px; }
+/* Draws the eye to the Name field of a token the student just added. */
+@keyframes name-prompt {
+  from { box-shadow: 0 0 0 4px var(--mustard); }
+  to { box-shadow: 0 0 0 4px transparent; }
+}
+.name-prompt { animation: name-prompt 1.8s ease-out; border-color: var(--plum); }
+@media (prefers-reduced-motion: reduce) {
+  .name-prompt { animation-duration: 0.01s; }
+}
 
 /* ---------- Prompts & versions tabs ---------- */
 

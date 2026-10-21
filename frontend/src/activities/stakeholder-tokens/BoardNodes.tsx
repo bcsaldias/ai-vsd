@@ -57,7 +57,7 @@ export function TokenNode({ id }: NodeProps) {
 
   return (
     <div className={`token ${token.kind}${token.overlooked ? ' overlooked' : ''}`} title={token.label || undefined}>
-      <span className="token-label">{token.label || 'Unnamed'}</span>
+      <span className={token.label ? 'token-label' : 'token-label unnamed'}>{token.label || 'Name me'}</span>
       {token.overlooked && <span className="token-flag" aria-hidden="true">?</span>}
       {(impacts.length > 0 || values.length > 0) && (
         <div className="token-notes" aria-hidden="true">

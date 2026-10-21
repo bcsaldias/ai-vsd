@@ -80,7 +80,8 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
   const [nodes, setNodes] = useState<BoardNode[]>(() => toNodes([], board, null));
   const [edges, setEdges] = useState<Edge[]>(() => toEdges(board, null));
   const [flow, setFlow] = useState<ReactFlowInstance<BoardNode, Edge> | null>(null);
-  const [newName, setNewName] = useState('');
+  // A token just added from the palette: the inspector puts the cursor in its Name field.
+  const [nameRequest, setNameRequest] = useState<string | null>(null);
   const [connectAs, setConnectAs] = useState<Link['type']>('relationship');
 
   // From the tensions step on, new connections default to tensions.
@@ -136,11 +137,12 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
     setSelection({ kind: 'link', id });
   };
 
+  // Add first, then name: like picking up a token and writing its label.
   const add = (kind: Token['kind'], at?: { x: number; y: number }) => {
     const id = newId('t');
-    update((b) => addToken(b, { id, kind, label: newName.trim() }, at));
+    update((b) => addToken(b, { id, kind, label: '' }, at));
     setSelection({ kind: 'token', id });
-    setNewName('');
+    setNameRequest(id);
   };
 
   const onDragOver = (e: DragEvent) => {
@@ -188,18 +190,10 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
         <div className="token-palette">
           {allows(step, 'direct') ? (
             <>
-              <label className="field">
-                <span>New stakeholder</span>
-                <input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && add(allows(step, 'indirect') ? 'indirect' : 'direct')}
-                  placeholder="A role, e.g. Teachers"
-                />
-              </label>
+              <span className="palette-title">Add a stakeholder</span>
               {paletteToken('direct', 'Direct')}
               {allows(step, 'indirect') && paletteToken('indirect', 'Indirect')}
-              <p className="hint">Drag a token onto the rings, or click to add it. Move it to change its ring.</p>
+              <p className="hint">Drag a token onto the rings (or click it), then name it. Move it to change its ring.</p>
             </>
           ) : (
             <p className="hint">First, name what you’re designing: select the centre of the board.</p>
@@ -257,7 +251,15 @@ export function StakeholderTokensActivity({ savedState, onChange, config }: Acti
           </BoardContext.Provider>
         </div>
 
-        <Inspector board={board} step={step} selection={selection} update={update} select={setSelection} />
+        <Inspector
+          board={board}
+          step={step}
+          selection={selection}
+          update={update}
+          select={setSelection}
+          nameRequest={nameRequest}
+          onNameFocused={() => setNameRequest(null)}
+        />
       </div>
     </div>
   );

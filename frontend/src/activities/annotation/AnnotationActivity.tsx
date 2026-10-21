@@ -56,7 +56,7 @@ export function AnnotationActivity({ prompt, savedState, onChange }: ActivityPro
         <div className="annotation-editor">
           {selectedRegion ? (
             <label>
-              Note for <strong>{selectedRegion.name}</strong>
+              <span>Note for <strong>{selectedRegion.name}</strong></span>
               <textarea
                 value={state.annotations[selectedRegion.id] ?? ''}
                 onChange={(e) => setNote(selectedRegion.id, e.target.value)}

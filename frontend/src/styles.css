@@ -1,98 +1,139 @@
-:root {
-  --bg: #f6f6f4;
-  --surface: #ffffff;
-  --border: #dddcd7;
-  --text: #1f1f1d;
-  --muted: #6b6a65;
-  --accent: #2f5fd0;
-  --accent-soft: #e6edfb;
-  --praise: #2e7d4f;
-  --suggestion: #9a6a00;
-  --issue: #b3261e;
-  --radius: 8px;
-  color-scheme: light;
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  font-size: 15px;
-  color: var(--text);
-  background: var(--bg);
-}
+/* Visual language adapted from the VSD Lab site (vsdesign.org): a flat, muted colour ground
+   per section, Cormorant Garamond throughout, ink text, plum links, white display titles,
+   and stacked thin white rules. White is only used for large titles and rules — on these
+   grounds it is below 3:1 — so all working text is ink. */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #161615;
-    --surface: #20201e;
-    --border: #3a3a37;
-    --text: #ecebe6;
-    --muted: #a09f99;
-    --accent: #7ea2ff;
-    --accent-soft: #24304d;
-    --praise: #6cc893;
-    --suggestion: #e0b44c;
-    --issue: #f08a80;
-    color-scheme: dark;
-  }
+:root {
+  /* Section grounds (one per tab, like the site's per-page colours). */
+  --ground-workspace: #d68c45;                                /* home */
+  --ground-prompts: linear-gradient(#bab3bc, #b0a9b2);        /* projects */
+  --ground-versions: #7f9cc7;                                 /* the lab */
+  /* Other site colours, for accents. */
+  --sage: #a6baa0;
+  --mustard: #daae49;
+  --coral: #d26559;
+
+  --ink: #00001c;
+  --ink-soft: rgba(0, 0, 28, 0.74);
+  --ink-line: rgba(0, 0, 28, 0.35);
+  --plum: #573d52;
+  --plum-dark: #3f2b3b;
+  --paper: #f4f4f4;
+  --rule: rgba(255, 255, 255, 0.85);
+  --surface: rgba(255, 255, 255, 0.25);
+  --surface-strong: rgba(255, 255, 255, 0.5);
+
+  --praise: #3f5a39;
+  --suggestion: #7a5a0c;
+  --issue: #9c3328;
+
+  --serif: 'Cormorant Garamond', Garamond, 'EB Garamond', Georgia, serif;
+  --wordmark: 'Barlow Condensed', 'DIN Condensed', 'Arial Narrow', sans-serif;
+  --mono: ui-monospace, Menlo, Consolas, monospace;
+
+  color-scheme: light;
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.35;
+  font-variant-numeric: lining-nums;
+  color: var(--ink);
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); }
-h2, h3 { margin: 0; font-size: 1rem; }
-h3 { margin-top: 1rem; font-size: 0.9rem; }
-pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 0.85rem; }
-code { font-size: 0.85rem; background: var(--accent-soft); padding: 1px 6px; border-radius: 4px; }
+body { margin: 0; background: var(--ground-workspace); }
+h1, h2, h3 { margin: 0; font-weight: 600; }
+h3 { margin-top: 1.1rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; }
+p { margin: 0.6rem 0; }
+pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; }
+code { font-family: var(--mono); font-size: 0.72rem; background: var(--surface-strong); padding: 1px 6px; }
 
-button, input, textarea {
-  font: inherit;
-  color: inherit;
-}
+button, input, textarea { font: inherit; color: inherit; }
 button {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: 6px;
-  padding: 6px 12px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  padding: 4px 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
 }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:hover:not(:disabled) { background: var(--surface-strong); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button.primary { background: var(--plum); border-color: var(--plum); color: #fff; }
+button.primary:hover:not(:disabled) { background: var(--plum-dark); }
+button:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--plum);
+  outline-offset: 2px;
+}
 input, textarea {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: 6px;
-  padding: 6px 10px;
+  border: 1px solid var(--ink-line);
+  background: var(--paper);
+  padding: 4px 10px;
 }
-textarea { width: 100%; resize: vertical; font-family: ui-monospace, Menlo, monospace; font-size: 0.85rem; }
+textarea { width: 100%; resize: vertical; font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; }
 
-.hint { color: var(--muted); font-size: 0.85rem; }
-.meta { color: var(--muted); font-size: 0.75rem; }
+.hint { color: var(--ink-soft); font-style: italic; font-size: 0.9rem; }
+.meta { color: var(--ink-soft); font-size: 0.75rem; letter-spacing: 0.02em; }
 .badge {
   display: inline-block;
   margin-left: 8px;
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 0.7rem;
-  font-weight: 600;
+  padding: 0 8px;
+  border: 1px solid var(--ink);
+  font-style: normal;
+  font-size: 0.62rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.12em;
+  vertical-align: middle;
+}
+
+/* The site's signature divider: a stack of thin white rules. */
+.rules {
+  height: 22px;
+  flex-shrink: 0;
+  background:
+    linear-gradient(var(--rule), var(--rule)) 0 0 / 100% 2px no-repeat,
+    linear-gradient(var(--rule), var(--rule)) 0 6px / 100% 2px no-repeat,
+    linear-gradient(var(--rule), var(--rule)) 0 13px / 100% 2px no-repeat,
+    linear-gradient(var(--rule), var(--rule)) 0 20px / 100% 2px no-repeat;
 }
 
 /* ---------- App shell & tabs ---------- */
 
-.app { display: flex; flex-direction: column; height: 100vh; }
+.app { display: flex; flex-direction: column; height: 100vh; background: var(--ground-workspace); }
+.app[data-tab='prompts'] { background: var(--ground-prompts); }
+.app[data-tab='versions'] { background: var(--ground-versions); }
+
 .tab-bar {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  align-items: flex-end;
+  gap: 4px 22px;
+  padding: 18px 24px 12px;
   flex-wrap: wrap;
 }
-.app-title { font-weight: 700; margin-right: 16px; }
-.tab { border: none; background: transparent; color: var(--muted); }
-.tab.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.app-title {
+  font-family: var(--wordmark);
+  font-weight: 600;
+  font-size: 1.15rem;
+  line-height: 0.95;
+  text-transform: uppercase;
+  margin-right: auto;
+}
+.app-title span { display: block; }
+.tab {
+  border: none;
+  background: transparent;
+  padding: 2px 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--ink);
+  text-underline-offset: 6px;
+}
+.tab:hover:not(:disabled) { background: transparent; color: var(--plum); text-decoration: underline; text-decoration-thickness: 1px; }
+.tab.active { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: var(--plum); }
+.app > .rules { margin: 0 24px; }
 .tab-content { flex: 1; min-height: 0; overflow: auto; }
-.tab-content > [role='tabpanel'] { height: 100%; }
+.tab-content > [role='tabpanel'] { min-height: 100%; }
 
 /* ---------- Panels ---------- */
 
@@ -101,79 +142,95 @@ textarea { width: 100%; resize: vertical; font-family: ui-monospace, Menlo, mono
   flex-direction: column;
   min-height: 0;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid var(--rule);
 }
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--rule);
 }
-.panel-body { padding: 12px 14px; overflow: auto; flex: 1; min-height: 0; }
+.panel-header h2, .panel-header h3 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.panel-body { padding: 10px 14px; overflow: auto; flex: 1; min-height: 0; }
 
 /* ---------- Workspace tab ---------- */
 
-/* Panel sizes come from --feedback-size / --activity-size (fractions, set inline by
-   WorkspaceTab). The resize handles sit in their own tracks and double as the gaps. */
+/* The workspace scrolls like a page: the top panels take their full content height,
+   and the activity panel below has its own height (--activity-height, set inline by
+   WorkspaceTab), resized from the handle along its bottom edge.
+   --feedback-size is the feedback panel's share of the width. */
 .workspace-grid {
   --feedback-size: 0.28;
-  --activity-size: 0.45;
-  --handle: 12px;
+  --activity-height: 520px;
+  --handle: 14px;
   display: grid;
-  height: 100%;
-  padding: 12px 16px;
+  padding: 14px 24px 20px;
   grid-template-columns: minmax(0, 1fr) var(--handle) max(220px, calc(var(--feedback-size) * 100%));
-  grid-template-rows: minmax(0, 1fr) var(--handle) max(160px, calc(var(--activity-size) * 100%));
+  grid-template-rows: minmax(200px, auto) var(--handle) var(--activity-height) var(--handle);
   grid-template-areas:
     'workspace vsplit   feedback'
-    'hsplit    hsplit   hsplit'
-    'activity  activity activity';
+    '.         .        .'
+    'activity  activity activity'
+    'hsplit    hsplit   hsplit';
 }
 .workspace-panel { grid-area: workspace; }
 .feedback-panel { grid-area: feedback; }
 .activity-panel { grid-area: activity; }
 
-.resize-handle { position: relative; touch-action: none; border-radius: 4px; }
+.resize-handle { position: relative; touch-action: none; }
 .resize-handle:focus { outline: none; }
-.resize-handle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.resize-handle:focus-visible { outline: 2px solid var(--plum); outline-offset: -2px; }
 .resize-handle.vertical { grid-area: vsplit; cursor: col-resize; }
 .resize-handle.horizontal { grid-area: hsplit; cursor: row-resize; }
-/* Always-visible grip so the handle is discoverable. */
+/* Always-visible grip so the handle is discoverable (plum: ≥3:1 on every ground). */
 .resize-handle::before {
   content: '';
   position: absolute;
   inset: 50% auto auto 50%;
   transform: translate(-50%, -50%);
-  border-radius: 999px;
-  background: var(--muted);
+  background: var(--plum);
 }
-@media (forced-colors: active) {
-  .resize-handle::before { background: CanvasText; }
-  .resize-handle:hover::after, .resize-handle:focus-visible::after { background: Highlight; }
-}
-.resize-handle.vertical::before { width: 4px; height: 36px; }
-.resize-handle.horizontal::before { width: 36px; height: 4px; }
-/* Full-length accent line while hovered, focused, or dragging. */
-.resize-handle::after { content: ''; position: absolute; border-radius: 2px; }
+.resize-handle.vertical::before { width: 3px; height: 40px; }
+.resize-handle.horizontal::before { width: 40px; height: 3px; }
+/* Full-length line while hovered, focused, or dragging. */
+.resize-handle::after { content: ''; position: absolute; }
 .resize-handle.vertical::after { inset: 0 auto 0 calc(50% - 1px); width: 2px; }
 .resize-handle.horizontal::after { inset: calc(50% - 1px) 0 auto 0; height: 2px; }
 .resize-handle:hover::after,
 .resize-handle:focus-visible::after,
 body.resizing-col .resize-handle.vertical::after,
-body.resizing-row .resize-handle.horizontal::after { background: var(--accent); }
+body.resizing-row .resize-handle.horizontal::after { background: var(--plum); }
 body.resizing-col { cursor: col-resize; user-select: none; }
 body.resizing-row { cursor: row-resize; user-select: none; }
+@media (forced-colors: active) {
+  .resize-handle::before { background: CanvasText; }
+  .resize-handle:hover::after, .resize-handle:focus-visible::after { background: Highlight; }
+}
 
-.activity-list { padding-left: 1.2rem; }
-button.link { border: none; background: none; padding: 2px 0; color: var(--accent); text-align: left; }
-button.link.active { font-weight: 700; text-decoration: underline; }
+.activity-list { padding-left: 1.2rem; margin: 0.4rem 0; }
+li::marker { font-variant-numeric: lining-nums; }
+button.link {
+  border: none;
+  background: none;
+  padding: 1px 0;
+  color: var(--plum);
+  font-weight: 500;
+  text-align: left;
+}
+button.link:hover:not(:disabled) { background: none; text-decoration: underline; }
+button.link.active { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-color: var(--plum); }
 
 .feedback-items { list-style: none; padding: 0; display: grid; gap: 8px; }
-.feedback-item { padding: 8px 10px; border-radius: 6px; border-left: 3px solid var(--border); background: var(--bg); }
-.feedback-item .tone { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+.feedback-item { padding: 8px 10px; border-left: 3px solid var(--ink-line); background: var(--paper); }
+.feedback-item .tone { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
 .feedback-item.praise { border-color: var(--praise); }
 .feedback-item.praise .tone { color: var(--praise); }
 .feedback-item.suggestion { border-color: var(--suggestion); }
@@ -184,66 +241,120 @@ button.link.active { font-weight: 700; text-decoration: underline; }
 
 /* ---------- Activities ---------- */
 
-.activity { display: flex; flex-direction: column; gap: 8px; height: 100%; }
+.activity { display: flex; flex-direction: column; gap: 8px; height: 100%; min-height: 0; }
 .activity-prompt { margin: 0; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .canvas {
   width: 100%;
   flex: 1;
   min-height: 180px;
-  background: var(--bg);
-  border: 1px dashed var(--border);
-  border-radius: 6px;
-  color: var(--muted);
+  background: var(--paper);
+  border: 1px solid var(--ink-line);
+  color: var(--ink-soft);
 }
 
-.diagram-canvas { min-height: 220px; overflow: hidden; }
-.diagram-canvas .react-flow { --xy-background-color: var(--bg); }
+.diagram-canvas { min-height: 140px; overflow: hidden; }
+.diagram-canvas .react-flow {
+  --xy-background-color: var(--paper);
+  --xy-background-pattern-dots-color: rgba(0, 0, 28, 0.25);
+  --xy-node-background-color: #fff;
+  --xy-node-color: var(--ink);
+  --xy-node-border: 1px solid var(--ink);
+  --xy-node-border-radius: 0;
+  --xy-node-boxshadow-selected: 0 0 0 2px var(--plum);
+  --xy-node-boxshadow-hover: 0 0 0 1px var(--plum);
+  --xy-handle-background-color: var(--plum);
+  --xy-handle-border-color: #fff;
+  --xy-edge-stroke: var(--plum);
+  --xy-edge-stroke-selected: var(--ink);
+  --xy-edge-stroke-width: 1.5;
+  --xy-connectionline-stroke: var(--plum);
+  --xy-controls-button-background-color: var(--paper);
+  --xy-controls-button-border-color: var(--ink-line);
+  --xy-controls-button-color: var(--ink);
+  --xy-attribution-background-color: transparent;
+  font-family: var(--serif);
+}
+.diagram-canvas .react-flow__node { font-size: 15px; font-weight: 600; }
+.diagram-canvas .react-flow__handle { width: 9px; height: 9px; }
 
-.annotation-layout { display: flex; gap: 12px; flex: 1; min-height: 0; flex-wrap: wrap; }
-.annotation-layout .canvas { flex: 2 1 320px; }
+.annotation-layout { display: flex; gap: 12px; flex: 1; min-height: 0; }
+/* The SVG scales to the space it gets (viewBox + default preserveAspectRatio). */
+.annotation-layout .canvas { flex: 2 1 320px; height: 100%; min-height: 140px; }
 .annotation-editor { flex: 1 1 220px; }
 .annotation-editor label { display: grid; gap: 6px; }
 .region { cursor: pointer; outline: none; }
-.region > * { fill: var(--surface); stroke: var(--border); stroke-width: 2; transition: fill 0.15s; }
-.region.annotated > * { fill: var(--accent-soft); }
-.region.hovered > *, .region:focus-visible > * { stroke: var(--accent); }
-.region.selected > * { stroke: var(--accent); stroke-width: 3; }
+.region > * { fill: #fff; stroke: var(--ink-line); stroke-width: 2; transition: fill 0.2s; }
+.region.annotated > * { fill: var(--mustard); }
+.region.hovered > *, .region:focus-visible > * { stroke: var(--plum); }
+.region.selected > * { stroke: var(--plum); stroke-width: 3; }
 
 /* ---------- Prompts & versions tabs ---------- */
 
-.tab-page { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
-.page-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
-.page-header p { margin: 4px 0 0; }
+.tab-page { padding: 14px 24px 24px; display: flex; flex-direction: column; gap: 16px; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px 24px; flex-wrap: wrap; }
+.page-header p { margin: 6px 0 0; }
+/* Large white display title with a trailing period, as on the site ("PROJECTS."). */
+.page-title {
+  font-weight: 300;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #fff;
+}
 .save-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.prompts-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
-.prompt-editors { display: grid; gap: 14px; align-content: start; }
+.prompts-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.prompt-editors { display: grid; gap: 16px; align-content: start; }
 .prompt-editor { display: grid; gap: 4px; }
-.role-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.role-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
 .variables { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.preview-message { display: grid; gap: 4px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.preview-message { display: grid; gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
 .preview-message:last-child { border-bottom: none; }
 
-.versions-grid { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 16px; }
-.version-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; align-content: start; }
-.version { width: 100%; display: grid; gap: 2px; text-align: left; }
-.version.active { border-color: var(--accent); background: var(--accent-soft); }
-.version-note { font-size: 0.85rem; }
+.versions-grid { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 20px; }
+.version-list { list-style: none; padding: 0; margin: 0; display: grid; align-content: start; border-top: 1px solid var(--rule); }
+.version {
+  width: 100%;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  border-left: 3px solid transparent;
+  padding: 8px 10px;
+  font-weight: 500;
+}
+.version.active { background: var(--surface-strong); border-left-color: var(--plum); }
+.version .badge { justify-self: start; margin-left: 0; }
+.version-note { font-size: 0.9rem; }
 .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ---------- Short windows: compact header to leave room for the panels ---------- */
+
+@media (max-height: 700px) {
+  .tab-bar { padding-top: 8px; padding-bottom: 6px; align-items: center; }
+  .app-title span { display: inline; }
+  .app > .rules { height: 9px; background-size: 100% 1px; }
+  .workspace-grid { padding-top: 10px; padding-bottom: 12px; }
+}
 
 /* ---------- Narrow screens: stack everything ---------- */
 
 @media (max-width: 800px) {
-  /* Stacked layout: panels flow vertically, so resizing is disabled. */
+  /* Stacked layout: the feedback width can't be resized, but the activity height still can. */
   .workspace-grid {
-    height: auto;
-    gap: 12px;
+    padding: 14px 16px 20px;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto;
-    grid-template-areas: 'workspace' 'activity' 'feedback';
+    grid-template-rows: auto var(--handle) var(--activity-height) var(--handle) auto;
+    grid-template-areas: 'workspace' '.' 'activity' 'hsplit' 'feedback';
   }
-  .resize-handle { display: none; }
-  .activity-panel { min-height: 420px; }
+  .resize-handle.vertical, .expand-toggle { display: none; }
+  .annotation-layout { flex-wrap: wrap; }
+  .annotation-layout .canvas { height: auto; }
   .prompts-grid, .versions-grid { grid-template-columns: minmax(0, 1fr); }
+  .tab-bar { padding: 14px 16px 10px; }
+  .app > .rules { margin: 0 16px; }
+  .tab-page { padding: 14px 16px 24px; }
 }

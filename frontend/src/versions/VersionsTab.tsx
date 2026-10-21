@@ -24,7 +24,7 @@ export function VersionsTab({ refreshKey }: { refreshKey: number }) {
     <div className="tab-page versions-page">
       <div className="page-header">
         <div>
-          <h2>Versions</h2>
+          <h1 className="page-title">Versions.</h1>
           <p className="hint">Prompt history. Every saved prompt change appears here; feedback records which version produced it.</p>
         </div>
       </div>

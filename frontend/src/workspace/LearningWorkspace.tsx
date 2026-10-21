@@ -10,7 +10,7 @@ export function LearningWorkspace({ lesson, currentActivityId, onSelectActivity 
   const current = lesson.activities.find((a) => a.id === currentActivityId);
 
   return (
-    <section className="panel workspace-panel" aria-label="Learning workspace">
+    <section className="panel workspace-panel" aria-label="VSD Learning workspace">
       <header className="panel-header">
         <h2>{lesson.title}</h2>
       </header>

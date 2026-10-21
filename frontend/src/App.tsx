@@ -18,9 +18,9 @@ export function App() {
   const [versionsRefreshKey, setVersionsRefreshKey] = useState(0);
 
   return (
-    <div className="app">
+    <div className="app" data-tab={tab}>
       <nav className="tab-bar" role="tablist" aria-label="Sections">
-        <span className="app-title">Learning Workspace</span>
+        <span className="app-title"><span>VSD Learning</span> <span>Workspace</span></span>
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -35,6 +35,7 @@ export function App() {
           </button>
         ))}
       </nav>
+      <div className="rules" aria-hidden="true" />
 
       <main className="tab-content">
         <div role="tabpanel" id="panel-workspace" aria-labelledby="tab-workspace" hidden={tab !== 'workspace'}>

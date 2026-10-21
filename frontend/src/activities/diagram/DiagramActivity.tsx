@@ -92,7 +92,7 @@ export function DiagramActivity({ prompt, savedState, onChange }: ActivityProps<
         <button onClick={addNode}>Add node</button>
         <button onClick={clear} disabled={!nodes.length}>Clear</button>
         <span className="hint">
-          Drag nodes to move them. Drag from a node’s bottom dot to another node to connect. Select + Backspace deletes.
+          Drag nodes to move them. Drag from a node’s bottom dot to another node to connect. Select + Backspace deletes. Zoom with + / − or pinch.
         </span>
       </div>
       <div className="canvas diagram-canvas">
@@ -104,7 +104,9 @@ export function DiagramActivity({ prompt, savedState, onChange }: ActivityProps<
           onConnect={onConnect}
           isValidConnection={(c) => c.source !== c.target}
           defaultEdgeOptions={EDGE_OPTIONS}
-          colorMode="system"
+          colorMode="light"
+          zoomOnScroll={false}
+          preventScrolling={false}
           fitView
           fitViewOptions={{ maxZoom: 1 }}
         >

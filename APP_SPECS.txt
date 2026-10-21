@@ -1,4 +1,4 @@
-Student Learning Workspace — Initial Specs
+VSD Student Learning Workspace — Initial Specs
 
 PRODUCT
 
@@ -36,15 +36,21 @@ Three coordinated areas:
      - Hovering over, highlighting, and annotating parts of a visual.
    - Treat this as a host for activity-specific components, not as one universal canvas.
 
-Resizable panels:
-   - Students can resize the panels by dragging the dividers between them:
+Scrolling layout and resizable panels:
+   - The workspace scrolls like a page. The learning workspace and feedback panels always show their
+     full content; the activity panel sits below them and is reached by scrolling.
+   - Students can resize panels by dragging dividers:
      - A vertical divider between the learning workspace and the feedback panel (feedback width).
-     - A horizontal divider above the activity panel (activity height).
+     - A horizontal divider along the bottom edge of the activity panel (activity height, 240–4000px,
+       default 520px). Making it taller makes the page longer.
    - Dividers are keyboard accessible: focus with Tab, Arrow keys resize, Enter resets.
      Double-clicking a divider resets it to the default size.
-   - Each panel has a minimum and maximum size so no panel can be collapsed or hidden.
+   - An "Expand" button in the activity panel's header makes it fill the visible area and scrolls to it;
+     "Restore" returns to the previous height.
+   - Inside the diagram, the mouse wheel scrolls the page (it does not zoom); zoom with the +/− controls or pinch.
    - Panel sizes are remembered per browser (a UI preference, not student data).
-   - On narrow screens (800px wide or less) the panels stack vertically and resizing is disabled.
+   - On narrow screens (800px wide or less) the panels stack vertically; the feedback width can't be
+     resized there, but the activity height still can.
 
 
 B. PROMPTS TAB
@@ -68,6 +74,21 @@ Track the history of prompt changes:
 - Placeholders for later: comparing two versions (diff) and restoring an older version.
 - Every feedback result records the prompt version that produced it, so results can be traced back
   to the prompts that generated them.
+
+
+VISUAL STYLE
+
+Adapted from the VSD Lab site (vsdesign.org: home, projects, the lab):
+- One flat, muted colour ground per tab, like the site's per-page colours:
+  Workspace = orange #D68C45 (home), Prompts = mauve #BAB3BC→#B0A9B2 (projects), Versions = blue #7F9CC7 (the lab).
+- Cormorant Garamond for all text; a condensed sans (Barlow Condensed) for the app wordmark.
+- Ink #00001C for text, plum #573D52 for links, primary buttons, and focus.
+- Large white display titles with a trailing period ("PROMPTS."), and stacked thin white rules as dividers.
+- Flat and editorial: square corners, no shadows; panels are light translucent fills with thin white borders.
+- Accessibility: white fails contrast on these grounds (about 2.2–2.8:1), so it is only used for large titles
+  and rules; all working text is ink (7:1 or higher). Lining numerals are used so "1" does not read as "I".
+- Fonts are self-hosted (no requests to Google Fonts), so the app works offline and does not share student traffic.
+- Light theme only, matching the site.
 
 
 RECOMMENDED TECHNOLOGY

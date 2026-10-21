@@ -53,7 +53,7 @@ export function PromptsTab({ onSaved }: { onSaved: () => void }) {
     <div className="tab-page prompts-page">
       <div className="page-header">
         <div>
-          <h2>Prompts</h2>
+          <h1 className="page-title">Prompts.</h1>
           <p className="hint">
             Editing from version {base.number}
             {dirty && <span className="badge">Unsaved changes</span>}

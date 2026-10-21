@@ -1,7 +1,7 @@
 // Renders the activity for a definition and wraps its state in the standard
 // ActivityReport envelope. Knows nothing about how any activity works inside.
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { ActivityDefinition, ActivityReport, ActivityStatus } from '../types/contracts';
 import { DiagramActivity, type DiagramState } from '../activities/diagram/DiagramActivity';
 import { AnnotationActivity, type AnnotationState } from '../activities/annotation/AnnotationActivity';
@@ -10,9 +10,11 @@ interface Props {
   definition: ActivityDefinition;
   savedReport: ActivityReport | null;
   onReport: (report: ActivityReport) => void;
+  /** Extra header controls supplied by the layout (e.g. expand). */
+  headerActions?: ReactNode;
 }
 
-export function ActivityHost({ definition, savedReport, onReport }: Props) {
+export function ActivityHost({ definition, savedReport, onReport, headerActions }: Props) {
   const [latestState, setLatestState] = useState<unknown>(savedReport?.state ?? null);
 
   const report = (state: unknown, status: ActivityStatus) => {
@@ -43,9 +45,12 @@ export function ActivityHost({ definition, savedReport, onReport }: Props) {
     <section id="activity-panel" className="panel activity-panel" aria-label="Activity">
       <header className="panel-header">
         <h2>{definition.title}</h2>
-        <button className="primary" onClick={() => report(latestState, 'submitted')} disabled={latestState == null}>
-          Check my work
-        </button>
+        <div className="actions">
+          {headerActions}
+          <button className="primary" onClick={() => report(latestState, 'submitted')} disabled={latestState == null}>
+            Check my work
+          </button>
+        </div>
       </header>
       <div className="panel-body">{activity}</div>
     </section>

@@ -6,7 +6,15 @@ React + TypeScript app built with Vite. See [`../APP_SPECS.txt`](../APP_SPECS.tx
 npm install
 npm run dev        # http://localhost:5173
 npm run build      # typecheck + production build
+npm run preview    # serve the production build at http://localhost:4173/ai-vsd/
 ```
+
+## Deploying
+
+Pushing to `main` publishes the site to GitHub Pages at https://bcsaldias.github.io/ai-vsd/
+(`.github/workflows/deploy.yml`). The `base` path in `vite.config.ts` must match the repo name.
+`robots.txt` is not in this repo: crawlers only read it at the domain root, so it lives in the
+`bcsaldias.github.io` repo.
 
 ## `src/`
 

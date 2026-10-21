@@ -22,7 +22,11 @@ Three coordinated areas:
    - Shows the lesson introduction, a card for the current activity, and the list of activities.
    - The card is a flat white box beside the activity list (stacked above it when the panel is narrow).
      It shows "Step N of M", the activity title, its description (the prompt), and its learning objectives.
-     Activities do not repeat the prompt in the activity panel; the panel header keeps the activity title.
+     Activities do not repeat the prompt in the activity panel; the panel header shows "Step N · Title".
+   - A "Next" button under the activity list moves to the next activity (hidden on the last one).
+     If the current activity's work hasn't been checked since it last changed, Next first offers
+     "Check my work" (feedback appears; the student stays on the step) or "Skip to next step".
+     Once checked, Next moves on directly.
    - The current lesson is VSD stakeholder analysis: each activity is one step of the process (see
      STAKEHOLDER TOKENS LESSON below).
 

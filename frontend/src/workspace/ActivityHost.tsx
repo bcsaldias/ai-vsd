@@ -1,8 +1,9 @@
 // Renders the activity for a definition and wraps its state in the standard
 // ActivityReport envelope. Knows nothing about how any activity works inside.
+// Checking work is coordinated by WorkspaceTab, so it can also be triggered from elsewhere.
 
-import { useState, type ReactNode } from 'react';
-import type { ActivityDefinition, ActivityReport, ActivityStatus } from '../types/contracts';
+import type { ReactNode } from 'react';
+import type { ActivityDefinition, ActivityReport } from '../types/contracts';
 import { DiagramActivity, type DiagramState } from '../activities/diagram/DiagramActivity';
 import { AnnotationActivity, type AnnotationState } from '../activities/annotation/AnnotationActivity';
 import {
@@ -11,26 +12,25 @@ import {
 
 interface Props {
   definition: ActivityDefinition;
+  /** 1-based position of the activity in the lesson, shown in the header. */
+  number: number;
   savedReport: ActivityReport | null;
   onReport: (report: ActivityReport) => void;
+  onCheck: () => void;
+  canCheck: boolean;
   /** Extra header controls supplied by the layout (e.g. expand). */
   headerActions?: ReactNode;
 }
 
-export function ActivityHost({ definition, savedReport, onReport, headerActions }: Props) {
-  const [latestState, setLatestState] = useState<unknown>(savedReport?.state ?? null);
-
-  const report = (state: unknown, status: ActivityStatus) => {
-    setLatestState(state);
+export function ActivityHost({ definition, number, savedReport, onReport, onCheck, canCheck, headerActions }: Props) {
+  const onChange = (state: unknown) =>
     onReport({
       activityId: definition.id,
       kind: definition.kind,
-      status,
+      status: 'in-progress',
       state,
       updatedAt: new Date().toISOString(),
     });
-  };
-  const onChange = (state: unknown) => report(state, 'in-progress');
 
   const common = { prompt: definition.prompt, config: definition.config, onChange };
 
@@ -50,10 +50,10 @@ export function ActivityHost({ definition, savedReport, onReport, headerActions 
   return (
     <section id="activity-panel" className="panel activity-panel" aria-label="Activity">
       <header className="panel-header">
-        <h2>{definition.title}</h2>
+        <h2>Step {number} · {definition.title}</h2>
         <div className="actions">
           {headerActions}
-          <button className="primary" onClick={() => report(latestState, 'submitted')} disabled={latestState == null}>
+          <button className="primary" onClick={onCheck} disabled={!canCheck}>
             Check my work
           </button>
         </div>

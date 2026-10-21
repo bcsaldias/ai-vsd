@@ -2,7 +2,7 @@
 // reports to persistence and feedback; implements no activity behavior itself.
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import type { ActivityReport, Feedback, Lesson } from '../types/contracts';
+import type { ActivityReport, ActivityStatus, Feedback, Lesson } from '../types/contracts';
 import { getLesson, loadReport, saveReport } from '../services/activityService';
 import { requestFeedback } from '../services/feedbackService';
 import { LearningWorkspace } from './LearningWorkspace';
@@ -20,6 +20,10 @@ export function WorkspaceTab() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   const currentId = useRef<string | null>(null);
+  // The current activity's latest report — what "Check my work" submits — and its status
+  // (null until there is work to check).
+  const latest = useRef<ActivityReport | null>(null);
+  const [status, setStatus] = useState<ActivityStatus | null>(null);
   // Expanded = activity panel fills the visible area; Restore returns to the previous height.
   const [expanded, setExpanded] = useState(false);
   const restoreActivityTo = useRef<number>(LAYOUT_LIMITS.activityHeight.default);
@@ -47,14 +51,23 @@ export function WorkspaceTab() {
     const definition = lesson?.activities.find((a) => a.id === activityId);
     if (!activityId || !definition) return;
     setFeedback(null);
+    latest.current = null;
+    setStatus(null);
     loadReport(definition).then((report) => {
-      if (currentId.current === activityId) setSaved({ activityId, report });
+      if (currentId.current !== activityId) return;
+      setSaved({ activityId, report });
+      latest.current = report;
+      setStatus(report?.status ?? null);
     });
   }, [activityId, lesson]);
 
   const handleReport = async (report: ActivityReport) => {
     const definition = lesson?.activities.find((a) => a.id === report.activityId);
     if (!definition) return;
+    if (report.activityId === currentId.current) {
+      latest.current = report;
+      setStatus(report.status);
+    }
     await saveReport(definition, report);
     if (report.status !== 'submitted') return;
     setLoadingFeedback(true);
@@ -68,7 +81,21 @@ export function WorkspaceTab() {
   };
 
   if (!lesson || !activityId) return <p className="hint">Loading lesson…</p>;
-  const definition = lesson.activities.find((a) => a.id === activityId)!;
+  const index = lesson.activities.findIndex((a) => a.id === activityId);
+  const definition = lesson.activities[index];
+  const next = lesson.activities[index + 1];
+
+  // Submits the latest work for the current activity (from the activity panel or the Next prompt).
+  const checkWork = () => {
+    if (!latest.current) return;
+    handleReport({
+      ...latest.current,
+      activityId: definition.id,
+      kind: definition.kind,
+      status: 'submitted',
+      updatedAt: new Date().toISOString(),
+    });
+  };
   // Activities that share state (the steps of one board) share one host, so the board
   // stays mounted — with its zoom and selection — when the student moves between steps.
   const hostKey = (id: string) => lesson.activities.find((a) => a.id === id)?.stateKey ?? id;
@@ -106,7 +133,15 @@ export function WorkspaceTab() {
 
   return (
     <div className="workspace-grid" ref={gridRef} style={gridStyle}>
-      <LearningWorkspace lesson={lesson} currentActivityId={activityId} onSelectActivity={setActivityId} />
+      <LearningWorkspace
+        lesson={lesson}
+        currentActivityId={activityId}
+        onSelectActivity={setActivityId}
+        checked={status === 'submitted'}
+        canCheck={status !== null}
+        onCheck={checkWork}
+        onNext={next ? () => setActivityId(next.id) : undefined}
+      />
       <ResizeHandle
         orientation="vertical"
         label="Resize feedback panel"
@@ -140,6 +175,9 @@ export function WorkspaceTab() {
         <ActivityHost
           key={hostKey(activityId)}
           definition={definition}
+          number={index + 1}
+          onCheck={checkWork}
+          canCheck={status !== null}
           savedReport={saved.report}
           onReport={handleReport}
           headerActions={expandButton}

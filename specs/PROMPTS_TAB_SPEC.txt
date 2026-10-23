@@ -202,6 +202,12 @@ PREVIEW
 - The student's work is read again each time the Prompts tab is opened, so changes made in the
   Workspace always show up.
 
+"Copy prompt" (in the preview header, with a copy icon): copies both messages as plain text, each
+under its label ("System:", then a blank line, "User:"), exactly as the preview shows them, with the
+sample currently chosen. So students can paste the prompt into another chat tool. The label reads
+"Copied" for two seconds ("Couldn't copy" if the browser refuses), and the result is announced to
+screen readers. Disabled when both prompts are empty.
+
 Sample switch ("My work | Worked example", beside the User label: it only changes {{student_work}}):
   - Picks what fills {{student_work}} in the preview. The option in use is filled dark.
   - Starts on My work. The choice is kept across steps and lessons while the app is open.

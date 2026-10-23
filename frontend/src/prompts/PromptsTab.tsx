@@ -86,6 +86,14 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
   }, [unsaved]);
 
   const session = lessonId ? sessions[lessonId] : undefined;
+  // "Copied" / "Couldn't copy" on the copy button, for two seconds.
+  const [copied, setCopied] = useState<'done' | 'failed' | null>(null);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(null), 2000);
+    return () => clearTimeout(t);
+  }, [copied]);
+
   if (!lessonId || !session) return <p className="hint">Loading prompts…</p>;
   const { base, draft, note } = session;
   const patch = (p: Partial<typeof session>) => setSessions((all) => ({ ...all, [lessonId]: { ...all[lessonId], ...p } }));
@@ -131,6 +139,15 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
   const preview = activity
     ? templateParts(draft.user, templateVariables(activity, work != null ? workUpToStep(activity, work) : null))
     : [{ text: draft.user }];
+
+  // Copy: both messages as plain text under their labels, so they can be pasted into any chat tool.
+  const sentText = (parts: { text: string }[]) => parts.map((p) => p.text).join('').trim();
+  const promptText = [
+    sentText(systemPrompt) && `System:\n${sentText(systemPrompt)}`,
+    draft.user.trim() && `User:\n${sentText(preview)}`,
+  ].filter(Boolean).join('\n\n');
+  const copyPrompt = () =>
+    navigator.clipboard.writeText(promptText).then(() => setCopied('done'), () => setCopied('failed'));
 
   return (
     <div className="tab-page prompts-page" style={lessonAccent(lessons, lessonId)}>
@@ -243,6 +260,17 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
                 Only the text in the boxes is sent.
               </p>
             </div>
+            <button className="small copy-prompt" onClick={copyPrompt} disabled={!promptText}>
+              <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                <rect x="5.5" y="5.5" width="8" height="9" rx="1" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M3 10.5V2.5a1 1 0 0 1 1-1h6.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+              {copied === 'done' ? 'Copied' : copied === 'failed' ? 'Couldn’t copy' : 'Copy prompt'}
+            </button>
+            {/* Announces the result; the button's own label change isn't reliably read out. */}
+            <span className="sr-only" role="status">
+              {copied === 'done' ? 'Prompt copied' : copied === 'failed' ? 'Couldn’t copy the prompt' : ''}
+            </span>
           </header>
           <div className="panel-body">
             {/* What is sent: the system prompt (with the questions inside it) and the user prompt. */}

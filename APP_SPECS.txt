@@ -186,10 +186,11 @@ The full Prompts tab spec is in specs/PROMPTS_TAB_SPEC.txt; this section is the 
 
 - A short introduction says what the prompts are and that anyone, students included, can change them.
 
-- System prompt: the tutor's role, tone, and rules (e.g. "do not give away the answer").
+- System prompt: the AI's role, tone, and rules (e.g. "do not give away the answer").
 - User prompt: a template filled with activity and student data using variables:
     {{activity_title}}, {{activity_prompt}}, {{objectives}}, {{student_work}}
-- Assistant prompt: optional prefill or example response.
+- Questions to ask: the questions the AI can ask about the work, for every step and for each step,
+  sent inside the system prompt (only the checked step's own list).
 - A preview that shows the user prompt filled in for the step open in the Workspace.
 - Saving creates a new version; it never overwrites an existing one.
 - Prompts are kept per lesson (each lesson has its own tutor role and rubric). The lesson switcher at
@@ -201,7 +202,7 @@ C. VERSIONS TAB
 Track the history of prompt changes:
 
 - List of versions: number, author (a placeholder, "you", until sign-in), date, and a short note.
-- Selecting a version shows its full system / user / assistant prompts.
+- Selecting a version shows its full system prompt, questions to ask, and user prompt.
 - Placeholders for later: comparing two versions (diff) and restoring an older version.
 - Every feedback result records the prompt version that produced it, so results can be traced back
   to the prompts that generated them.
@@ -278,8 +279,9 @@ Placeholder phase:
 - POST /lessons/{id}/prompts/versions   Save a new prompt version for a lesson
 
 Later:
-- Fill the user prompt template, call the AI model with the system / user / assistant prompts,
-  and convert the response into the Feedback contract.
+- Fill the user prompt template, call the AI model with the system prompt (with the questions to
+  ask inside it; see specs/PROMPTS_TAB_SPEC.txt) and the user prompt, and convert the response
+  into the Feedback contract.
 - Log every feedback request and response, with its prompt version and the student's rating.
 - Stream feedback as it is generated.
 - Add sign-in, and record each prompt version's author and role (student, instructor, researcher).
@@ -299,7 +301,8 @@ Defined once in frontend/src/types/contracts.ts and mirrored as Pydantic models 
 - ActivityReport (what gets stored and sent for feedback): activityId, kind, status (in-progress | submitted), state, updatedAt.
 - Feedback: activityId, source (mock | ai), promptVersionId, generatedAt, summary, items[].
 - FeedbackItem: id, tone (praise | suggestion | issue), message, optional targetId.
-- PromptSet: system, user, assistant.
+- PromptSet: system, questions (for every step), stepQuestions (by activity id), user. The questions
+  are sent inside the system prompt: every-step ones plus the checked step's own.
 - LessonSummary: id, title (for lesson lists).
 - StakeholderRef: name, kind (direct | indirect) — stakeholders passed between activities.
 - ActivityDefinition.stakeholderSource: optional { stateKey, kind, label } to bring stakeholders in from.

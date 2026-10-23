@@ -13,10 +13,24 @@ const KEY = 'prompt-versions';
 function loadSaved(): PromptVersion[] {
   try {
     const parsed = JSON.parse(localStorage.getItem(KEY) ?? '[]');
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.map(upgrade) : [];
   } catch {
     return [];
   }
+}
+
+/** The third box was "Assistant", then "Example feedback", now "Questions to ask" (for every step,
+    plus per-step lists). Older saved versions keep their text in the every-step list, so nothing
+    written is lost. */
+function upgrade(v: PromptVersion): PromptVersion {
+  const { system, user, questions, stepQuestions, example, assistant } = v.prompts as Partial<PromptSet> & {
+    example?: string;
+    assistant?: string;
+  };
+  return {
+    ...v,
+    prompts: { system: system ?? '', user: user ?? '', questions: questions ?? example ?? assistant ?? '', stepQuestions: stepQuestions ?? {} },
+  };
 }
 
 const saved = loadSaved();
@@ -42,7 +56,7 @@ export async function savePromptVersion(lessonId: string, prompts: PromptSet, no
     author: 'you',
     note: note.trim() || `Version ${number}`,
     createdAt: new Date().toISOString(),
-    prompts: { ...prompts },
+    prompts: { ...prompts, stepQuestions: { ...prompts.stepQuestions } },
   };
   versions.push(version);
   saved.push(version);
@@ -52,6 +66,31 @@ export async function savePromptVersion(lessonId: string, prompts: PromptSet, no
     // Storage unavailable — the version stays in memory for this session.
   }
   return version;
+}
+
+/** The app's heading before the questions to ask. */
+/** The app's headings before each list of questions. */
+export const QUESTIONS_INTRO = 'Questions you can draw on at any step:';
+export const STEP_QUESTIONS_INTRO = 'Questions for this step:';
+
+/** The system prompt as sent for one activity, in pieces: the System text, then the questions for
+    every step and the activity's own questions, each after the app's heading (`framing` marks the
+    app's text). Other steps' questions are never sent. The backend sends the same text. */
+export function systemPromptParts(prompts: PromptSet, activityId: string | null): { text: string; framing?: boolean }[] {
+  const parts: { text: string; framing?: boolean }[] = [{ text: prompts.system }];
+  const add = (heading: string, list: string) => {
+    if (!list.trim()) return;
+    const gap = parts.some((p) => p.text.trim()) ? '\n\n' : '';
+    parts.push({ text: `${gap}${heading}\n`, framing: true }, { text: list.trim() });
+  };
+  add(QUESTIONS_INTRO, prompts.questions);
+  add(STEP_QUESTIONS_INTRO, activityId ? (prompts.stepQuestions[activityId] ?? '') : '');
+  return parts;
+}
+
+/** Whether two sets of per-step questions say the same (a missing step and an empty one are equal). */
+export function sameStepQuestions(a: Record<string, string>, b: Record<string, string>): boolean {
+  return [...new Set([...Object.keys(a), ...Object.keys(b)])].every((id) => (a[id] ?? '') === (b[id] ?? ''));
 }
 
 export const TEMPLATE_VARIABLES = ['activity_title', 'activity_prompt', 'objectives', 'student_work'] as const;

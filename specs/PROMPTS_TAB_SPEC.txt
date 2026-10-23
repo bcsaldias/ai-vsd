@@ -26,18 +26,88 @@ Header:
     buttons are disabled when there are no unsaved changes).
 
 Body, two columns:
-  - Left: three editors, System, User, Assistant.
+  - Left: three editors in the order they are sent: System, Questions to ask right under it (they
+    are sent inside the system prompt), then User. The Versions tab uses the same order.
   - Right: the Preview panel.
 
 
-THE THREE PROMPTS
+THE THREE PARTS
 
-- System: the tutor's role, tone, and rules (e.g. "do not give away the answer"). Sent as written.
+- System: who the AI is and its rules. Sent as written. Hint: "The AI's role, tone, and rules."
+- Questions to ask: the questions the AI can ask about the student's work, one per line, in two
+  lists (see QUESTIONS TO ASK). Hint: "Questions the AI can ask about the work, one per line.
+  They're sent with the System prompt: the ones for every step, plus the ones for the step being
+  checked. Add, remove, or reword them to change what the AI pushes you on."
 - User: a template sent with each feedback request. Its {{variables}} are filled in (see below).
-- Assistant: optional prefill or example response. Sent as written.
 
-Variables are only filled in the User prompt. A {{name}} in the System or Assistant prompt is sent
-exactly as typed.
+Variables are only filled in the User prompt. A {{name}} in the System prompt or the questions is
+sent exactly as typed.
+
+
+STARTING PROMPTS
+
+Each lesson starts with one prompt set. The AI is framed as a critical thinking partner, not a
+tutor:
+  - System: "You are a critical thinking partner for students ..." Don't give answers or list what
+    is missing (value scenarios: don't write or rewrite scenarios); ask short, specific questions
+    that make the student look again at their own work; start with one specific thing done well,
+    then two or three questions, no more; the reasoning should stay theirs.
+  - Questions for every step (both lessons): who is affected without ever using it (value
+    scenarios: and whose story isn't told yet); what those people would say about the student's
+    choices (or this future); which of the student's assumptions they would question.
+  - Questions for each step: two or three per step, written from that step's task and objectives
+    (e.g. Stakeholder Tokens step 3: who is affected without ever using it; who was left out
+    because they seemed far away or hard to see; who is excluded by the design, and is that a
+    choice). All 17 steps (9 + 8) have their own list. The full text is in mockData.ts.
+  - Questions are written in the second person ("your map"), as the AI would ask them.
+
+
+QUESTIONS TO ASK
+
+Two lists, so the questions adapt to the activity being checked:
+  - For every step: the general critical-thinking moves, one list per lesson.
+  - For this step: questions for one activity only, one list per step of the lesson.
+
+Editing:
+  - "For every step" is always shown.
+  - "For this step · Step N · Title" shows the list for the step open in the Workspace, the same
+    step the preview uses. There is no step picker in the Prompts tab: to edit another step's
+    questions, open that step in the Workspace (hint under the box says so).
+  - Edits to any step's list count as unsaved changes and are saved with the version. Lists for
+    several steps can be edited before saving one version.
+
+Sent inside the system prompt, after the System text, each list under the app's heading:
+
+    <System text>
+
+    Questions you can draw on at any step:
+    <the questions for every step>
+
+    Questions for this step:
+    <the questions for the step being checked>
+
+  An empty list adds nothing. Only the checked step's list is sent, never other steps': a question
+  about a later step (e.g. tensions while the student is naming direct stakeholders) would hand
+  them that step's work early, the same reason student work is limited to the step.
+
+Why both lists and the task/objectives variables: the variables tell the AI what the step asks and
+what good work looks like (its rubric, and how it spots "one thing done well"); the questions tell
+it how to push the student's thinking. Task and objectives are lesson content, shared with the step
+card; the questions are prompts anyone can edit.
+- Why questions and not an example: each question is one thing the AI may do, so students can add,
+  remove or reword one and see the effect, which is the prompting lesson. An example would also show
+  tone and length, but the AI tends to copy its specifics; the System rules cover tone and length.
+- Why not an assistant message: the third box was first an "Assistant" box meant as a prefill (the
+  start of the model's reply), but current Claude models reject a request that ends with an
+  assistant message, so a filled-in box would have made every feedback request fail.
+- One definition of the sent text: systemPromptParts in promptService. The preview uses it, and the
+  backend sends the same text.
+- Saved versions keep the questions in PromptSet.questions (every step) and
+  PromptSet.stepQuestions (by activity id). Versions saved in a browser under the box's earlier
+  names (`assistant`, then `example`) load with that text in "For every step", so nothing written
+  is lost; they start with no per-step questions.
+- The Versions tab lists, in the order they are sent: System, Questions to ask · For every step,
+  Questions to ask · Step N · Title for each step that has questions, then User.
 
 
 TEMPLATE VARIABLES
@@ -110,8 +180,10 @@ to screen readers when they appear.
 
 PREVIEW
 
-- Shows the System, User and Assistant prompts as they would be sent (empty prompts are skipped),
-  with the User template filled in.
+- Shows the two prompts as they would be sent (an empty one is skipped): System, with the questions
+  for every step and for the open step inside it, and User, with the template filled in. The app's
+  headings before the questions are muted and italic (tooltip: "Added by the app before your
+  questions").
 - Follows the step open in the Workspace: all four variables come from that activity. The header
   reads "Preview · Step N · Title". Until the Workspace has opened a step, the lesson's first
   activity is used.
@@ -204,7 +276,9 @@ CODE MAP
                                               sample switch.
   frontend/src/prompts/TemplateTextarea.tsx   The User editor with colored variables.
   frontend/src/services/promptService.ts      Versions and storage; TEMPLATE_VARIABLES,
-                                              templateVariables, templateParts, checkTemplate.
+                                              templateVariables, templateParts, checkTemplate,
+                                              systemPromptParts (the questions' headings),
+                                              sameStepQuestions.
   frontend/src/workspace/ActivityHost.tsx     workUpToStep (per-step view of shared work).
   frontend/src/App.tsx                        The shared lesson and the step open in each lesson.
   frontend/src/styles.css                     "Prompts & versions tabs" section; data-tip tooltip.
@@ -212,7 +286,7 @@ CODE MAP
 
 LATER
 
-- Warn about {{variables}} in the System and Assistant prompts (they are never filled there).
+- Warn about {{variables}} in the System prompt and the questions (they are never filled there).
 - Versions work: "Edit from this version" (load an older version as the draft) and showing what
   changed before saving / between versions. See C. VERSIONS TAB in APP_SPECS.txt.
 - When the backend arrives: make lesson loading ignore out-of-order responses (also in the

@@ -1,11 +1,10 @@
 // Prompt version history. Compare and restore are placeholders for now.
 
 import { useEffect, useState } from 'react';
-import type { LessonSummary, PromptRole, PromptVersion } from '../types/contracts';
+import type { Lesson, LessonSummary, PromptVersion } from '../types/contracts';
 import { listPromptVersions } from '../services/promptService';
+import { getLesson } from '../services/activityService';
 import { LessonPicker, lessonAccent } from '../lessons/LessonPicker';
-
-const ROLES: PromptRole[] = ['system', 'user', 'assistant'];
 
 interface Props {
   lessons: LessonSummary[];
@@ -19,6 +18,11 @@ interface Props {
 export function VersionsTab({ lessons, lessonId, onLessonChange, refreshKey }: Props) {
   const [versions, setVersions] = useState<PromptVersion[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // The lesson's steps, to label each step's questions.
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  useEffect(() => {
+    if (lessonId) getLesson(lessonId).then(setLesson);
+  }, [lessonId]);
 
   useEffect(() => {
     if (!lessonId) return;
@@ -64,10 +68,18 @@ export function VersionsTab({ lessons, lessonId, onLessonChange, refreshKey }: P
               </div>
             </header>
             <div className="panel-body">
-              {ROLES.map((role) => (
-                <div key={role} className="preview-message">
-                  <span className="role-label">{role}</span>
-                  <pre>{selected.prompts[role] || '(empty)'}</pre>
+              {/* In the order they are sent; only steps that have questions of their own are listed. */}
+              {[
+                { label: 'System', text: selected.prompts.system },
+                { label: 'Questions to ask · For every step', text: selected.prompts.questions },
+                ...(lesson?.id === selected.lessonId ? lesson.activities : [])
+                  .map((a, i) => ({ label: `Questions to ask · Step ${i + 1} · ${a.title}`, text: selected.prompts.stepQuestions[a.id] ?? '' }))
+                  .filter((s) => s.text.trim()),
+                { label: 'User', text: selected.prompts.user },
+              ].map(({ label, text }) => (
+                <div key={label} className="preview-message">
+                  <span className="role-label">{label}</span>
+                  <pre>{text || '(empty)'}</pre>
                 </div>
               ))}
             </div>

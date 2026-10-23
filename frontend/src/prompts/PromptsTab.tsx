@@ -1,19 +1,27 @@
-// Edit the system / user / assistant prompts. Saving always creates a new version.
+// Edit the system prompt, questions to ask, and user template. Saving always creates a new version.
 
 import { useEffect, useRef, useState } from 'react';
-import type { Lesson, LessonSummary, PromptRole, PromptSet, PromptVersion } from '../types/contracts';
+import type { Lesson, LessonSummary, PromptPart, PromptSet, PromptVersion } from '../types/contracts';
 import {
-  checkTemplate, getLatestPromptVersion, savePromptVersion, TEMPLATE_VARIABLES, templateParts, templateVariables,
+  checkTemplate, getLatestPromptVersion, sameStepQuestions, savePromptVersion, systemPromptParts, TEMPLATE_VARIABLES,
+  templateParts, templateVariables,
 } from '../services/promptService';
 import { getLesson, loadReport } from '../services/activityService';
 import { LessonPicker, lessonAccent } from '../lessons/LessonPicker';
 import { workUpToStep } from '../workspace/ActivityHost';
 import { TemplateTextarea } from './TemplateTextarea';
 
-const ROLES: { role: PromptRole; label: string; help: string }[] = [
-  { role: 'system', label: 'System', help: "The tutor's role, tone, and rules." },
-  { role: 'user', label: 'User', help: 'Template sent with each request. Use {{variables}} below.' },
-  { role: 'assistant', label: 'Assistant', help: 'Optional prefill or example response.' },
+// In the order they are sent: the questions go inside the system prompt, right after its text.
+const PARTS: { part: PromptPart; label: string; help: string }[] = [
+  { part: 'system', label: 'System', help: "The AI's role, tone, and rules." },
+  {
+    part: 'questions',
+    label: 'Questions to ask',
+    help:
+      'Questions the AI can ask about the work, one per line. They’re sent with the System prompt: the ones for every ' +
+      'step, plus the ones for the step being checked. Add, remove, or reword them to change what the AI pushes you on.',
+  },
+  { part: 'user', label: 'User', help: 'Template sent with each request. Use {{variables}} below.' },
 ];
 
 interface Props {
@@ -28,7 +36,8 @@ interface Props {
 }
 
 type Session = { base: PromptVersion; draft: PromptSet; note: string };
-const isDirty = ({ base, draft }: Session) => ROLES.some(({ role }) => draft[role] !== base.prompts[role]);
+const isDirty = ({ base, draft }: Session) =>
+  PARTS.some(({ part }) => draft[part] !== base.prompts[part]) || !sameStepQuestions(draft.stepQuestions, base.prompts.stepQuestions);
 
 /** Each lesson has its own prompts. The preview fills the template with the step open in the
     workspace and the student's saved work on it (or, if there is none yet, its worked example),
@@ -114,10 +123,12 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, activityId, acti
   // The student's work, or the worked example until there is some.
   // The chosen sample, or the other one when the step doesn't have it.
   const own = saved?.activityId === activity?.id ? saved?.state : null;
-  const example = activity?.example;
-  const shown = own != null && (sample === 'own' || example == null) ? 'own' : example != null ? 'example' : null;
-  const work = shown === 'own' ? own : shown === 'example' ? example : null;
+  const worked = activity?.example;
+  const shown = own != null && (sample === 'own' || worked == null) ? 'own' : worked != null ? 'example' : null;
+  const work = shown === 'own' ? own : shown === 'example' ? worked : null;
 
+  // The system prompt as sent for the open step: its questions, and the ones for every step.
+  const systemPrompt = systemPromptParts(draft, activity?.id ?? null);
   const preview = activity
     ? templateParts(draft.user, templateVariables(activity, work != null ? workUpToStep(activity, work) : null))
     : [{ text: draft.user }];
@@ -147,18 +158,43 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, activityId, acti
 
       <div className="prompts-grid">
         <div className="prompt-editors">
-          {ROLES.map(({ role, label, help }) => (
-            <div key={role} className="prompt-editor">
-              <label>
-                <span className="role-label">{label}</span>
-                <span className="hint">{help}</span>
-                {role === 'user' ? (
-                  <TemplateTextarea ref={userEditor} value={draft.user} onChange={(user) => setDraft({ ...draft, user })} rows={8} />
-                ) : (
-                  <textarea value={draft[role]} onChange={(e) => setDraft({ ...draft, [role]: e.target.value })} rows={4} />
-                )}
-              </label>
-              {role === 'user' && (
+          {PARTS.map(({ part, label, help }) => (
+            <div key={part} className="prompt-editor">
+              {part === 'questions' ? (
+                // Two lists: one for every step, and one for the step open in the Workspace.
+                <>
+                  <span className="role-label">{label}</span>
+                  <span className="hint">{help}</span>
+                  <label className="question-list">
+                    <span className="list-label">For every step</span>
+                    <textarea value={draft.questions} onChange={(e) => setDraft({ ...draft, questions: e.target.value })} rows={4} />
+                  </label>
+                  {activity && (
+                    <label className="question-list">
+                      <span className="list-label">For this step · Step {index + 1} · {activity.title}</span>
+                      <span className="hint">To edit another step’s questions, open that step in the Workspace.</span>
+                      <textarea
+                        value={draft.stepQuestions[activity.id] ?? ''}
+                        onChange={(e) =>
+                          setDraft({ ...draft, stepQuestions: { ...draft.stepQuestions, [activity.id]: e.target.value } })
+                        }
+                        rows={4}
+                      />
+                    </label>
+                  )}
+                </>
+              ) : (
+                <label>
+                  <span className="role-label">{label}</span>
+                  <span className="hint">{help}</span>
+                  {part === 'user' ? (
+                    <TemplateTextarea ref={userEditor} value={draft.user} onChange={(user) => setDraft({ ...draft, user })} rows={8} />
+                  ) : (
+                    <textarea value={draft[part]} onChange={(e) => setDraft({ ...draft, [part]: e.target.value })} rows={4} />
+                  )}
+                </label>
+              )}
+              {part === 'user' && (
                 <div className="variables">
                   <span className="hint">Click to insert:</span>
                   {TEMPLATE_VARIABLES.map((v) => {
@@ -179,7 +215,7 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, activityId, acti
                   })}
                 </div>
               )}
-              {role === 'user' && (
+              {part === 'user' && (
                 <ul className="template-checks" role="status">
                   {checks.unknown.map((name) => (
                     <li key={name}>
@@ -220,9 +256,9 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, activityId, acti
               <button
                 className="small"
                 aria-pressed={shown === 'example'}
-                aria-disabled={example == null}
-                data-tip={example == null ? 'This step has no worked example.' : undefined}
-                onClick={() => example != null && setSample('example')}
+                aria-disabled={worked == null}
+                data-tip={worked == null ? 'This step has no worked example.' : undefined}
+                onClick={() => worked != null && setSample('example')}
               >
                 Worked example
               </button>
@@ -230,28 +266,41 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, activityId, acti
           </header>
           <div className="panel-body">
             <p className="hint">Blue text is filled in from a variable. Hover over it to see which one.</p>
-            {ROLES.filter(({ role }) => draft[role].trim()).map(({ role, label }) => (
-              <div key={role} className="preview-message">
-                <span className="role-label">{label}</span>
+            {/* What is sent: the system prompt (with the questions inside it) and the user prompt. */}
+            {systemPrompt.some((part) => part.text.trim()) && (
+              <div className="preview-message">
+                <span className="role-label">System</span>
                 <pre>
-                  {role !== 'user'
-                    ? draft[role]
-                    : preview.map((part, i) =>
-                        part.variable ? (
-                          <mark
-                            key={i}
-                            className={part.unknown ? 'unknown' : undefined}
-                            data-tip={part.unknown ? 'Not a variable: sent as typed' : `{{${part.variable}}}`}
-                          >
-                            {part.text}
-                          </mark>
-                        ) : (
-                          part.text
-                        ),
-                      )}
+                  {systemPrompt.map((part, i) =>
+                    part.framing ? (
+                      <span key={i} className="framing" data-tip="Added by the app before your questions">{part.text}</span>
+                    ) : (
+                      part.text
+                    ),
+                  )}
                 </pre>
               </div>
-            ))}
+            )}
+            {draft.user.trim() && (
+              <div className="preview-message">
+                <span className="role-label">User</span>
+                <pre>
+                  {preview.map((part, i) =>
+                    part.variable ? (
+                      <mark
+                        key={i}
+                        className={part.unknown ? 'unknown' : undefined}
+                        data-tip={part.unknown ? 'Not a variable: sent as typed' : `{{${part.variable}}}`}
+                      >
+                        {part.text}
+                      </mark>
+                    ) : (
+                      part.text
+                    ),
+                  )}
+                </pre>
+              </div>
+            )}
           </div>
         </aside>
       </div>

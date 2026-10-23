@@ -719,6 +719,9 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 .prompt-editors { display: grid; gap: 16px; align-content: start; }
 .prompt-editor, .prompt-editor > label { display: grid; gap: 4px; }
 .prompt-editor { gap: 6px; }
+/* The two lists inside "Questions to ask". */
+.question-list { margin-top: 4px; }
+.list-label { font-size: 0.85rem; font-weight: 700; }
 .role-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
 .variables { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 /* Looks like inline code; the border on hover shows it can be clicked. */
@@ -759,6 +762,8 @@ button.variable[aria-disabled='true']:hover { background: var(--surface-strong);
 .sample-toggle [data-tip]::after { left: auto; right: 0; transform: none; }
 /* Preview: text that came from a variable is blue, like the variable it replaced; unknown names in the issue color. */
 .prompt-preview mark { background: none; color: var(--variable); }
+/* The app's heading before the questions to ask: muted, so the student's own text stands out. */
+.prompt-preview .framing { color: var(--ink-soft); font-style: italic; }
 .preview-message { display: grid; gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
 .preview-message:last-child { border-bottom: none; }
 

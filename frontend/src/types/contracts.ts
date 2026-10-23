@@ -99,10 +99,13 @@ export interface Feedback {
 
 // ---------- Prompts & versions ----------
 
-export type PromptRole = 'system' | 'user' | 'assistant';
+/** The text parts of a lesson's prompts. */
+export type PromptPart = 'system' | 'questions' | 'user';
 
-/** One editable template per chat role. `user` supports {{variables}}. */
-export type PromptSet = Record<PromptRole, string>;
+/** A lesson's prompts. `user` is a template with {{variables}}. The questions to ask are sent inside
+    the system prompt (see systemPromptParts): `questions` for every step, plus the checked step's
+    entry in `stepQuestions` (by activity id). */
+export type PromptSet = Record<PromptPart, string> & { stepQuestions: Record<string, string> };
 
 /** Prompt versions are kept per lesson: each lesson has its own tutor prompts and rubric. */
 export interface PromptVersion {

@@ -27,7 +27,7 @@ Pushing to `main` publishes the site to GitHub Pages at https://bcsaldias.github
 | `services/` | The only code that reads or writes data. Mock data and localStorage for now; later these call the FastAPI backend with the same function signatures. |
 | `workspace/` | Workspace tab (student-facing). `WorkspaceTab` arranges the three panels (`LearningWorkspace`, `FeedbackPanel`, `ActivityHost`) and their resize handles. |
 | `activities/` | One folder per activity (`diagram/`, `annotation/`, `stakeholder-tokens/`). Each owns its own interaction logic and state shape. `stakeholder-tokens/model.ts` holds the board's data and pure update functions; the components only render and call them. |
-| `prompts/` | Prompts tab. Edit the system, user, and assistant prompts; saving creates a new version. |
+| `prompts/` | Prompts tab. Edit the system prompt, questions to ask, and user template; saving creates a new version. |
 | `versions/` | Versions tab. Prompt version history (compare and restore are placeholders). |
 
 ## Rules of thumb

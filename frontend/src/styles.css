@@ -801,6 +801,11 @@ button.variable[aria-disabled='true']:hover { background: var(--surface-strong);
 .prompt-preview .framing { color: var(--ink-soft); font-style: italic; }
 .preview-message { display: grid; gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
 .preview-message:last-child { border-bottom: none; }
+.preview-message .hint { margin: 0; }
+/* What is sent sits in a box; labels and notes outside it are not sent. Greyer than the editors'
+   paper, so it reads as read only. */
+.preview-message pre { background: var(--surface-strong); padding: 8px 10px; }
+.preview-intro { margin: 2px 0 0; }
 
 .versions-grid { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 20px; }
 .version-list { list-style: none; padding: 0; margin: 0; display: grid; align-content: start; border-top: 1px solid var(--rule); }

@@ -187,13 +187,17 @@ PREVIEW
   headings before the questions are muted and italic (tooltip: "Added by the app before your
   questions").
 - Follows the step open in the Workspace: all four variables come from that activity. The header
-  reads "Preview · Step N · Title". Until the Workspace has opened a step, the lesson's first
-  activity is used.
+  reads "What the AI receives", with "This is the full prompt the AI works with when you check your
+  work on this step. Only the text in the boxes is sent." in the header under it; the step itself
+  is in the step trail. Each prompt sits in a box, greyer than the editors' paper so it reads as
+  read only; labels and hints outside the boxes are the app's notes and are not sent. Until the Workspace has
+  opened a step, the lesson's first activity is used.
 - The step open in each lesson is one shared choice in the app shell, the same way the lesson is, so
   the Workspace and the Prompts tab can't disagree.
 - Text filled in from a variable is blue; hovering it shows which variable it came from. Unknown names
-  show in the issue color with a wavy underline (tooltip: "Not a variable: sent as typed"). A hint at
-  the top: "Blue text is filled in from a variable. Hover over it to see which one."
+  show in the issue color with a wavy underline (tooltip: "Not a variable: sent as typed"). A hint under
+  the User label (only the User prompt has variables): "Blue text is filled in from a variable.
+  Hover over it to see which one."
 - The student's work is read again each time the Prompts tab is opened, so changes made in the
   Workspace always show up.
 

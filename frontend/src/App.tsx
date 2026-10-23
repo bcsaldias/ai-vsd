@@ -18,8 +18,22 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'versions', label: 'Versions' },
 ];
 
+// The open tab lives in the address (#prompts, #versions), so a refresh stays on it while opening
+// the app fresh still starts on the Workspace.
+const tabFromHash = (): TabId => TABS.find((t) => `#${t.id}` === window.location.hash)?.id ?? 'workspace';
+
 export function App() {
-  const [tab, setTab] = useState<TabId>('workspace');
+  const [tab, setTabState] = useState<TabId>(tabFromHash);
+  const setTab = (id: TabId) => {
+    setTabState(id);
+    history.replaceState(null, '', id === 'workspace' ? window.location.pathname + window.location.search : `#${id}`);
+  };
+  // Typing or following a #tab link while the app is open switches to it too.
+  useEffect(() => {
+    const follow = () => setTabState(tabFromHash());
+    window.addEventListener('hashchange', follow);
+    return () => window.removeEventListener('hashchange', follow);
+  }, []);
   const [versionsRefreshKey, setVersionsRefreshKey] = useState(0);
   // One lesson selection for every tab: picking a lesson anywhere changes it everywhere.
   const [lessons, setLessons] = useState<LessonSummary[]>([]);

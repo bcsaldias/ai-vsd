@@ -147,8 +147,10 @@ The lesson is the outer level of the app. The top bar holds the app name and the
 under it, Workspace, Prompts, and Versions are the selected lesson's sections, and under those the
 step trail shows its steps. The sections and the trail hang off a rule in the lesson's color, so they
 read as belonging to it. The selected lesson is one choice for the whole app: switching keeps the
-open section, and the browser remembers the lesson. Switching back to a lesson returns to
-the step last open in it. Unsaved prompt edits are kept per lesson, so switching never discards them.
+open section, and the browser remembers the lesson. The open section is in the address (#prompts,
+#versions; none for the Workspace), so a refresh stays on it and opening the app fresh starts on
+the Workspace. Switching back to a lesson returns to the step last open in it. Unsaved prompt edits
+are kept per lesson, so switching never discards them.
 
 The open step is also one choice for the whole app. A step trail under the sections, on Workspace and
 Prompts (not Versions: versions are kept per lesson, not per step), shows the lesson's steps as dots joined by arrows (o → o → o); the current step's dot is filled

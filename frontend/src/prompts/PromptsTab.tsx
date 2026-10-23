@@ -234,7 +234,11 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
 
         <aside className="panel prompt-preview">
           <header className="panel-header">
-            <h3>Preview{activity && ` · Step ${index + 1} · ${activity.title}`}</h3>
+            {/* Named by what it shows; the step it follows is in the trail at the top. */}
+            <div>
+              <h3>What the AI receives</h3>
+              <p className="hint preview-intro">This is the full prompt the AI works with when you check your work on this step. Only the text in the boxes is sent.</p>
+            </div>
             <div className="sample-toggle" role="group" aria-label="Student work in the preview">
               {/* aria-disabled rather than disabled, so the tooltip saying why still shows on hover. */}
               <button
@@ -263,7 +267,6 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
             </div>
           </header>
           <div className="panel-body">
-            <p className="hint">Blue text is filled in from a variable. Hover over it to see which one.</p>
             {/* What is sent: the system prompt (with the questions inside it) and the user prompt. */}
             {systemPrompt.some((part) => part.text.trim()) && (
               <div className="preview-message">
@@ -282,6 +285,8 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
             {draft.user.trim() && (
               <div className="preview-message">
                 <span className="role-label">User</span>
+                {/* Only the User prompt has variables, so the hint sits here. */}
+                <p className="hint">Blue text is filled in from a variable. Hover over it to see which one.</p>
                 <pre>
                   {preview.map((part, i) =>
                     part.variable ? (

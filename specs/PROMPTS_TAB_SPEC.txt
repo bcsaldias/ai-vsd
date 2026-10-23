@@ -15,7 +15,7 @@ prompt AI. Each lesson has its own prompts (its own AI role, questions, and rubr
 LAYOUT
 
 Header:
-  - "PROMPTS." title (the lesson is picked in the top bar, above the sections), and a short
+  - "PROMPT DESIGN." title (the tab stays "Prompts"; the lesson is picked in the top bar, above the sections), and a short
     introduction that frames the AI as a critical-thinking partner, not a tutor, and says anyone can
     change its instructions: "The AI here is told not to give answers. Instead, it asks questions,
     points out gaps, and challenges your reasoning, following the instructions below. Anyone,

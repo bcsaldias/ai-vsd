@@ -232,7 +232,7 @@ Adapted from the VSD Lab site (vsdesign.org: home, projects, the lab):
   Workspace = orange #D68C45 (home), Prompts = mauve #BAB3BC→#B0A9B2 (projects), Versions = blue #7F9CC7 (the lab).
 - Cormorant Garamond for all text; a condensed sans (Barlow Condensed) for the app wordmark.
 - Ink #00001C for text, plum #573D52 for links, primary buttons, and focus.
-- Large white display titles with a trailing period ("PROMPTS."), and stacked thin white rules as dividers.
+- Large white display titles with a trailing period ("PROMPT DESIGN.", "VERSIONS."), and stacked thin white rules as dividers.
 - Flat and editorial: square corners, no shadows; panels are light translucent fills with thin white borders.
 - Accessibility: white fails contrast on these grounds (about 2.2–2.8:1), so it is only used for large titles
   and rules; all working text is ink (7:1 or higher). Lining numerals are used so "1" does not read as "I".

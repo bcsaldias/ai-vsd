@@ -153,7 +153,7 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
     <div className="tab-page prompts-page" style={lessonAccent(lessons, lessonId)}>
       <div className="page-header">
         <div>
-          <h1 className="page-title">Prompts.</h1>
+          <h1 className="page-title">Prompt Design.</h1>
           <p className="prompts-intro">
             The AI here is told not to give answers. Instead, it asks questions, points out gaps, and challenges
             your reasoning, following the instructions below. Anyone, students included, can read and change

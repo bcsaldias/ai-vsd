@@ -1,9 +1,10 @@
 // AppShell: switches between tabs. Tabs stay mounted so unsaved drafts survive switching.
 
 import { useEffect, useState } from 'react';
-import type { LessonSummary } from './types/contracts';
-import { getLessons } from './services/activityService';
+import type { Lesson, LessonSummary } from './types/contracts';
+import { getLesson, getLessons } from './services/activityService';
 import { rememberLesson, rememberedLesson } from './lessons/rememberedLesson';
+import { StepTrail } from './lessons/StepTrail';
 import { WorkspaceTab } from './workspace/WorkspaceTab';
 import { PromptsTab } from './prompts/PromptsTab';
 import { VersionsTab } from './versions/VersionsTab';
@@ -38,6 +39,12 @@ export function App() {
   const [steps, setSteps] = useState<Record<string, string>>({});
   const selectStep = (lesson: string, activityId: string) =>
     setSteps((all) => (all[lesson] === activityId ? all : { ...all, [lesson]: activityId }));
+  // The selected lesson's steps, for the step trail.
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  useEffect(() => {
+    if (lessonId) getLesson(lessonId).then(setLesson);
+  }, [lessonId]);
+  const trailLesson = lesson?.id === lessonId ? lesson : null;
 
   return (
     <div className="app" data-tab={tab}>
@@ -57,6 +64,13 @@ export function App() {
           </button>
         ))}
       </nav>
+      {trailLesson && trailLesson.activities.length > 0 && (
+        <StepTrail
+          lesson={trailLesson}
+          currentId={steps[trailLesson.id] ?? trailLesson.activities[0].id}
+          onSelect={(activityId) => selectStep(trailLesson.id, activityId)}
+        />
+      )}
       <div className="rules" aria-hidden="true" />
 
       <main className="tab-content">

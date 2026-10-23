@@ -71,8 +71,9 @@ Two lists, so the questions adapt to the activity being checked:
 Editing:
   - "For every step" is always shown.
   - "For this step · Step N · Title" shows the list for the step open in the Workspace, the same
-    step the preview uses. There is no step picker in the Prompts tab: to edit another step's
-    questions, open that step in the Workspace (hint under the box says so).
+    step the preview uses. There is no step picker in the Prompts tab itself: to edit another
+    step's questions, pick that step in the step trail under the tab bar (see APP_SPECS.txt; the
+    hint under the box says "To edit another step's questions, pick it in the steps at the top.").
   - Edits to any step's list count as unsaved changes and are saved with the version. Lists for
     several steps can be edited before saving one version.
 

@@ -72,6 +72,14 @@ export function WorkspaceTab({ lessons, lessonId, onLessonChange, steps, onStepC
     if (lesson && activityId && lesson.activities.some((a) => a.id === activityId)) onStepChange(lesson.id, activityId);
   }, [lesson, activityId]);
 
+  // A step picked elsewhere (the step trail, on any tab) opens here too.
+  const requested = lessonId ? steps[lessonId] : undefined;
+  useEffect(() => {
+    if (lesson && requested && requested !== activityId && lesson.activities.some((a) => a.id === requested)) {
+      setActivityId(requested);
+    }
+  }, [requested]);
+
   useEffect(() => {
     currentId.current = activityId;
     const definition = lesson?.activities.find((a) => a.id === activityId);

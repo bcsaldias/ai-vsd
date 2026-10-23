@@ -172,7 +172,7 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, activityId, acti
                   {activity && (
                     <label className="question-list">
                       <span className="list-label">For this step · Step {index + 1} · {activity.title}</span>
-                      <span className="hint">To edit another step’s questions, open that step in the Workspace.</span>
+                      <span className="hint">To edit another step’s questions, pick it in the steps at the top.</span>
                       <textarea
                         value={draft.stepQuestions[activity.id] ?? ''}
                         onChange={(e) =>

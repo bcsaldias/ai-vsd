@@ -144,6 +144,14 @@ The selected lesson is one choice for the whole app: picking a lesson on any tab
 Versions) changes it everywhere, and the browser remembers it. Switching back to a lesson returns to
 the step last open in it. Unsaved prompt edits are kept per lesson, so switching never discards them.
 
+The open step is also one choice for the whole app. A step trail under the tab bar, on every tab,
+shows the lesson's steps as dots joined by arrows (o → o → o); the current step's dot is filled
+with the lesson's color and slightly larger, and "Step N of M · Title" is written beside the trail,
+so color is never the only cue. Clicking a dot opens that step everywhere: the Workspace activity,
+the Prompts preview, and the Prompts step questions. Each dot shows "Step N · Title" on hover or
+focus, and is labelled "Step N of M: Title" for screen readers. The Workspace's activity list and
+Next button move the trail too. On narrow screens the trail wraps.
+
 A second, independent lesson (Nathan, Klasnja & Friedman, 2007): short stories about how a technology
 plays out for different stakeholders, once widely used and over many years. Its own steps, saved work
 (stateKey "value-scenarios"), example, Export / Import / Start over, and prompts. The learning

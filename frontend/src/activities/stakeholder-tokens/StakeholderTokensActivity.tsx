@@ -27,6 +27,8 @@ type BoardNode = Node<Record<string, never>>;
 const RINGS_ID = '__rings';
 const CONTEXT_ID = '__context';
 const DRAG_TYPE = 'application/x-stakeholder-token';
+/** How the board is framed: the whole rings, never zoomed past 100%. */
+const FIT_VIEW = { padding: 0.04, maxZoom: 1 };
 
 const nodeTypes = { rings: RingsNode, context: ContextNode, token: TokenNode };
 const edgeTypes = { link: LinkEdge };
@@ -85,6 +87,24 @@ export function StakeholderTokensActivity({ savedState, onChange, config, exampl
   // A token just added from the palette: the inspector puts the cursor in its Name field.
   const [nameRequest, setNameRequest] = useState<string | null>(null);
   const [connectAs, setConnectAs] = useState<Link['type']>('relationship');
+
+  // The board can mount while its tab is hidden (a refresh on Prompts, a lesson switch on Versions),
+  // and fitView then frames the rings in a 0×0 box: tiny, in the top-left corner. Fit again once the
+  // board is shown. Only on hidden → shown, so a student's own zoom survives panel resizing.
+  const canvasRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el || !flow) return;
+    let hidden = el.clientWidth === 0 || el.clientHeight === 0;
+    const observer = new ResizeObserver(() => {
+      const nowHidden = el.clientWidth === 0 || el.clientHeight === 0;
+      // A frame later, so React Flow has measured the nodes at their real size.
+      if (hidden && !nowHidden) requestAnimationFrame(() => flow.fitView(FIT_VIEW));
+      hidden = nowHidden;
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [flow]);
 
   // From the tensions step on, new connections default to tensions.
   useEffect(() => setConnectAs(allows(step, 'tensions') ? 'tension' : 'relationship'), [step]);
@@ -233,7 +253,7 @@ export function StakeholderTokensActivity({ savedState, onChange, config, exampl
               {board.context.label || 'Name what you’re designing'}
             </span>
           </button>
-        <div className={`canvas tokens-board${canConnect ? ' can-connect' : ''}`} onDragOver={onDragOver} onDrop={onDrop}>
+        <div ref={canvasRef} className={`canvas tokens-board${canConnect ? ' can-connect' : ''}`} onDragOver={onDragOver} onDrop={onDrop}>
           <BoardContext.Provider value={{ board, step }}>
             <ReactFlow
               nodes={nodes}
@@ -261,7 +281,7 @@ export function StakeholderTokensActivity({ savedState, onChange, config, exampl
               preventScrolling={false}
               minZoom={0.2}
               fitView
-              fitViewOptions={{ padding: 0.04, maxZoom: 1 }}
+              fitViewOptions={FIT_VIEW}
             >
               <Controls showInteractive={false} />
             </ReactFlow>

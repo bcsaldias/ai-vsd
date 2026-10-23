@@ -1,0 +1,140 @@
+{
+  "id": "vsd-value-scenarios",
+  "title": "Value Scenarios",
+  "color": "#d26559",
+  "symbol": "≡",
+  "intro": "Value scenarios are short stories about how a technology plays out for different people, including people who never use it, once it is widely used and has been around for years (Nathan, Klasnja & Friedman, 2007). In this lesson you will write a few scenarios, push them forward in time and across society, and trace the values they touch. Your scenarios carry over from step to step.",
+  "activity": "value-scenarios",
+  "sharedBoard": "value-scenarios",
+  "bringStakeholdersFrom": {
+    "stateKey": "stakeholder-board",
+    "kind": "stakeholder-tokens",
+    "label": "my stakeholder map"
+  },
+  "steps": [
+    {
+      "id": "scenarios-technology",
+      "title": "Choose the technology",
+      "task": "Name the technology your scenarios are about. Be concrete: what does it do, and who uses it?",
+      "objectives": [
+        "Names a specific technology and what it does"
+      ],
+      "guide": [
+        {
+          "target": "technology",
+          "label": "Technology",
+          "where": "The box at the top left of the panel below."
+        }
+      ]
+    },
+    {
+      "id": "scenarios-stakeholders",
+      "title": "Whose stories?",
+      "task": "List the people whose stories you will tell. Include at least one indirect stakeholder: someone affected by the technology who never uses it.",
+      "objectives": [
+        "Lists at least three stakeholders",
+        "Includes at least one indirect stakeholder"
+      ],
+      "guide": [
+        {
+          "target": "stakeholders",
+          "label": "Whose stories?",
+          "where": "Left of the scenario list. Add people yourself, or bring them in from your stakeholder map."
+        }
+      ]
+    },
+    {
+      "id": "scenarios-story",
+      "title": "Write a scenario",
+      "task": "Write a short story, a few sentences, about one stakeholder meeting the technology today. Make it specific: a person, a place, a moment. Then write another for a different stakeholder.",
+      "objectives": [
+        "Tells a concrete story from one stakeholder’s point of view",
+        "Writes scenarios for at least two stakeholders"
+      ],
+      "guide": [
+        {
+          "target": "story",
+          "label": "+ New scenario",
+          "where": "Under the scenario list."
+        }
+      ]
+    },
+    {
+      "id": "scenarios-time",
+      "title": "Move it forward in time",
+      "task": "Jump ahead 5 or 20+ years in each scenario. What has changed for this person?",
+      "objectives": [
+        "Describes how effects build up or change over the years"
+      ],
+      "guide": [
+        {
+          "target": "time",
+          "label": "Later",
+          "where": "In each scenario card: pick how far ahead, then write."
+        }
+      ]
+    },
+    {
+      "id": "scenarios-widespread",
+      "title": "Imagine everyone has it",
+      "task": "What happens when the technology is everywhere, not just in one home, school, or workplace?",
+      "objectives": [
+        "Considers the effects of widespread use, not only of one user"
+      ],
+      "guide": [
+        {
+          "target": "widespread",
+          "label": "If everyone had it",
+          "where": "In each scenario card."
+        }
+      ]
+    },
+    {
+      "id": "scenarios-systemic",
+      "title": "Trace systemic effects",
+      "task": "Follow the knock-on effects: how do institutions, social norms, or relationships change?",
+      "objectives": [
+        "Identifies indirect effects on institutions, norms, or relationships"
+      ],
+      "guide": [
+        {
+          "target": "systemic",
+          "label": "Knock-on effects",
+          "where": "In each scenario card."
+        }
+      ]
+    },
+    {
+      "id": "scenarios-values",
+      "title": "Value implications",
+      "task": "Tag each scenario with the values it touches, and mark each one as a harm or a benefit.",
+      "objectives": [
+        "Names the values at stake in each scenario",
+        "Marks whether each value is harmed or supported"
+      ],
+      "guide": [
+        {
+          "target": "values",
+          "label": "Values at stake",
+          "where": "At the bottom of each scenario card. Pick harm or benefit, type, press Enter."
+        }
+      ]
+    },
+    {
+      "id": "scenarios-tensions",
+      "title": "Compare scenarios",
+      "task": "Put your scenarios side by side. Where does one stakeholder’s benefit come at another’s cost? Record the tensions.",
+      "objectives": [
+        "Identifies at least one tension between scenarios",
+        "Explains which values conflict"
+      ],
+      "guide": [
+        {
+          "target": "tensions",
+          "label": "Tensions between scenarios",
+          "where": "Under the scenario cards."
+        }
+      ]
+    }
+  ]
+}

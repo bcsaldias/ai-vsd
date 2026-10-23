@@ -1,0 +1,127 @@
+{
+  "technology": "Smart doorbell camera that records the front door and shares clips to a phone app",
+  "stakeholders": [
+    {
+      "id": "exs-home",
+      "name": "Homeowners",
+      "kind": "direct"
+    },
+    {
+      "id": "exs-teen",
+      "name": "Teenagers in the household",
+      "kind": "direct"
+    },
+    {
+      "id": "exs-delivery",
+      "name": "Delivery workers",
+      "kind": "indirect"
+    },
+    {
+      "id": "exs-street",
+      "name": "Neighbours and passers-by",
+      "kind": "indirect"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "exs-1",
+      "stakeholderId": "exs-delivery",
+      "title": "The “suspicious” driver",
+      "story": "Sam delivers 120 parcels a day. At one house, a clip of Sam leaving a parcel is posted to a neighbourhood app with the caption “suspicious”. Sam only finds out when a customer mentions it.",
+      "horizon": "years",
+      "later": "Most homes on Sam’s route now have cameras. The delivery company starts using customers’ clips to rate how fast and how carefully drivers work.",
+      "widespread": "Every doorstep records workers. Delivery work is watched all day by people who are not the employer.",
+      "systemic": "Employers lean on customers’ cameras instead of their own policies. Complaints arrive as video that workers can’t see or answer.",
+      "values": [
+        {
+          "id": "exs-v1",
+          "name": "Dignity",
+          "effect": "harm"
+        },
+        {
+          "id": "exs-v2",
+          "name": "Privacy",
+          "effect": "harm"
+        },
+        {
+          "id": "exs-v3",
+          "name": "Fairness",
+          "effect": "harm"
+        },
+        {
+          "id": "exs-v4",
+          "name": "Trust",
+          "effect": "benefit"
+        }
+      ]
+    },
+    {
+      "id": "exs-2",
+      "stakeholderId": "exs-street",
+      "title": "The morning walk",
+      "story": "Ana walks her dog past the same houses every morning. Three of them have doorbell cameras that also capture the pavement. She has never noticed them.",
+      "horizon": "decades",
+      "later": "Clips from thousands of doorbells can be searched by time and place. Anyone with access could piece together Ana’s daily routine.",
+      "widespread": "If every front door records the street, there is no unrecorded public space left.",
+      "systemic": "Police and insurers come to expect footage. Not having a camera starts to look careless, or suspicious.",
+      "values": [
+        {
+          "id": "exs-v5",
+          "name": "Privacy",
+          "effect": "harm"
+        },
+        {
+          "id": "exs-v6",
+          "name": "Informed consent",
+          "effect": "harm"
+        },
+        {
+          "id": "exs-v7",
+          "name": "Safety",
+          "effect": "benefit"
+        }
+      ]
+    },
+    {
+      "id": "exs-3",
+      "stakeholderId": "exs-home",
+      "title": "Peace of mind",
+      "story": "Jo works late and checks the app to see her teenager get home safely. It’s the first thing she looks at.",
+      "horizon": "years",
+      "later": "Her teenager has learned to come in through the back door so they aren’t logged.",
+      "widespread": "Families everywhere track each other’s comings and goings by default.",
+      "systemic": "Trust at home shifts from conversation to checking. Not being watched starts to need a reason.",
+      "values": [
+        {
+          "id": "exs-v8",
+          "name": "Safety",
+          "effect": "benefit"
+        },
+        {
+          "id": "exs-v9",
+          "name": "Autonomy",
+          "effect": "harm"
+        },
+        {
+          "id": "exs-v10",
+          "name": "Trust",
+          "effect": "harm"
+        }
+      ]
+    }
+  ],
+  "tensions": [
+    {
+      "id": "exs-t1",
+      "a": "exs-3",
+      "b": "exs-2",
+      "note": "Jo’s sense of safety depends on recording the doorstep, which also records Ana, who never agreed to it (safety vs privacy)."
+    },
+    {
+      "id": "exs-t2",
+      "a": "exs-3",
+      "b": "exs-1",
+      "note": "Homeowners gain proof of delivery; drivers lose dignity and become judged by clips they can’t answer."
+    }
+  ]
+}

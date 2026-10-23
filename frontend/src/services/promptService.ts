@@ -1,15 +1,15 @@
 // Prompt templates and their version history, kept per lesson.
-// Placeholder: the seeded versions from mock data, plus versions saved in this browser (localStorage).
+// Placeholder: each lesson's starting version (content/<lesson>/prompts.json), plus versions saved in this browser (localStorage).
 // Later: FastAPI endpoints, shared by everyone.
 
 import type { ActivityDefinition, PromptSet, PromptVersion } from '../types/contracts';
-import { SEED_PROMPT_VERSIONS } from './mockData';
+import { SEED_PROMPT_VERSIONS } from './lessonContent';
 
 const KEY = 'prompt-versions';
 
-/** Versions saved in this browser. The seeds stay in code, so changes to them still show up.
-    Numbers continue after the seeds, so adding a seed later collides with saved versions (see
-    SEED_PROMPT_VERSIONS). Goes away once the backend numbers versions. */
+/** Versions saved in this browser. The starting versions stay in the content files, so changes to
+    them still show up. Numbers continue after them, so each lesson keeps exactly one starting
+    version (see SEED_PROMPT_VERSIONS). Goes away once the backend numbers versions. */
 function loadSaved(): PromptVersion[] {
   try {
     const parsed = JSON.parse(localStorage.getItem(KEY) ?? '[]');

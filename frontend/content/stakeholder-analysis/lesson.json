@@ -1,0 +1,167 @@
+{
+  "id": "vsd-stakeholder-analysis",
+  "title": "Stakeholder Analysis",
+  "color": "#a6baa0",
+  "symbol": "◎",
+  "intro": "Value Sensitive Design asks you to account for everyone a technology affects — not only the people who use it. In this lesson you will build a stakeholder map with tokens: place stakeholders on rings around what you are designing, connect them, note what each could gain or lose, and trace those harms and benefits to the values at stake. The board carries over from step to step, so you can go back and revise at any point. No project of your own? Use a reading app that tracks each student’s progress and shares it with teachers and parents.",
+  "activity": "stakeholder-tokens",
+  "sharedBoard": "stakeholder-board",
+  "steps": [
+    {
+      "id": "stakeholders-start",
+      "title": "Choose a starting point",
+      "task": "Start from a technology, a value, or a context of use. Select the centre of the board and name what you are designing.",
+      "objectives": [
+        "Names a specific technology, value, or context of use",
+        "Says which of the three it is"
+      ],
+      "guide": [
+        {
+          "target": "context",
+          "label": "The centre of the board",
+          "where": "Select it, then name it in the panel on the right."
+        }
+      ]
+    },
+    {
+      "id": "stakeholders-direct",
+      "title": "Direct stakeholders",
+      "task": "Add the people who will interact with the technology or its outputs. Drag each token onto the rings: the closer to the centre, the more central they are to the design.",
+      "objectives": [
+        "Identifies the groups who interact with the technology directly",
+        "Names stakeholders as roles (e.g. “teachers”), not individuals",
+        "Places core stakeholders nearer the centre than peripheral ones"
+      ],
+      "guide": [
+        {
+          "target": "direct",
+          "label": "Direct token",
+          "where": "In the palette left of the board. Drag it onto the rings, then type its name."
+        }
+      ]
+    },
+    {
+      "id": "stakeholders-indirect",
+      "title": "Indirect stakeholders",
+      "task": "Add the people affected by the technology who never use it. Look for those who are easy to miss: move anyone currently left out of the design into the outer “excluded” area, and flag stakeholders who are hidden or easily overlooked.",
+      "objectives": [
+        "Identifies at least two indirect stakeholder groups",
+        "Surfaces hidden, overlooked, or excluded groups",
+        "Distinguishes direct from indirect stakeholders correctly"
+      ],
+      "guide": [
+        {
+          "target": "indirect",
+          "label": "Indirect token",
+          "where": "In the palette left of the board."
+        },
+        {
+          "target": "excluded",
+          "label": "Excluded area",
+          "where": "The outer dashed ring. Drag left-out stakeholders there."
+        },
+        {
+          "target": "overlooked",
+          "label": "Hidden or overlooked",
+          "where": "Right panel, after you select a stakeholder."
+        }
+      ]
+    },
+    {
+      "id": "stakeholders-relationships",
+      "title": "Relationships between stakeholders",
+      "task": "Connect stakeholders who affect one another: drag from a token’s dot to another token, then label how one affects the other (e.g. “reports to”, “cares for”, “pays for”).",
+      "objectives": [
+        "Connects stakeholders whose interests are linked",
+        "Labels each relationship with how one affects the other"
+      ],
+      "guide": [
+        {
+          "target": "relationships",
+          "label": "Connections",
+          "where": "Drag from a token’s dot to another token, or use “Connect to…” in the right panel."
+        }
+      ]
+    },
+    {
+      "id": "stakeholders-impacts",
+      "title": "Harms and benefits",
+      "task": "Select each stakeholder and note what they could gain or lose from the technology.",
+      "objectives": [
+        "Lists at least one harm or benefit for each stakeholder",
+        "Includes harms for indirect stakeholders, not only for users"
+      ],
+      "guide": [
+        {
+          "target": "impacts",
+          "label": "+ Harm / + Benefit",
+          "where": "Right panel, after you select a stakeholder."
+        }
+      ]
+    },
+    {
+      "id": "stakeholders-values",
+      "title": "Map to values",
+      "task": "For each harm and benefit, name the human values it touches (e.g. privacy, autonomy, trust, fairness).",
+      "objectives": [
+        "Links each harm and benefit to one or more values",
+        "Chooses values with ethical import, not only usability features"
+      ],
+      "guide": [
+        {
+          "target": "values",
+          "label": "+ value",
+          "where": "Under each harm and benefit in the right panel. Type a value and press Enter."
+        }
+      ]
+    },
+    {
+      "id": "stakeholders-definitions",
+      "title": "Define the key values",
+      "task": "For the values that matter most, write what each one means in this context. Different stakeholders may understand the same value differently.",
+      "objectives": [
+        "Defines key values in terms of this technology and its stakeholders",
+        "Notes where stakeholders would understand a value differently"
+      ],
+      "guide": [
+        {
+          "target": "definitions",
+          "label": "Value definitions",
+          "where": "In the Values list at the bottom of the right panel."
+        }
+      ]
+    },
+    {
+      "id": "stakeholders-tensions",
+      "title": "Value tensions",
+      "task": "Draw a tension between two stakeholders whose values pull against each other, and name the value at stake for each (e.g. a student’s privacy vs a parent’s wish to stay informed).",
+      "objectives": [
+        "Identifies at least one tension between stakeholders’ values",
+        "Names the specific value in conflict on each side"
+      ],
+      "guide": [
+        {
+          "target": "tensions",
+          "label": "Tensions",
+          "where": "“Tension with…” in the right panel, or switch dragging to “Tension” left of the board."
+        }
+      ]
+    },
+    {
+      "id": "stakeholders-organization",
+      "title": "Take it into the organization",
+      "task": "For the key values and tensions, note who should own them and what they will do next.",
+      "objectives": [
+        "Assigns an owner to each key value or tension",
+        "Proposes a concrete next action for each"
+      ],
+      "guide": [
+        {
+          "target": "organization",
+          "label": "Owner and next action",
+          "where": "Under each value, and in each tension."
+        }
+      ]
+    }
+  ]
+}

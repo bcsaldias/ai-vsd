@@ -20,7 +20,8 @@ Pushing to `main` publishes the site to GitHub Pages at https://bcsaldias.github
 
 | Path | Purpose |
 |---|---|
-| `main.tsx` | Entry point. Mounts `App` and loads global styles. |
+| `../content/` | Lesson content as plain JSON files, one folder per lesson: steps, worked example, starting prompts. Edit these to change what students read and what the AI is told; see `content/README.md`. `services/lessonContent.ts` reads and checks them. |
+| `main.tsx` | Entry point. Loads global styles, then the app; if a content file has a mistake, shows which file and field instead. |
 | `App.tsx` | App shell. Switches between the Workspace, Prompts, and Versions tabs. |
 | `styles.css` | All styles: theme colors (light only), layout, panels, and the narrow-screen layout. |
 | `types/` | `contracts.ts` holds the shared data shapes (lesson, activity report, feedback, prompt version). Every other folder depends on these, never on each other's internals. |

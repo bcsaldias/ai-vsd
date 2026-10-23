@@ -249,6 +249,9 @@ ai-vsd/
   APP_SPECS.txt    Core app and Workspace spec
   specs/           Detailed specs per tab (PROMPTS_TAB_SPEC.txt)
   frontend/       Self-contained Vite project (package.json, index.html, src/)
+    content/       Lesson content as plain files anyone can edit, one folder per lesson: lesson.json
+                   (steps' titles, tasks, objectives, guide), worked-example.json, prompts.json
+                   (starting prompts). See content/README.md. Read by services/lessonContent.ts.
     src/
       types/         Shared data contracts
       services/      The only code that talks to data sources (mock now, backend later)

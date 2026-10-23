@@ -58,7 +58,8 @@ tutor:
   - Questions for each step: two or three per step, written from that step's task and objectives
     (e.g. Stakeholder Tokens step 3: who is affected without ever using it; who was left out
     because they seemed far away or hard to see; who is excluded by the design, and is that a
-    choice). All 17 steps (9 + 8) have their own list. The full text is in mockData.ts.
+    choice). All 17 steps (9 + 8) have their own list. The full text is in each lesson's
+    content file, frontend/content/<lesson>/prompts.json (see frontend/content/README.md).
   - Questions are written in the second person ("your map"), as the AI would ask them.
 
 
@@ -280,6 +281,8 @@ CODE MAP
                                               templateVariables, templateParts, checkTemplate,
                                               systemPromptParts (the questions' headings),
                                               sameStepQuestions.
+  frontend/content/<lesson>/prompts.json      Each lesson's starting prompts (editable without code).
+  frontend/src/services/lessonContent.ts      Reads and checks the content files.
   frontend/src/workspace/ActivityHost.tsx     workUpToStep (per-step view of shared work).
   frontend/src/App.tsx                        The shared lesson and the step open in each lesson.
   frontend/src/styles.css                     "Prompts & versions tabs" section; data-tip tooltip.

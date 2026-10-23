@@ -6,7 +6,7 @@
 // the same board.
 
 import type { ActivityDefinition, ActivityReport, Lesson, LessonSummary } from '../types/contracts';
-import { LESSONS } from './mockData';
+import { LESSONS } from './lessonContent';
 
 const reportKey = (activityId: string) => `activity-report:${activityId}`;
 const sharedKey = (stateKey: string) => `activity-state:${stateKey}`;

@@ -845,3 +845,7 @@ button.variable[aria-disabled='true']:hover { background: var(--surface-strong);
   .step-trail { margin: 0 16px 8px; }
   .tab-page { padding: 14px 16px 24px; }
 }
+
+/* Shown instead of the app when a lesson content file has a mistake (see main.tsx). */
+.content-error { max-width: 46rem; margin: 48px auto; padding: 0 24px; }
+.content-error pre { padding: 12px 14px; background: var(--paper); border-left: 6px solid var(--issue); color: var(--issue); }

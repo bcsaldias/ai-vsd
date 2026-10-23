@@ -247,7 +247,7 @@ REPOSITORY LAYOUT
 
 ai-vsd/
   APP_SPECS.txt    Core app and Workspace spec
-  specs/           Detailed specs per tab (PROMPTS_TAB_SPEC.txt)
+  specs/           Detailed specs (PROMPTS_TAB_SPEC.txt, BACKEND_SPEC.txt)
   frontend/       Self-contained Vite project (package.json, index.html, src/)
     content/       Lesson content as plain files anyone can edit, one folder per lesson: lesson.json
                    (steps' titles, tasks, objectives, guide), worked-example.json, prompts.json
@@ -269,7 +269,7 @@ WHY A BACKEND
 Frontend-only is sufficient while everything is mock data. A backend is required once any of the following is true:
 
 - AI feedback is real: the model API key must never be shipped to the browser.
-- Prompt versions must be shared and persistent across people and devices.
+- Prompt versions must persist across devices (each person's versions are their own).
 - Real students use the tool: their work and feedback must be stored centrally, not in one browser.
 
 The backend stays thin. It stores and serves data and makes the AI call. It never implements
@@ -277,6 +277,10 @@ activity behavior; it treats each activity's state as opaque JSON.
 
 
 BACKEND RESPONSIBILITIES
+
+The full backend design (groups, sign-in with personal access codes, roles, limits, what is
+stored, consent, hosting on the UW server, every endpoint) is in specs/BACKEND_SPEC.txt; this
+section is the summary.
 
 Placeholder phase:
 - GET  /lessons                        Lesson list (id, title)
@@ -295,7 +299,8 @@ Later:
   into the Feedback contract.
 - Log every feedback request and response, with its prompt version and the student's rating.
 - Stream feedback as it is generated.
-- Add sign-in, and record each prompt version's author and role (student, instructor, researcher).
+- Add sign-in (personal access codes per group), and record each prompt version's owner and role
+  (participant, group lead, admin). See specs/BACKEND_SPEC.txt.
 
 
 DATA CONTRACTS
@@ -377,8 +382,11 @@ Phase 3 — Real AI feedback
 
 OPEN QUESTIONS
 
-- Will real students use this, and in what setting (class, study, demo)?
 - Which AI model / provider?
 - Should version tracking also cover lessons and activity definitions, or only prompts?
-- When a student saves a prompt version, does it apply only to their own feedback or to everyone in
-  the lesson? (Today prompts live in each browser, so only their own.)
+
+Decided (details in specs/BACKEND_SPEC.txt):
+- Setting: any group of people, a class or a research study; each group is set up by its
+  instructor or researcher.
+- Prompts are personal: a saved prompt version applies only to its owner's feedback.
+- Hosting: a UW server.

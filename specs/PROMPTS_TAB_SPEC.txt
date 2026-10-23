@@ -7,9 +7,9 @@ prompts is in APP_SPECS.txt (PRODUCT).
 
 PURPOSE
 
-The Prompts tab shows and edits the instructions the AI tutor follows when it gives feedback in a
-lesson. Anyone, students included, can read and change them: shaping these rules is part of learning
-how to prompt AI. Each lesson has its own prompts (its own tutor role and rubric).
+The Prompts tab shows and edits the instructions the AI follows when it gives feedback in a lesson.
+Anyone, students included, can read and change them: shaping these rules is part of learning how to
+prompt AI. Each lesson has its own prompts (its own AI role, questions, and rubric).
 
 
 LAYOUT
@@ -170,9 +170,9 @@ HIGHLIGHTING IN THE USER EDITOR
 TEMPLATE WARNINGS
 
 Shown in the issue color under the variable chips, as the student types:
-  - Unknown name: "{{name}} isn't a variable, so the tutor gets it exactly as typed. Check the
+  - Unknown name: "{{name}} isn't a variable, so the AI gets it exactly as typed. Check the
     spelling." One line per distinct name.
-  - Missing work: "There's no {{student_work}}, so the tutor won't see the student's work and can't
+  - Missing work: "There's no {{student_work}}, so the AI won't see the student's work and can't
     give feedback on it."
 
 They inform; they never block saving, since students are meant to experiment. They are announced

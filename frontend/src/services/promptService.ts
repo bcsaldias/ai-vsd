@@ -123,7 +123,7 @@ export function templateParts(template: string, vars: Record<string, string>): T
 }
 
 /** Mistakes worth flagging in a user template: names that aren't variables (usually typos), and
-    leaving out the student's work, without which the tutor can't comment on it. */
+    leaving out the student's work, without which the AI can't comment on it. */
 export function checkTemplate(template: string): { unknown: string[]; missingWork: boolean } {
   const names = [...template.matchAll(PLACEHOLDER)].map((m) => m[1]);
   return {

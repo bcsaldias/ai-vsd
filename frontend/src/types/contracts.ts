@@ -107,7 +107,7 @@ export type PromptPart = 'system' | 'questions' | 'user';
     entry in `stepQuestions` (by activity id). */
 export type PromptSet = Record<PromptPart, string> & { stepQuestions: Record<string, string> };
 
-/** Prompt versions are kept per lesson: each lesson has its own tutor prompts and rubric. */
+/** Prompt versions are kept per lesson: each lesson has its own AI prompts and rubric. */
 export interface PromptVersion {
   id: string;
   lessonId: string;

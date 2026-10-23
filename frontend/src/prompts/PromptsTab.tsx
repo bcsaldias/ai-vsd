@@ -219,12 +219,12 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, activityId, acti
                 <ul className="template-checks" role="status">
                   {checks.unknown.map((name) => (
                     <li key={name}>
-                      <code>{`{{${name}}}`}</code> isn't a variable, so the tutor gets it exactly as typed. Check the spelling.
+                      <code>{`{{${name}}}`}</code> isn't a variable, so the AI gets it exactly as typed. Check the spelling.
                     </li>
                   ))}
                   {checks.missingWork && (
                     <li>
-                      There's no <code>{'{{student_work}}'}</code>, so the tutor won't see the student's work and can't
+                      There's no <code>{'{{student_work}}'}</code>, so the AI won't see the student's work and can't
                       give feedback on it.
                     </li>
                   )}

@@ -1,10 +1,14 @@
 // Edit the system / user / assistant prompts. Saving always creates a new version.
 
-import { useEffect, useState } from 'react';
-import type { ActivityDefinition, LessonSummary, PromptRole, PromptSet, PromptVersion } from '../types/contracts';
-import { getLatestPromptVersion, renderTemplate, savePromptVersion, TEMPLATE_VARIABLES } from '../services/promptService';
-import { getLesson } from '../services/activityService';
+import { useEffect, useRef, useState } from 'react';
+import type { Lesson, LessonSummary, PromptRole, PromptSet, PromptVersion } from '../types/contracts';
+import {
+  checkTemplate, getLatestPromptVersion, savePromptVersion, TEMPLATE_VARIABLES, templateParts, templateVariables,
+} from '../services/promptService';
+import { getLesson, loadReport } from '../services/activityService';
 import { LessonPicker, lessonAccent } from '../lessons/LessonPicker';
+import { workUpToStep } from '../workspace/ActivityHost';
+import { TemplateTextarea } from './TemplateTextarea';
 
 const ROLES: { role: PromptRole; label: string; help: string }[] = [
   { role: 'system', label: 'System', help: "The tutor's role, tone, and rules." },
@@ -16,16 +20,30 @@ interface Props {
   lessons: LessonSummary[];
   lessonId: string | null;
   onLessonChange: (id: string) => void;
+  /** The step open in this lesson's workspace (null until the workspace has opened one). */
+  activityId: string | null;
+  /** Whether this tab is showing, so the preview picks up work done since it was last open. */
+  active: boolean;
   onSaved: () => void;
 }
 
-/** Each lesson has its own prompts. The preview fills the template with the lesson's first
-    activity and, as sample student work, its worked example. */
-export function PromptsTab({ lessons, lessonId, onLessonChange, onSaved }: Props) {
+type Session = { base: PromptVersion; draft: PromptSet; note: string };
+const isDirty = ({ base, draft }: Session) => ROLES.some(({ role }) => draft[role] !== base.prompts[role]);
+
+/** Each lesson has its own prompts. The preview fills the template with the step open in the
+    workspace and the student's saved work on it (or, if there is none yet, its worked example),
+    up to that step: on a board shared by several steps, later steps' work is left out. */
+export function PromptsTab({ lessons, lessonId, onLessonChange, activityId, active, onSaved }: Props) {
   // One editing session per lesson (the version it started from, the draft, the note), kept while
   // the app is open, so switching lessons — from any tab — never discards unsaved edits.
-  const [sessions, setSessions] = useState<Record<string, { base: PromptVersion; draft: PromptSet; note: string }>>({});
-  const [sampleActivity, setSampleActivity] = useState<ActivityDefinition | null>(null);
+  const [sessions, setSessions] = useState<Record<string, Session>>({});
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  // The student's saved work on the open step, re-read whenever this tab is shown.
+  const [saved, setSaved] = useState<{ activityId: string; state: unknown } | null>(null);
+  // Which work fills {{student_work}} in the preview, when the step has both.
+  const [sample, setSample] = useState<'own' | 'example'>('own');
+  // The User editor, so the variable chips can insert at its cursor.
+  const userEditor = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!lessonId) return;
@@ -34,8 +52,30 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, onSaved }: Props
         setSessions((all) => (all[lessonId] ? all : { ...all, [lessonId]: { base: v, draft: v.prompts, note: '' } })),
       );
     }
-    getLesson(lessonId).then((l) => setSampleActivity(l.activities[0] ?? null));
+    getLesson(lessonId).then(setLesson);
   }, [lessonId]);
+
+  const activities = lesson?.id === lessonId ? lesson.activities : [];
+  const index = Math.max(0, activities.findIndex((a) => a.id === activityId));
+  const activity = activities[index] ?? null;
+
+  useEffect(() => {
+    if (!activity || !active) return;
+    let current = true;
+    loadReport(activity).then((report) => current && setSaved({ activityId: activity.id, state: report?.state ?? null }));
+    return () => {
+      current = false;
+    };
+  }, [activity, active]);
+
+  // Unsaved edits in any lesson: the browser asks before closing or reloading the page.
+  const unsaved = Object.values(sessions).some(isDirty);
+  useEffect(() => {
+    if (!unsaved) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [unsaved]);
 
   const session = lessonId ? sessions[lessonId] : undefined;
   if (!lessonId || !session) return <p className="hint">Loading prompts…</p>;
@@ -44,7 +84,20 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, onSaved }: Props
   const setDraft = (d: PromptSet) => patch({ draft: d });
   const setNote = (n: string) => patch({ note: n });
 
-  const dirty = ROLES.some(({ role }) => draft[role] !== base.prompts[role]);
+  /** Puts {{name}} at the User editor's cursor (replacing any selection) and keeps typing there. */
+  const insertVariable = (name: string) => {
+    const el = userEditor.current;
+    if (!el) return;
+    const text = `{{${name}}}`;
+    const { selectionStart: start, selectionEnd: end } = el;
+    setDraft({ ...draft, user: draft.user.slice(0, start) + text + draft.user.slice(end) });
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(start + text.length, start + text.length);
+    });
+  };
+
+  const dirty = isDirty(session);
 
   const save = async () => {
     const v = await savePromptVersion(lessonId, draft, note);
@@ -52,12 +105,22 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, onSaved }: Props
     onSaved();
   };
 
-  const preview = renderTemplate(draft.user, {
-    activity_title: sampleActivity?.title ?? '',
-    activity_prompt: sampleActivity?.prompt ?? '',
-    objectives: sampleActivity?.objectives.map((o) => `- ${o}`).join('\n') ?? '',
-    student_work: sampleActivity?.example ? JSON.stringify(sampleActivity.example, null, 2) : '(sample student work)',
-  });
+  const discard = () => {
+    if (window.confirm(`Discard your changes and go back to version ${base.number}?`)) patch({ draft: base.prompts, note: '' });
+  };
+
+  const checks = checkTemplate(draft.user);
+
+  // The student's work, or the worked example until there is some.
+  // The chosen sample, or the other one when the step doesn't have it.
+  const own = saved?.activityId === activity?.id ? saved?.state : null;
+  const example = activity?.example;
+  const shown = own != null && (sample === 'own' || example == null) ? 'own' : example != null ? 'example' : null;
+  const work = shown === 'own' ? own : shown === 'example' ? example : null;
+
+  const preview = activity
+    ? templateParts(draft.user, templateVariables(activity, work != null ? workUpToStep(activity, work) : null))
+    : [{ text: draft.user }];
 
   return (
     <div className="tab-page prompts-page" style={lessonAccent(lessons, lessonId)}>
@@ -76,6 +139,7 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, onSaved }: Props
         </div>
         <div className="save-row">
           <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="What changed?" aria-label="Version note" />
+          <button onClick={discard} disabled={!dirty}>Discard changes</button>
           <button className="primary" onClick={save} disabled={!dirty}>Save as new version</button>
         </div>
       </div>
@@ -83,33 +147,108 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, onSaved }: Props
       <div className="prompts-grid">
         <div className="prompt-editors">
           {ROLES.map(({ role, label, help }) => (
-            <label key={role} className="prompt-editor">
-              <span className="role-label">{label}</span>
-              <span className="hint">{help}</span>
-              <textarea
-                value={draft[role]}
-                onChange={(e) => setDraft({ ...draft, [role]: e.target.value })}
-                rows={role === 'user' ? 8 : 4}
-                spellCheck={role !== 'user'}
-              />
-            </label>
+            <div key={role} className="prompt-editor">
+              <label>
+                <span className="role-label">{label}</span>
+                <span className="hint">{help}</span>
+                {role === 'user' ? (
+                  <TemplateTextarea ref={userEditor} value={draft.user} onChange={(user) => setDraft({ ...draft, user })} rows={8} />
+                ) : (
+                  <textarea value={draft[role]} onChange={(e) => setDraft({ ...draft, [role]: e.target.value })} rows={4} />
+                )}
+              </label>
+              {role === 'user' && (
+                <div className="variables">
+                  <span className="hint">Click to insert:</span>
+                  {TEMPLATE_VARIABLES.map((v) => {
+                    // Each variable goes in once; deleting it from the prompt offers it again.
+                    const used = draft.user.includes(`{{${v}}}`);
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        className="variable"
+                        onClick={() => !used && insertVariable(v)}
+                        aria-disabled={used}
+                        data-tip={used ? 'Already in the User prompt' : undefined}
+                      >
+                        {`{{${v}}}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {role === 'user' && (
+                <ul className="template-checks" role="status">
+                  {checks.unknown.map((name) => (
+                    <li key={name}>
+                      <code>{`{{${name}}}`}</code> isn't a variable, so the tutor gets it exactly as typed. Check the spelling.
+                    </li>
+                  ))}
+                  {checks.missingWork && (
+                    <li>
+                      There's no <code>{'{{student_work}}'}</code>, so the tutor won't see the student's work and can't
+                      give feedback on it.
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
           ))}
-          <div className="variables">
-            <span className="hint">Variables:</span>
-            {TEMPLATE_VARIABLES.map((v) => <code key={v}>{`{{${v}}}`}</code>)}
-          </div>
         </div>
 
         <aside className="panel prompt-preview">
           <header className="panel-header">
-            <h3>Preview</h3>
-            <span className="badge">Sample data</span>
+            <h3>Preview{activity && ` · Step ${index + 1} · ${activity.title}`}</h3>
+            <div className="sample-toggle" role="group" aria-label="Student work in the preview">
+              {/* aria-disabled rather than disabled, so the tooltip saying why still shows on hover. */}
+              <button
+                className="small"
+                aria-pressed={shown === 'own'}
+                aria-disabled={own == null}
+                data-tip={
+                  own != null ? undefined
+                  // Steps sharing a board share the work, so anything from an earlier step counts.
+                  : activity?.stateKey ? 'Start this lesson in the Workspace to see your work here. Work from earlier steps carries over.'
+                  : 'Start this step in the Workspace to see your work here.'
+                }
+                onClick={() => own != null && setSample('own')}
+              >
+                My work
+              </button>
+              <button
+                className="small"
+                aria-pressed={shown === 'example'}
+                aria-disabled={example == null}
+                data-tip={example == null ? 'This step has no worked example.' : undefined}
+                onClick={() => example != null && setSample('example')}
+              >
+                Worked example
+              </button>
+            </div>
           </header>
           <div className="panel-body">
+            <p className="hint">Blue text is filled in from a variable. Hover over it to see which one.</p>
             {ROLES.filter(({ role }) => draft[role].trim()).map(({ role, label }) => (
               <div key={role} className="preview-message">
                 <span className="role-label">{label}</span>
-                <pre>{role === 'user' ? preview : draft[role]}</pre>
+                <pre>
+                  {role !== 'user'
+                    ? draft[role]
+                    : preview.map((part, i) =>
+                        part.variable ? (
+                          <mark
+                            key={i}
+                            className={part.unknown ? 'unknown' : undefined}
+                            data-tip={part.unknown ? 'Not a variable: sent as typed' : `{{${part.variable}}}`}
+                          >
+                            {part.text}
+                          </mark>
+                        ) : (
+                          part.text
+                        ),
+                      )}
+                </pre>
               </div>
             ))}
           </div>

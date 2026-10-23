@@ -260,7 +260,10 @@ const USER_TEMPLATE =
   'Objectives:\n{{objectives}}\n\n' +
   'Student work (JSON):\n{{student_work}}';
 
-/** One starting prompt set per lesson; each lesson's versions are numbered separately. */
+/** One starting prompt set per lesson; each lesson's versions are numbered separately.
+    Caution: versions saved in a browser are numbered after these seeds (see promptService), so adding
+    a seed to a lesson gives it the same number and id as that browser's first saved version there.
+    Edit an existing seed instead, or clear the "prompt-versions" localStorage key after adding one. */
 export const SEED_PROMPT_VERSIONS: PromptVersion[] = [
   {
     id: `${STAKEHOLDER_LESSON.id}-v1`,

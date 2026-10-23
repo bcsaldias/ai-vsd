@@ -181,7 +181,8 @@ a homeowner) with two tensions; read only and filtered by step, as in the stakeh
 
 B. PROMPTS TAB
 
-Edit the prompts used to generate AI feedback (open to students; see PRODUCT):
+Edit the prompts used to generate AI feedback (open to students; see PRODUCT).
+The full Prompts tab spec is in specs/PROMPTS_TAB_SPEC.txt; this section is the summary.
 
 - A short introduction says what the prompts are and that anyone, students included, can change them.
 
@@ -189,11 +190,10 @@ Edit the prompts used to generate AI feedback (open to students; see PRODUCT):
 - User prompt: a template filled with activity and student data using variables:
     {{activity_title}}, {{activity_prompt}}, {{objectives}}, {{student_work}}
 - Assistant prompt: optional prefill or example response.
-- A preview that shows the user prompt filled in with sample data.
+- A preview that shows the user prompt filled in for the step open in the Workspace.
 - Saving creates a new version; it never overwrites an existing one.
 - Prompts are kept per lesson (each lesson has its own tutor role and rubric). The lesson switcher at
-  the top is the same selection as in the Workspace and Versions tabs. The preview
-  uses the lesson's first activity and its worked example as sample student work.
+  the top is the same selection as in the Workspace and Versions tabs.
 
 
 C. VERSIONS TAB
@@ -237,8 +237,9 @@ RECOMMENDED TECHNOLOGY
 REPOSITORY LAYOUT
 
 ai-vsd/
-  APP_SPECS.txt
-  frontend/        Self-contained Vite project (package.json, index.html, src/)
+  APP_SPECS.txt    Core app and Workspace spec
+  specs/           Detailed specs per tab (PROMPTS_TAB_SPEC.txt)
+  frontend/       Self-contained Vite project (package.json, index.html, src/)
     src/
       types/         Shared data contracts
       services/      The only code that talks to data sources (mock now, backend later)
@@ -350,7 +351,7 @@ Phase 1 — Frontend with mock data (current)
   select and press Backspace to delete. Saved state stays library-independent (nodes with x/y, edges).
 - Persist activity state as structured data (localStorage for now) that can later be sent to the FastAPI backend.
 - Stakeholder Tokens lesson: nine steps sharing one ring board (see STAKEHOLDER TOKENS LESSON).
-- Prompts and Versions tabs with basic structure; versions are kept in memory.
+- Prompts and Versions tabs with basic structure; saved versions are kept in the browser (localStorage).
 
 Phase 2 — Minimal backend
 - FastAPI app with the placeholder-phase endpoints above and simple storage.

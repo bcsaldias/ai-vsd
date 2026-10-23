@@ -1,0 +1,215 @@
+VSD Student Learning Workspace — Prompts Tab Specs
+
+The detailed spec for the Prompts tab (tab B in ../APP_SPECS.txt). APP_SPECS.txt covers the core app
+and the Workspace tab; this file covers how the Prompts tab works. Why students can see and edit the
+prompts is in APP_SPECS.txt (PRODUCT).
+
+
+PURPOSE
+
+The Prompts tab shows and edits the instructions the AI tutor follows when it gives feedback in a
+lesson. Anyone, students included, can read and change them: shaping these rules is part of learning
+how to prompt AI. Each lesson has its own prompts (its own tutor role and rubric).
+
+
+LAYOUT
+
+Header:
+  - "PROMPTS." title, the lesson switcher (the same lesson selection as every other tab), and a short
+    introduction saying what the prompts are and that anyone can change them.
+  - "Editing from version N", with an "Unsaved changes" badge while the draft differs from version N.
+  - On the right: a "What changed?" note field, "Discard changes", and "Save as new version" (the two
+    buttons are disabled when there are no unsaved changes).
+
+Body, two columns:
+  - Left: three editors, System, User, Assistant.
+  - Right: the Preview panel.
+
+
+THE THREE PROMPTS
+
+- System: the tutor's role, tone, and rules (e.g. "do not give away the answer"). Sent as written.
+- User: a template sent with each feedback request. Its {{variables}} are filled in (see below).
+- Assistant: optional prefill or example response. Sent as written.
+
+Variables are only filled in the User prompt. A {{name}} in the System or Assistant prompt is sent
+exactly as typed.
+
+
+TEMPLATE VARIABLES
+
+  {{activity_title}}    The activity's title.
+  {{activity_prompt}}   The activity's task description (its prompt).
+  {{objectives}}        The activity's learning objectives, one "- objective" per line.
+  {{student_work}}      The student's work on the activity as formatted JSON, limited to the
+                        activity's step (see STUDENT WORK UP TO THE STEP). "(no student work yet)"
+                        when there is none.
+
+- Names are matched exactly: {{name}}, letters, digits and underscores, no spaces.
+- A name that isn't one of these four is left exactly as typed, so the gap stays visible.
+- The mapping is defined once (templateVariables in promptService). The preview uses it, and the
+  backend fills the same variables the same way for real feedback.
+
+
+STUDENT WORK UP TO THE STEP
+
+Lessons whose steps share one board (activities with the same stateKey) also share one saved state,
+so the saved state can hold work from steps after the one being looked at. {{student_work}} only
+holds what exists by the activity's step: the same per-step view the worked example uses (each
+activity model's forStep). For example, in Stakeholder Tokens step 2, indirect stakeholders and the
+"overlooked" marks are left out, because they belong to step 3.
+
+- This applies to both the student's work and the worked example.
+- It is decided by what each step introduces, not by when the student did the work: an edit made
+  while revisiting an earlier step counts for that step.
+- Work from earlier steps carries over: on a shared board, anything saved in an earlier step is
+  already the student's work for later steps.
+- Activities that don't share a board are unchanged.
+- Trimming is done in the frontend (workUpToStep, next to the activity registry), so the backend
+  never needs to know how an activity works.
+
+
+VARIABLE CHIPS
+
+- Directly under the User editor: "Click to insert:" and one chip per variable.
+- Clicking a chip inserts {{name}} at the User editor's cursor, replacing any selection, and puts the
+  cursor right after it. The editor remembers its cursor after losing focus, so the insert lands
+  where the student was typing.
+- Each variable goes in once: a chip is unavailable while its variable is anywhere in the User
+  prompt (tooltip: "Already in the User prompt"), and becomes available again as soon as the
+  variable is removed. With the default template all four chips start unavailable.
+
+
+HIGHLIGHTING IN THE USER EDITOR
+
+- As the student types, each known {{variable}} shows in the variable blue and each unknown name in
+  the issue color with a wavy underline, matching the warnings.
+- A textarea can't style parts of its text, so a copy of the text is drawn behind it with the
+  variables colored, and the textarea's own text is transparent. Typing, the caret, selection,
+  undo, scrolling and resizing stay the textarea's. Selected text gets a light blue tint so the
+  colors show through.
+- The copy must lay text out exactly like the textarea (font, padding, borders, wrapping, scrollbar
+  gutter). If the colors ever look shifted or doubled, that alignment is what to check.
+
+
+TEMPLATE WARNINGS
+
+Shown in the issue color under the variable chips, as the student types:
+  - Unknown name: "{{name}} isn't a variable, so the tutor gets it exactly as typed. Check the
+    spelling." One line per distinct name.
+  - Missing work: "There's no {{student_work}}, so the tutor won't see the student's work and can't
+    give feedback on it."
+
+They inform; they never block saving, since students are meant to experiment. They are announced
+to screen readers when they appear.
+
+
+PREVIEW
+
+- Shows the System, User and Assistant prompts as they would be sent (empty prompts are skipped),
+  with the User template filled in.
+- Follows the step open in the Workspace: all four variables come from that activity. The header
+  reads "Preview · Step N · Title". Until the Workspace has opened a step, the lesson's first
+  activity is used.
+- The step open in each lesson is one shared choice in the app shell, the same way the lesson is, so
+  the Workspace and the Prompts tab can't disagree.
+- Text filled in from a variable is blue; hovering it shows which variable it came from. Unknown names
+  show in the issue color with a wavy underline (tooltip: "Not a variable: sent as typed"). A hint at
+  the top: "Blue text is filled in from a variable. Hover over it to see which one."
+- The student's work is read again each time the Prompts tab is opened, so changes made in the
+  Workspace always show up.
+
+Sample switch ("My work | Worked example", in the preview header):
+  - Picks what fills {{student_work}} in the preview. The option in use is filled dark.
+  - Starts on My work. The choice is kept across steps and lessons while the app is open.
+  - An option the step lacks is unavailable, and the preview uses the other one:
+      My work, no saved work: "Start this lesson in the Workspace to see your work here. Work from
+        earlier steps carries over." (on a shared board), or "Start this step in the Workspace to
+        see your work here." (otherwise).
+      Worked example, none for the step: "This step has no worked example."
+  - With neither, both are unavailable and {{student_work}} reads "(no student work yet)".
+  - The switch only affects the preview. "Check my work" in the Workspace always sends the student's
+    own work.
+  - Saved work belongs to the browser and the exact web address it was made at: work done at another
+    address (127.0.0.1 instead of localhost, another port, the published site) doesn't show up.
+
+
+TOOLTIPS
+
+- The tab uses its own quick tooltip (a data-tip attribute) instead of the browser's title tooltip,
+  which waits about a second and can't be made faster. It appears about 0.15 s after hover or
+  keyboard focus.
+- Styled like the board's token tooltip: solid white, ink border and text, square corners. It opens
+  above its element; in the preview header it opens leftward so it stays on the page.
+- Unavailable controls that need a tooltip (the sample switch, used chips) are marked aria-disabled
+  instead of disabled, so they still show their tooltip on hover and focus; clicking them does
+  nothing. They are dimmed by text color, not opacity, which would fade the tooltip too.
+
+
+EDITING, SAVING, AND VERSIONS
+
+- Each lesson has its own editing session (the version it started from, the draft, the note), kept
+  while the app is open, so switching lessons from any tab never discards unsaved edits.
+- "Save as new version" saves the draft with the note (or "Version N" when the note is empty). It
+  never overwrites an existing version. Versions are numbered within each lesson.
+- "Discard changes" asks for confirmation, then returns the draft and note to the version the
+  session started from.
+- Closing or reloading the page with unsaved edits in any lesson makes the browser ask first.
+- Storage (placeholder until the backend): the starting versions live in code (mock data); versions
+  saved in the browser are kept in localStorage ("prompt-versions") and listed after them, so they
+  survive a reload but are only visible in that browser. Unsaved drafts don't survive a reload.
+- Caution: saved versions are numbered after the starting versions, so adding a starting version to
+  a lesson later gives it the same number and id as that browser's first saved version there. Edit
+  an existing starting version instead, or clear "prompt-versions" after adding one. This goes away
+  once the backend numbers versions.
+
+
+CONNECTION TO FEEDBACK
+
+- "Check my work" in the Workspace sends the student's work limited to the activity's step, exactly
+  what the preview shows for My work.
+- The feedback request uses the lesson's latest saved prompt version and records its id on the
+  result, so feedback can be traced to the prompts that produced it.
+- Placeholder: no model is connected yet, so the prompts don't change the feedback students see.
+  Later, the backend fills the User template with the variables above and sends the three prompts
+  to the model.
+
+
+VISUAL STYLE
+
+Follows VISUAL STYLE in APP_SPECS.txt (mauve ground, Cormorant Garamond, ink text), plus:
+  - Variable blue #1F4F99 (--variable, about 7.5:1 on the editor background) wherever a variable
+    appears: the chips' text, {{names}} in the User editor, and filled-in text in the preview.
+  - Issue color #9C3328 (--issue) for unknown names and the template warnings.
+  - The lesson's accent color marks the editors' left edge and the preview's top band.
+  - Monospace for the editors, chips, and preview text.
+
+
+ACCESSIBILITY
+
+- Every control works from the keyboard; tooltips also show on keyboard focus.
+- Template warnings are a live region (announced when they appear).
+- Unavailable controls use aria-disabled, so they stay focusable and say why they are unavailable.
+- The sample switch is a labelled group of toggle buttons (aria-pressed).
+- The colored copy behind the User editor is hidden from screen readers; the textarea is the editor.
+
+
+CODE MAP
+
+  frontend/src/prompts/PromptsTab.tsx         The tab: sessions, editors, chips, warnings, preview,
+                                              sample switch.
+  frontend/src/prompts/TemplateTextarea.tsx   The User editor with colored variables.
+  frontend/src/services/promptService.ts      Versions and storage; TEMPLATE_VARIABLES,
+                                              templateVariables, templateParts, checkTemplate.
+  frontend/src/workspace/ActivityHost.tsx     workUpToStep (per-step view of shared work).
+  frontend/src/App.tsx                        The shared lesson and the step open in each lesson.
+  frontend/src/styles.css                     "Prompts & versions tabs" section; data-tip tooltip.
+
+
+LATER
+
+- Warn about {{variables}} in the System and Assistant prompts (they are never filled there).
+- Versions work: "Edit from this version" (load an older version as the draft) and showing what
+  changed before saving / between versions. See C. VERSIONS TAB in APP_SPECS.txt.
+- When the backend arrives: make lesson loading ignore out-of-order responses (also in the
+  Workspace and Versions tabs).

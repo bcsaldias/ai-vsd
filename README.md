@@ -25,7 +25,7 @@ This is an early prototype:
 
 - **Feedback is a placeholder.** No AI model is connected yet.
 - **Work is saved only in the student's browser.** Students can export it as a file.
-- **Prompt edits are not saved.** They are kept in memory and reset when the page reloads.
+- **Prompt versions are saved only in your browser.** Other people don't see them. Unsaved edits reset when the page reloads.
 - **No sign-in yet.** Prompt versions don't record who wrote them; sign-in will come later.
 
 A small backend for shared storage and real AI feedback is planned.

@@ -9,13 +9,27 @@ import { AnnotationActivity, type AnnotationState } from '../activities/annotati
 import {
   StakeholderTokensActivity, type StakeholderTokensState,
 } from '../activities/stakeholder-tokens/StakeholderTokensActivity';
-import { stakeholderRefs } from '../activities/stakeholder-tokens/model';
+import * as tokens from '../activities/stakeholder-tokens/model';
 import { ValueScenariosActivity, type ValueScenariosState } from '../activities/value-scenarios/ValueScenariosActivity';
+import * as scenarios from '../activities/value-scenarios/model';
 
 /** Activities whose saved state can list stakeholders for other activities (see stakeholderSource). */
 export const STAKEHOLDER_EXPORTERS: Partial<Record<ActivityKind, (state: unknown) => StakeholderRef[]>> = {
-  'stakeholder-tokens': stakeholderRefs,
+  'stakeholder-tokens': tokens.stakeholderRefs,
 };
+
+/** Activities whose steps share one state: the part of it that exists by a step (config.step). */
+const STEP_VIEWS: Partial<Record<ActivityKind, (state: unknown, step: number) => unknown>> = {
+  'stakeholder-tokens': (s, step) => tokens.forStep(tokens.normalize(s as Partial<StakeholderTokensState> | null), step),
+  'value-scenarios': (s, step) => scenarios.forStep(scenarios.normalize(s as Partial<ValueScenariosState> | null), step),
+};
+
+/** Work on a shared board as of this activity's step, without anything from later steps. */
+export function workUpToStep(definition: ActivityDefinition, state: unknown): unknown {
+  const view = STEP_VIEWS[definition.kind];
+  const step = definition.config?.step;
+  return view && typeof step === 'number' ? view(state, step) : state;
+}
 
 interface Props {
   definition: ActivityDefinition;

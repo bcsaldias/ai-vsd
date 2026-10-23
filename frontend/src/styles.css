@@ -30,6 +30,8 @@
   --praise: #3f5a39;
   --suggestion: #7a5a0c;
   --issue: #9c3328;
+  /* Template variables, wherever they appear: chips, the user prompt editor, the preview. */
+  --variable: #1f4f99;
 
   --serif: 'Cormorant Garamond', Garamond, 'EB Garamond', Georgia, serif;
   --wordmark: 'Barlow Condensed', 'DIN Condensed', 'Arial Narrow', sans-serif;
@@ -491,6 +493,33 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
   pointer-events: none;
 }
 .react-flow__node:hover .token-tooltip, .react-flow__node:focus-visible .token-tooltip { display: block; }
+
+/* Quick tooltip from data-tip, in the same style: the native title waits about a second. */
+[data-tip] { position: relative; }
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: max-content;
+  max-width: 260px;
+  padding: 4px 8px;
+  background: #fff;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+[data-tip]:hover::after, [data-tip]:focus-visible::after { opacity: 1; transition-delay: 0.15s; }
 .react-flow__node:hover, .react-flow__node:focus-visible { z-index: 1000 !important; }
 
 /* Tokens are fixed-size discs so edges can meet them at the centre; notes hang below. */
@@ -688,9 +717,48 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 
 .prompts-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
 .prompt-editors { display: grid; gap: 16px; align-content: start; }
-.prompt-editor { display: grid; gap: 4px; }
+.prompt-editor, .prompt-editor > label { display: grid; gap: 4px; }
+.prompt-editor { gap: 6px; }
 .role-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
 .variables { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+/* Looks like inline code; the border on hover shows it can be clicked. */
+button.variable {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 400;
+  background: var(--surface-strong); border-color: transparent; padding: 1px 6px; color: var(--variable);
+}
+button.variable:hover:not(:disabled) { border-color: var(--variable); }
+
+/* User prompt editor: a copy of the text behind a transparent-text textarea colors the variables.
+   The copy must lay text out exactly like the textarea (font, padding, borders, wrapping, gutter). */
+.template-input { position: relative; }
+.template-backdrop, .template-input textarea {
+  font-family: var(--mono); font-size: 0.72rem; line-height: 1.5;
+  padding: 4px 10px; white-space: pre-wrap; overflow-wrap: break-word; scrollbar-gutter: stable;
+}
+.template-backdrop {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  border: 1px solid transparent; border-left-width: 6px; background: var(--paper); color: var(--ink);
+}
+.template-input textarea { position: relative; display: block; background: transparent; color: transparent; caret-color: var(--ink); }
+.template-input textarea::selection { color: transparent; background: rgba(31, 79, 153, 0.25); }
+.template-backdrop .variable { color: var(--variable); }
+.template-backdrop .unknown, .prompt-preview mark.unknown { color: var(--issue); text-decoration: underline wavy; }
+.template-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.template-checks li { color: var(--issue); font-size: 0.85rem; padding-left: 10px; border-left: 3px solid var(--issue); }
+/* Preview: which work fills {{student_work}}. Joined buttons; the one in use is filled. */
+.sample-toggle { display: flex; flex-shrink: 0; }
+.sample-toggle button { border-color: var(--ink-line); font-weight: 500; white-space: nowrap; }
+.sample-toggle button + button { border-left: none; }
+.sample-toggle button[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+/* Unavailable but still hoverable (aria-disabled), so a tooltip can say why. Dimmed by color, not
+   opacity, which would fade the tooltip too. */
+.sample-toggle button[aria-disabled='true'], button.variable[aria-disabled='true'] { color: var(--ink-line); cursor: not-allowed; }
+.sample-toggle button[aria-disabled='true']:hover { background: transparent; }
+button.variable[aria-disabled='true']:hover { background: var(--surface-strong); border-color: transparent; }
+/* At the panel's right edge: the tooltip opens leftward so it stays on the page. */
+.sample-toggle [data-tip]::after { left: auto; right: 0; transform: none; }
+/* Preview: text that came from a variable is blue, like the variable it replaced; unknown names in the issue color. */
+.prompt-preview mark { background: none; color: var(--variable); }
 .preview-message { display: grid; gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
 .preview-message:last-child { border-bottom: none; }
 

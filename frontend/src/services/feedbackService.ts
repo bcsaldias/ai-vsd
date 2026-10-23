@@ -4,7 +4,8 @@
 import type { ActivityReport, Feedback } from '../types/contracts';
 import { getLatestPromptVersion } from './promptService';
 
-/** Uses the latest prompts of the lesson the activity belongs to. */
+/** Uses the latest prompts of the lesson the activity belongs to. `report.state` is already limited
+    to the activity's step; the backend fills the template from it (see templateVariables). */
 export async function requestFeedback(report: ActivityReport, lessonId: string): Promise<Feedback> {
   const promptVersion = await getLatestPromptVersion(lessonId);
   await new Promise((resolve) => setTimeout(resolve, 400)); // simulate latency

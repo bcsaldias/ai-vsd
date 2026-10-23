@@ -34,6 +34,10 @@ export function App() {
     rememberLesson(id);
   };
   const lessonProps = { lessons, lessonId, onLessonChange: selectLesson };
+  // The step open in each lesson's workspace; the Prompts preview fills its template from it.
+  const [steps, setSteps] = useState<Record<string, string>>({});
+  const selectStep = (lesson: string, activityId: string) =>
+    setSteps((all) => (all[lesson] === activityId ? all : { ...all, [lesson]: activityId }));
 
   return (
     <div className="app" data-tab={tab}>
@@ -57,10 +61,15 @@ export function App() {
 
       <main className="tab-content">
         <div role="tabpanel" id="panel-workspace" aria-labelledby="tab-workspace" hidden={tab !== 'workspace'}>
-          <WorkspaceTab {...lessonProps} />
+          <WorkspaceTab {...lessonProps} steps={steps} onStepChange={selectStep} />
         </div>
         <div role="tabpanel" id="panel-prompts" aria-labelledby="tab-prompts" hidden={tab !== 'prompts'}>
-          <PromptsTab {...lessonProps} onSaved={() => setVersionsRefreshKey((k) => k + 1)} />
+          <PromptsTab
+            {...lessonProps}
+            activityId={lessonId ? (steps[lessonId] ?? null) : null}
+            active={tab === 'prompts'}
+            onSaved={() => setVersionsRefreshKey((k) => k + 1)}
+          />
         </div>
         <div role="tabpanel" id="panel-versions" aria-labelledby="tab-versions" hidden={tab !== 'versions'}>
           <VersionsTab {...lessonProps} refreshKey={versionsRefreshKey} />

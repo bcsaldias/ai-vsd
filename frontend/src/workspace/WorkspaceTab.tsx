@@ -9,7 +9,7 @@ import {
 import { requestFeedback } from '../services/feedbackService';
 import { LearningWorkspace } from './LearningWorkspace';
 import { FeedbackPanel } from './FeedbackPanel';
-import { ActivityHost, STAKEHOLDER_EXPORTERS } from './ActivityHost';
+import { ActivityHost, STAKEHOLDER_EXPORTERS, workUpToStep } from './ActivityHost';
 import { ResizeHandle } from './ResizeHandle';
 import { LAYOUT_LIMITS, useWorkspaceLayout } from './useWorkspaceLayout';
 
@@ -18,13 +18,15 @@ interface Props {
   /** The lesson selected across the app (shared with the Prompts and Versions tabs). */
   lessonId: string | null;
   onLessonChange: (id: string) => void;
+  /** The step last open in each lesson, so switching lessons (from any tab) comes back to it.
+      Shared with the Prompts tab, whose preview uses the open step. */
+  steps: Record<string, string>;
+  onStepChange: (lessonId: string, activityId: string) => void;
 }
 
-export function WorkspaceTab({ lessons, lessonId, onLessonChange }: Props) {
+export function WorkspaceTab({ lessons, lessonId, onLessonChange, steps, onStepChange }: Props) {
   const [layout, setLayout] = useWorkspaceLayout();
   const gridRef = useRef<HTMLDivElement>(null);
-  // The step last open in each lesson, so switching lessons (from any tab) comes back to it.
-  const lastStep = useRef<Record<string, string>>({});
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [activityId, setActivityId] = useState<string | null>(null);
   const [saved, setSaved] = useState<{ activityId: string; report: ActivityReport | null } | null>(null);
@@ -61,13 +63,13 @@ export function WorkspaceTab({ lessons, lessonId, onLessonChange }: Props) {
     setShowExample(false);
     getLesson(lessonId).then((l) => {
       setLesson(l);
-      const last = lastStep.current[l.id];
+      const last = steps[l.id];
       setActivityId(l.activities.some((a) => a.id === last) ? last : (l.activities[0]?.id ?? null));
     });
   }, [lessonId]);
 
   useEffect(() => {
-    if (lesson && activityId && lesson.activities.some((a) => a.id === activityId)) lastStep.current[lesson.id] = activityId;
+    if (lesson && activityId && lesson.activities.some((a) => a.id === activityId)) onStepChange(lesson.id, activityId);
   }, [lesson, activityId]);
 
   useEffect(() => {
@@ -96,7 +98,8 @@ export function WorkspaceTab({ lessons, lessonId, onLessonChange }: Props) {
     if (report.status !== 'submitted') return;
     setLoadingFeedback(true);
     try {
-      const result = await requestFeedback(report, lesson!.id);
+      // Feedback sees the work as of this step, as in the Prompts preview, never later steps'.
+      const result = await requestFeedback({ ...report, state: workUpToStep(definition, report.state) }, lesson!.id);
       // Ignore results for an activity the student has already left.
       if (result.activityId === currentId.current) setFeedback(result);
     } finally {

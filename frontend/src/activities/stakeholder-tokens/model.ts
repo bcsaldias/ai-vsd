@@ -96,6 +96,31 @@ export const TOKEN_SIZE = 88;
 export const CONTEXT_SIZE = 112;
 // Token and centre sizes must match .token and .context-token in styles.css.
 
+/** How far a tension bows to one side, so a relationship and a tension can join the same pair. */
+export const TENSION_BEND = 36;
+/** How close to the board's centre a connection may pass before it bends around the centre token. */
+const CENTRE_CLEARANCE = CONTEXT_SIZE / 2 + 24;
+
+/** How far a connection between two token centres bows from the straight line, along its left-hand
+    normal (0 = straight; the sign is the side). A line that would cross the centre token bends
+    around it, away from the centre; a tension on such a pair bows further, so the two never
+    overlap. The curve is a quadratic whose midpoint sits `bend` off the line. */
+export function linkBend(a: { x: number; y: number }, b: { x: number; y: number }, type: Link['type']): number {
+  const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+  const [ux, uy] = [(b.x - a.x) / len, (b.y - a.y) / len];
+  // Where the centre (0, 0) falls along the line (0 = at a, 1 = at b), and its signed distance from it.
+  const along = (-a.x * ux - a.y * uy) / len;
+  const offset = a.x * uy - a.y * ux;
+  let around = 0;
+  if (along > 0 && along < 1 && Math.abs(offset) < CENTRE_CLEARANCE) {
+    // The curve's offset at a point is 4·s·(1−s)·bend, so bend enough to clear the centre where it is closest.
+    const s = Math.min(0.85, Math.max(0.15, along));
+    around = (offset >= 0 ? 1 : -1) * ((CENTRE_CLEARANCE - Math.abs(offset)) / (4 * s * (1 - s)));
+  }
+  if (type === 'relationship') return around;
+  return around === 0 ? TENSION_BEND : around + Math.sign(around) * TENSION_BEND;
+}
+
 /** The rings and starting-point types, in order. Their words come from the lesson's wording (see Words). */
 export const RINGS: Ring[] = ['core', 'peripheral', 'excluded'];
 export const CONTEXT_TYPES: ContextType[] = ['technology', 'value', 'context'];

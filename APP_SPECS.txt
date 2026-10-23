@@ -101,7 +101,9 @@ The board:
   - Relationships are lines between tokens: one-way relationships have an arrowhead at the
     stakeholder affected; mutual ones have none. VSD doesn't require direction; it is offered because
     unequal relationships (who watches, pays, or decides for whom) are central to the analysis.
-    Tensions are dashed red curves labelled with the two values.
+    Tensions are dashed red curves labelled with the two values. A connection that would run
+    through the centre token bends around it; a tension on such a pair bends further out, so the
+    two never overlap (linkBend in the board model).
   - Harms (−), benefits (+), and values show as small chips under each token.
   - The starting point appears in full as a heading strip above the board (click it to edit); the
     centre token shows a short version.

@@ -27,10 +27,28 @@ const text = (v: unknown, where: string): string => (typeof v === 'string' && v.
 const texts = (v: unknown, where: string): string[] =>
   Array.isArray(v) ? v.map((t, i) => (typeof t === 'string' ? t : fail(`${where}[${i + 1}]`, 'should be text in quotes'))) : fail(where, 'should be a list [ … ]');
 
-function readLesson(folder: string): { lesson: Lesson; prompts: PromptVersion } {
-  const at = (file: string) => `content/${folder}/${file}`;
+/** A lesson folder's files, as read from disk (undefined when a file is missing). */
+export interface LessonFiles {
+  lesson?: unknown;
+  example?: unknown;
+  prompts?: unknown;
+  wording?: unknown;
+}
+
+const filesIn = (folder: string): LessonFiles => {
   const file = (files: Record<string, unknown>, name: string) => files[`../../content/${folder}/${name}`];
-  const raw = file(lessonFiles, 'lesson.json');
+  return {
+    lesson: file(lessonFiles, 'lesson.json'),
+    example: file(exampleFiles, 'worked-example.json'),
+    prompts: file(promptFiles, 'prompts.json'),
+    wording: file(wordingFiles, 'wording.json'),
+  };
+};
+
+/** Checks one lesson folder's files and turns them into the lesson and its starting prompts. */
+export function readLesson(folder: string, files: LessonFiles): { lesson: Lesson; prompts: PromptVersion } {
+  const at = (file: string) => `content/${folder}/${file}`;
+  const raw = files.lesson;
   if (raw === undefined) fail(at('lesson.json'), 'missing (the folder is listed in content/lessons.json)');
   const l = obj(raw, at('lesson.json'));
   const where = (field: string) => `${at('lesson.json')} → ${field}`;
@@ -39,7 +57,7 @@ function readLesson(folder: string): { lesson: Lesson; prompts: PromptVersion } 
   if (!(ACTIVITY_KINDS as readonly string[]).includes(activity)) fail(where('activity'), `should be one of ${ACTIVITY_KINDS.join(', ')}`);
   const sharedBoard = l.sharedBoard === undefined ? undefined : text(l.sharedBoard, where('sharedBoard'));
   const source = l.bringStakeholdersFrom === undefined ? undefined : obj(l.bringStakeholdersFrom, where('bringStakeholdersFrom'));
-  const example = file(exampleFiles, 'worked-example.json');
+  const example = files.example;
   if (!Array.isArray(l.steps) || !l.steps.length) fail(where('steps'), 'should be a list of at least one step');
 
   // The words for the activity's parts, on screen and in the AI's text: the file gives every word
@@ -47,13 +65,19 @@ function readLesson(folder: string): { lesson: Lesson; prompts: PromptVersion } 
   const keys = wordingKeys(activity as ActivityKind);
   let wording: Record<string, string> | undefined;
   if (keys.length) {
-    const words = obj(file(wordingFiles, 'wording.json') ?? fail(at('wording.json'), 'missing'), at('wording.json'));
+    const words = obj(files.wording ?? fail(at('wording.json'), 'missing'), at('wording.json'));
     const ww = (key: string) => `${at('wording.json')} → ${key}`;
     for (const key of Object.keys(words)) {
       if (!keys.includes(key)) fail(ww(key), `is not a word this activity uses. Its words are: ${keys.join(', ')}`);
     }
     wording = Object.fromEntries(keys.map((key) => [key, text(words[key] ?? fail(ww(key), 'is missing'), ww(key))]));
   }
+
+  // Step texts can name the activity's parts with {word}, filled from wording.json, so a word is
+  // written once: "+ {harm} / + {benefit}" reads "+ Harm / + Benefit".
+  const words = (value: string, at: string) =>
+    value.replace(/\{(\w+)\}/g, (_, key: string) =>
+      wording && Object.hasOwn(wording, key) ? wording[key] : fail(at, `{${key}} is not a word in wording.json`));
 
   const ids = new Set<string>();
   const activities: ActivityDefinition[] = (l.steps as unknown[]).map((s, i) => {
@@ -65,13 +89,13 @@ function readLesson(folder: string): { lesson: Lesson; prompts: PromptVersion } 
     return {
       id,
       kind: activity as ActivityKind,
-      title: text(step.title, w('title')),
-      prompt: text(step.task, w('task')),
-      objectives: texts(step.objectives, w('objectives')),
+      title: words(text(step.title, w('title')), w('title')),
+      prompt: words(text(step.task, w('task')), w('task')),
+      objectives: texts(step.objectives, w('objectives')).map((o, j) => words(o, w(`objectives[${j + 1}]`))),
       guide: (step.guide === undefined ? [] : Array.isArray(step.guide) ? step.guide : fail(w('guide'), 'should be a list [ … ]')).map((g, j) => {
         const item = obj(g, w(`guide[${j + 1}]`));
         const gw = (field: string) => w(`guide[${j + 1}].${field}`);
-        return { target: text(item.target, gw('target')), label: text(item.label, gw('label')), where: text(item.where, gw('where')) };
+        return { target: text(item.target, gw('target')), label: words(text(item.label, gw('label')), gw('label')), where: words(text(item.where, gw('where')), gw('where')) };
       }),
       // The step number follows the order of the steps, so the board knows which tools to offer.
       config: { step: i + 1 },
@@ -97,7 +121,7 @@ function readLesson(folder: string): { lesson: Lesson; prompts: PromptVersion } 
     activities,
   };
 
-  const p = obj(file(promptFiles, 'prompts.json') ?? fail(at('prompts.json'), 'missing'), at('prompts.json'));
+  const p = obj(files.prompts ?? fail(at('prompts.json'), 'missing'), at('prompts.json'));
   const pw = (field: string) => `${at('prompts.json')} → ${field}`;
   const list = (questions: string[]) => questions.filter((q) => q.trim()).map((q) => `- ${q.trim()}`).join('\n');
   const perStep = obj(p.questionsForEachStep ?? {}, pw('questionsForEachStep'));
@@ -121,7 +145,7 @@ function readLesson(folder: string): { lesson: Lesson; prompts: PromptVersion } 
   return { lesson, prompts };
 }
 
-const loaded = texts(order, 'content/lessons.json').map(readLesson);
+const loaded = texts(order, 'content/lessons.json').map((folder) => readLesson(folder, filesIn(folder)));
 
 export const LESSONS: Lesson[] = loaded.map((l) => l.lesson);
 

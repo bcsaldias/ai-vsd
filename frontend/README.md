@@ -6,13 +6,23 @@ React + TypeScript app built with Vite. See [`../APP_SPECS.txt`](../APP_SPECS.tx
 npm install
 npm run dev        # http://localhost:5173
 npm run build      # typecheck + production build
+npm test           # the tests (Vitest); also run before every deploy
 npm run preview    # serve the production build at http://localhost:4173/ai-vsd/
 ```
 
+## Tests
+
+`npm test` checks what the AI reads and the lesson files: each step's work stops at that step
+(`activities/registry.test.ts`), the plain-language text and connection bends follow their rules,
+the system prompt sends only the checked step's questions (`services/promptService.test.ts`), and
+the content files load, with a mistake reported by file and field (`services/lessonContent.test.ts`).
+They check rules, not the lessons' wording, so editing content never needs a test update.
+
 ## Deploying
 
-Pushing to `main` publishes the site to GitHub Pages at https://bcsaldias.github.io/ai-vsd/
-(`.github/workflows/deploy.yml`). The `base` path in `vite.config.ts` must match the repo name.
+Pushing to `main` runs the tests, then publishes the site to GitHub Pages at
+https://bcsaldias.github.io/ai-vsd/ (`.github/workflows/deploy.yml`). Failing tests stop the deploy.
+The `base` path in `vite.config.ts` must match the repo name.
 `robots.txt` is not in this repo: crawlers only read it at the domain root, so it lives in the
 `bcsaldias.github.io` repo.
 
@@ -20,7 +30,7 @@ Pushing to `main` publishes the site to GitHub Pages at https://bcsaldias.github
 
 | Path | Purpose |
 |---|---|
-| `../content/` | Lesson content as plain JSON files, one folder per lesson: steps, worked example, starting prompts. Edit these to change what students read and what the AI is told; see `content/README.md`. `services/lessonContent.ts` reads and checks them. |
+| `../content/` | Lesson content as plain JSON files, one folder per lesson: steps, worked example, starting prompts, wording. Edit these to change what students read and what the AI is told; see `content/README.md`. `services/lessonContent.ts` reads and checks them. |
 | `main.tsx` | Entry point. Loads global styles, then the app; if a content file has a mistake, shows which file and field instead. |
 | `App.tsx` | App shell. Switches between the Workspace, Prompts, and Versions tabs. |
 | `styles.css` | All styles: theme colors (light only), layout, panels, and the narrow-screen layout. |

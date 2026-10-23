@@ -35,7 +35,7 @@
       "guide": [
         {
           "target": "direct",
-          "label": "Direct token",
+          "label": "{direct} token",
           "where": "In the palette left of the board. Drag it onto the rings, then type its name."
         }
       ]
@@ -43,7 +43,7 @@
     {
       "id": "stakeholders-indirect",
       "title": "Indirect stakeholders",
-      "task": "Add the people affected by the technology who never use it. Look for those who are easy to miss: move anyone currently left out of the design into the outer “excluded” area, and flag stakeholders who are hidden or easily overlooked.",
+      "task": "Add the people affected by the technology who never use it. Look for those who are easy to miss: move anyone currently left out of the design into the outer “{excluded}” area, and flag stakeholders who are hidden or easily overlooked.",
       "objectives": [
         "Identifies at least two indirect stakeholder groups",
         "Surfaces hidden, overlooked, or excluded groups",
@@ -52,17 +52,17 @@
       "guide": [
         {
           "target": "indirect",
-          "label": "Indirect token",
+          "label": "{indirect} token",
           "where": "In the palette left of the board."
         },
         {
           "target": "excluded",
-          "label": "Excluded area",
+          "label": "{excluded} area",
           "where": "The outer dashed ring. Drag left-out stakeholders there."
         },
         {
           "target": "overlooked",
-          "label": "Hidden or overlooked",
+          "label": "{overlooked}",
           "where": "Right panel, after you select a stakeholder."
         }
       ]
@@ -95,7 +95,7 @@
       "guide": [
         {
           "target": "impacts",
-          "label": "+ Harm / + Benefit",
+          "label": "+ {harm} / + {benefit}",
           "where": "Right panel, after you select a stakeholder."
         }
       ]
@@ -128,7 +128,7 @@
         {
           "target": "definitions",
           "label": "Value definitions",
-          "where": "In the Values list at the bottom of the right panel."
+          "where": "In the {values} list at the bottom of the right panel."
         }
       ]
     },
@@ -159,7 +159,7 @@
       "guide": [
         {
           "target": "organization",
-          "label": "Owner and next action",
+          "label": "{owner} and {action}",
           "where": "Under each value, and in each tension."
         }
       ]

@@ -19,7 +19,8 @@ content/
 
 1. Open the file and change the text between the quotes `"…"`.
 2. Save, and reload the app. If something is wrong in a file, the app shows a message naming the
-   file and the field to fix, instead of the lesson.
+   file and the field to fix, instead of the lesson. The same check runs before the site is
+   published, so a broken file is never published.
 
 The files are JSON. A few rules keep them valid:
 
@@ -114,8 +115,9 @@ away.
   the app opens, with the list of names it accepts.
 - `none` is shown for a part with nothing in it yet, `blank` for an empty field, and `unnamed`
   for something not named yet. These, `for` and `vs` are only in the AI's text.
-- The step texts in lesson.json mention some of these words (e.g. "+ Harm / + Benefit" in a guide
-  item); if you change a word here, change it there too.
+- Step texts in lesson.json use these words by name, in single braces: `"+ {harm} / + {benefit}"`
+  shows as "+ Harm / + Benefit". Change a word here and every step text that uses it follows. An
+  unknown name in braces is reported like any other mistake.
 
 ## lessons.json
 

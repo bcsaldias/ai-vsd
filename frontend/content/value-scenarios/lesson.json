@@ -22,7 +22,7 @@
       "guide": [
         {
           "target": "technology",
-          "label": "Technology",
+          "label": "{technology}",
           "where": "The box at the top left of the panel below."
         }
       ]
@@ -38,7 +38,7 @@
       "guide": [
         {
           "target": "stakeholders",
-          "label": "Whose stories?",
+          "label": "{stakeholders}",
           "where": "Left of the scenario list. Add people yourself, or bring them in from your stakeholder map."
         }
       ]
@@ -84,7 +84,7 @@
       "guide": [
         {
           "target": "widespread",
-          "label": "If everyone had it",
+          "label": "{widespread}",
           "where": "In each scenario card."
         }
       ]
@@ -99,7 +99,7 @@
       "guide": [
         {
           "target": "systemic",
-          "label": "Knock-on effects",
+          "label": "{systemic}",
           "where": "In each scenario card."
         }
       ]
@@ -115,8 +115,8 @@
       "guide": [
         {
           "target": "values",
-          "label": "Values at stake",
-          "where": "At the bottom of each scenario card. Pick harm or benefit, type, press Enter."
+          "label": "{values}",
+          "where": "At the bottom of each scenario card. Pick {harm} or {benefit}, type, press Enter."
         }
       ]
     },
@@ -131,7 +131,7 @@
       "guide": [
         {
           "target": "tensions",
-          "label": "Tensions between scenarios",
+          "label": "{tensions}",
           "where": "Under the scenario cards."
         }
       ]

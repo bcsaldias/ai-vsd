@@ -7,7 +7,7 @@ import {
   type Edge, type EdgeProps, type InternalNode, type NodeProps,
 } from '@xyflow/react';
 import {
-  RADIUS, allows, guide, tokenValueIds, valueName,
+  RADIUS, allows, guide, linkBend, tokenValueIds, valueName,
   type Link, type StakeholderTokensState, type Wording,
 } from './model';
 
@@ -107,10 +107,8 @@ const centre = (n: InternalNode) => ({
   y: n.internals.positionAbsolute.y + (n.measured.height ?? 0) / 2,
 });
 
-const TENSION_BEND = 36;
-
-/** Line between token centres, trimmed to the token edges so arrowheads stay visible.
-    Relationships are straight; tensions bow to one side so both can join the same pair. */
+/** Line between token centres, trimmed to the token edges so arrowheads stay visible. Relationships
+    are straight unless they would cross the centre token; tensions bow to one side (see linkBend). */
 export function LinkEdge({ id, source, target, markerEnd, label, data }: EdgeProps<Edge<{ type: Link['type'] }>>) {
   const s = useInternalNode(source);
   const t = useInternalNode(target);
@@ -122,7 +120,7 @@ export function LinkEdge({ id, source, target, markerEnd, label, data }: EdgePro
   const [ux, uy] = [(b.x - a.x) / len, (b.y - a.y) / len];
   const ra = (s.measured.width ?? 0) / 2 + 2;
   const rb = (t.measured.width ?? 0) / 2 + 4;
-  const bend = data?.type === 'tension' ? TENSION_BEND : 0;
+  const bend = linkBend(a, b, data?.type ?? 'relationship');
   // Bending pulls the ends slightly off-centre; rotate them toward the bend so they still meet the disc edge.
   const tilt = Math.atan2(bend, len / 2);
   const rot = (x: number, y: number, ang: number) => [x * Math.cos(ang) - y * Math.sin(ang), x * Math.sin(ang) + y * Math.cos(ang)];

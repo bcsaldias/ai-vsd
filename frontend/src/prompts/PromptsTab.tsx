@@ -237,33 +237,11 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
             {/* Named by what it shows; the step it follows is in the trail at the top. */}
             <div>
               <h3>What the AI receives</h3>
-              <p className="hint preview-intro">This is the full prompt the AI works with when you check your work on this step. Only the text in the boxes is sent.</p>
-            </div>
-            <div className="sample-toggle" role="group" aria-label="Student work in the preview">
-              {/* aria-disabled rather than disabled, so the tooltip saying why still shows on hover. */}
-              <button
-                className="small"
-                aria-pressed={shown === 'own'}
-                aria-disabled={own == null}
-                data-tip={
-                  own != null ? undefined
-                  // Steps sharing a board share the work, so anything from an earlier step counts.
-                  : activity?.stateKey ? 'Start this lesson in the Workspace to see your work here. Work from earlier steps carries over.'
-                  : 'Start this step in the Workspace to see your work here.'
-                }
-                onClick={() => own != null && setSample('own')}
-              >
-                My work
-              </button>
-              <button
-                className="small"
-                aria-pressed={shown === 'example'}
-                aria-disabled={worked == null}
-                data-tip={worked == null ? 'This step has no worked example.' : undefined}
-                onClick={() => worked != null && setSample('example')}
-              >
-                Worked example
-              </button>
+              <p className="hint preview-intro">
+                The full prompt the AI gets when work on this step is checked, as two messages.
+                <br />
+                Only the text in the boxes is sent.
+              </p>
             </div>
           </header>
           <div className="panel-body">
@@ -284,7 +262,36 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
             )}
             {draft.user.trim() && (
               <div className="preview-message">
-                <span className="role-label">User</span>
+                {/* The sample switch sits with the User message: it only changes {{student_work}}. */}
+                <div className="role-row">
+                  <span className="role-label">User</span>
+                  <div className="sample-toggle" role="group" aria-label="Student work in the preview">
+                    {/* aria-disabled rather than disabled, so the tooltip saying why still shows on hover. */}
+                    <button
+                      className="small"
+                      aria-pressed={shown === 'own'}
+                      aria-disabled={own == null}
+                      data-tip={
+                        own != null ? undefined
+                        // Steps sharing a board share the work, so anything from an earlier step counts.
+                        : activity?.stateKey ? 'Start this lesson in the Workspace to see your work here. Work from earlier steps carries over.'
+                        : 'Start this step in the Workspace to see your work here.'
+                      }
+                      onClick={() => own != null && setSample('own')}
+                    >
+                      My work
+                    </button>
+                    <button
+                      className="small"
+                      aria-pressed={shown === 'example'}
+                      aria-disabled={worked == null}
+                      data-tip={worked == null ? 'This step has no worked example.' : undefined}
+                      onClick={() => worked != null && setSample('example')}
+                    >
+                      Worked example
+                    </button>
+                  </div>
+                </div>
                 {/* Only the User prompt has variables, so the hint sits here. */}
                 <p className="hint">Blue text is filled in from a variable. Hover over it to see which one.</p>
                 <pre>

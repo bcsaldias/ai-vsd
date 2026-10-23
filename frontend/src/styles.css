@@ -784,6 +784,7 @@ button.variable:hover:not(:disabled) { border-color: var(--variable); }
 .template-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .template-checks li { color: var(--issue); font-size: 0.85rem; padding-left: 10px; border-left: 3px solid var(--issue); }
 /* Preview: which work fills {{student_work}}. Joined buttons; the one in use is filled. */
+.role-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .sample-toggle { display: flex; flex-shrink: 0; }
 .sample-toggle button { border-color: var(--ink-line); font-weight: 500; white-space: nowrap; }
 .sample-toggle button + button { border-left: none; }

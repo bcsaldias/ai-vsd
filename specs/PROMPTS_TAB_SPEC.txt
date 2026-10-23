@@ -187,8 +187,9 @@ PREVIEW
   headings before the questions are muted and italic (tooltip: "Added by the app before your
   questions").
 - Follows the step open in the Workspace: all four variables come from that activity. The header
-  reads "What the AI receives", with "This is the full prompt the AI works with when you check your
-  work on this step. Only the text in the boxes is sent." in the header under it; the step itself
+  reads "What the AI receives", with "The full prompt the AI gets when work on this step is
+  checked, as two messages. Only the text in the boxes is sent." in the header under it (the System
+  and User labels name the two messages); the step itself
   is in the step trail. Each prompt sits in a box, greyer than the editors' paper so it reads as
   read only; labels and hints outside the boxes are the app's notes and are not sent. Until the Workspace has
   opened a step, the lesson's first activity is used.
@@ -201,7 +202,7 @@ PREVIEW
 - The student's work is read again each time the Prompts tab is opened, so changes made in the
   Workspace always show up.
 
-Sample switch ("My work | Worked example", in the preview header):
+Sample switch ("My work | Worked example", beside the User label: it only changes {{student_work}}):
   - Picks what fills {{student_work}} in the preview. The option in use is filled dark.
   - Starts on My work. The choice is kept across steps and lessons while the app is open.
   - An option the step lacks is unavailable, and the preview uses the other one:

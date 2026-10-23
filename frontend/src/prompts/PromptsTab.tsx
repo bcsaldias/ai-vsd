@@ -129,8 +129,9 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, activityId, acti
           <h1 className="page-title">Prompts.</h1>
           <LessonPicker lessons={lessons} value={lessonId} onChange={onLessonChange} />
           <p className="prompts-intro">
-            These are the instructions the AI tutor follows when it gives feedback in this lesson. Anyone,
-            students included, can read and change them: shaping these rules is part of learning how to prompt AI.
+            The AI here doesn't give answers. It asks questions, points out gaps, and challenges your reasoning,
+            following the instructions below. Anyone, students included, can read and change them: deciding how
+            an AI should challenge you is part of learning to work with one.
           </p>
           <p className="hint">
             Editing from version {base.number}

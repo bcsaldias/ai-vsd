@@ -55,7 +55,7 @@ export function LearningWorkspace({
   return (
     <section id="workspace-panel" className="panel workspace-panel" aria-label="VSD Learning workspace">
       <header className="panel-header">
-        <h2><span className="lesson-mark" aria-hidden="true">{lesson.symbol}</span> {lesson.title}</h2>
+        <h2>About this lesson</h2>
       </header>
       <div className="panel-body">
         <p>{lesson.intro}</p>
@@ -64,7 +64,7 @@ export function LearningWorkspace({
           {current && (
             <article className="step-card" aria-labelledby="step-card-title">
               <span className="step-count">
-                <span className="lesson-mark" aria-hidden="true">{lesson.symbol}</span> {lesson.title} · Step {index + 1} of {lesson.activities.length}
+                Step {index + 1} of {lesson.activities.length}
               </span>
               <h3 id="step-card-title" className="step-title">{current.title}</h3>
               <p>{current.prompt}</p>

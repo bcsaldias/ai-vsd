@@ -27,7 +27,10 @@ Three coordinated areas:
    - Shows the lesson introduction, a card for the current activity, and the list of activities.
    - The card is a flat white box beside the activity list (stacked above it when the panel is narrow).
      It shows "Step N of M", the activity title, its description (the prompt), and its learning objectives.
-     Activities do not repeat the prompt in the activity panel; the panel header shows "Step N · Title".
+     Activities do not repeat the prompt in the activity panel.
+   - Panel headers name what each panel is for: "About this lesson", "Your work" (the activity
+     panel; "Worked example" while the example shows), and "Feedback". The lesson's name stays in
+     the top bar and the step in the trail, both always in view, so the headers don't repeat them.
    - A "Next" button under the activity list moves to the next activity (hidden on the last one).
      If the current activity's work hasn't been checked since it last changed, Next first offers
      "Check my work" (feedback appears; the student stays on the step) or "Skip to next step".
@@ -121,9 +124,9 @@ Interaction:
 Worked example: a smart doorbell camera board (a different case from the reading app students are
 offered, so it models each step without giving away their answers). "See an example of this step" on
 the step card swaps the activity panel to the example: read only, filtered to what exists by the
-current step (e.g. step 2 shows only direct stakeholders; definitions appear from step 7), marked
-"Example" in the panel header, with "← Back to my board" right beside the badge. The board has a hatched background and a dashed border so it reads as
-read only. The student's board is not touched. Always available. The example
+current step (e.g. step 2 shows only direct stakeholders; definitions appear from step 7), headed
+"Worked example" instead of "Your work", with "← Back to my board" right beside it. The board has a
+hatched background and a dashed border so it reads as read only. The student's board is not touched. Always available. The example
 is lesson content (ActivityDefinition.example), served like the rest of the lesson.
 
 Your work (activity panel header): Export downloads the current state as a .json file
@@ -158,7 +161,7 @@ Next button move the trail too. On narrow screens the trail wraps.
 A second, independent lesson (Nathan, Klasnja & Friedman, 2007): short stories about how a technology
 plays out for different stakeholders, once widely used and over many years. Its own steps, saved work
 (stateKey "value-scenarios"), example, Export / Import / Start over, and prompts. The learning
-workspace header names the lesson; switching happens in the top bar.
+lesson is picked in the top bar.
 
 Telling lessons apart: each lesson has an accent color and a symbol (Stakeholder Analysis: sage
 #A6BAA0 and ◎; Value Scenarios: coral #D26559 and ≡), both from the VSD Lab palette. The color
@@ -167,8 +170,8 @@ the sections and step trail, the trail's current dot, a band along the top of th
 open step in the activity list (its number in a filled circle, like the trail's dot, and its title
 filled and bold), and the activity panel header (filled; it stays in view while working). On
 Prompts and Versions, it also colors the prompt editors' left edge, the preview, the selected
-version, and the version details. The lesson's name and symbol always appear alongside, so color is
-never the only cue. Each section keeps its own ground (the workspace's stays orange).
+version, and the version details. The lesson's name and symbol are always in view in the top bar,
+so color is never the only cue. Each section keeps its own ground (the workspace's stays orange).
 
 Bottom panel (a simple list for now; a time × pervasiveness grid may come later):
   - Left: the technology, and "Whose stories?" (stakeholders, direct or indirect). Optional bridge:

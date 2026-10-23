@@ -303,8 +303,6 @@ export function WorkspaceTab({ lessonId, steps, onStepChange }: Props) {
         <ActivityHost
           key={`example:${hostKey(activityId)}`}
           definition={definition}
-          number={index + 1}
-          lesson={lesson}
           savedReport={{ activityId: definition.id, kind: definition.kind, status: 'in-progress', state: definition.example, updatedAt: '' }}
           onReport={() => {}}
           onCheck={() => {}}
@@ -318,8 +316,6 @@ export function WorkspaceTab({ lessonId, steps, onStepChange }: Props) {
           key={`${hostKey(activityId)}#${hostVersion}`}
           importStakeholders={importStakeholders}
           definition={definition}
-          number={index + 1}
-          lesson={lesson}
           onCheck={checkWork}
           canCheck={status !== null}
           savedReport={saved.report}

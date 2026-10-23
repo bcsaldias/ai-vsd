@@ -114,6 +114,16 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
   };
 
   const dirty = isDirty(session);
+  // What differs from the version being edited, so edits to steps not open here aren't saved unseen.
+  const changed = (part: PromptPart) => draft[part] !== base.prompts[part];
+  const stepChanged = (id: string) => (draft.stepQuestions[id] ?? '') !== (base.prompts.stepQuestions[id] ?? '');
+  const changedParts = [
+    changed('system') && 'System',
+    changed('questions') && 'Questions for every step',
+    ...activities.map((a, i) => stepChanged(a.id) && `Step ${i + 1} questions`),
+    changed('user') && 'User',
+  ].filter(Boolean);
+  const changedTag = <span className="badge">Changed</span>;
 
   const save = async () => {
     const v = await savePromptVersion(lessonId, draft, note);
@@ -159,15 +169,19 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
             your reasoning, following the instructions below. Anyone, students included, can read and change
             them: deciding how an AI should challenge you is part of learning to work with one.
           </p>
+        </div>
+        {/* What is being saved, and from which version, sits with the controls that save it. */}
+        <div className="save-block">
           <p className="hint">
             Editing from version {base.number}
             {dirty && <span className="badge">Unsaved changes</span>}
           </p>
-        </div>
-        <div className="save-row">
-          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="What changed?" aria-label="Version note" />
-          <button onClick={discard} disabled={!dirty}>Discard changes</button>
-          <button className="primary" onClick={save} disabled={!dirty}>Save as new version</button>
+          {changedParts.length > 0 && <p className="hint">Changed: {changedParts.join(', ')}</p>}
+          <div className="save-row">
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="What changed?" aria-label="Version note" />
+            <button onClick={discard} disabled={!dirty}>Discard changes</button>
+            <button className="primary" onClick={save} disabled={!dirty}>Save as new version</button>
+          </div>
         </div>
       </div>
 
@@ -181,12 +195,15 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
                   <span className="role-label">{label}</span>
                   <span className="hint">{help}</span>
                   <label className="question-list">
-                    <span className="list-label">For every step</span>
+                    <span className="list-label">For every step{changed('questions') && changedTag}</span>
                     <textarea value={draft.questions} onChange={(e) => setDraft({ ...draft, questions: e.target.value })} rows={4} />
                   </label>
                   {activity && (
                     <label className="question-list">
-                      <span className="list-label">For this step · Step {index + 1} · {activity.title}</span>
+                      <span className="list-label">
+                        For this step · Step {index + 1} · {activity.title}
+                        {stepChanged(activity.id) && changedTag}
+                      </span>
                       <span className="hint">To edit another step’s questions, pick it in the steps at the top.</span>
                       <textarea
                         value={draft.stepQuestions[activity.id] ?? ''}
@@ -200,7 +217,7 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
                 </>
               ) : (
                 <label>
-                  <span className="role-label">{label}</span>
+                  <span className="role-label">{label}{changed(part) && changedTag}</span>
                   <span className="hint">{help}</span>
                   {part === 'user' ? (
                     <TemplateTextarea ref={userEditor} value={draft.user} onChange={(user) => setDraft({ ...draft, user })} rows={8} />

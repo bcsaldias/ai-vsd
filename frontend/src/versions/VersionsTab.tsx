@@ -37,7 +37,7 @@ export function VersionsTab({ lessons, lessonId, refreshKey }: Props) {
     <div className="tab-page versions-page" style={lessonAccent(lessons, lessonId)}>
       <div className="page-header">
         <div>
-          <h1 className="page-title">Versions.</h1>
+          <h1 className="page-title">Version History.</h1>
           <p className="hint">Prompt history. Every saved prompt change appears here; feedback records which version produced it.</p>
         </div>
       </div>

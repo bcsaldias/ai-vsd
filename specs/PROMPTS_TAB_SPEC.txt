@@ -117,12 +117,14 @@ TEMPLATE VARIABLES
   {{activity_title}}    The activity's title.
   {{activity_prompt}}   The activity's task description (its prompt).
   {{objectives}}        The activity's learning objectives, one "- objective" per line.
-  {{student_work}}      The student's work on the activity as formatted JSON, limited to the
-                        activity's step (see STUDENT WORK UP TO THE STEP). "(no student work yet)"
-                        when there is none.
+  {{student_work}}      The student's work on the activity in plain language, limited to the
+                        activity's step (see STUDENT WORK UP TO THE STEP and STUDENT WORK IN PLAIN
+                        LANGUAGE). "(no student work yet)" when there is none.
 
 - Names are matched exactly: {{name}}, letters, digits and underscores, no spaces.
 - A name that isn't one of these four is left exactly as typed, so the gap stays visible.
+- There is no variable for the raw JSON: the AI gets the plain-language form, and the JSON is what
+  gets stored. (A {{student_work_json}} variable for comparing the two could be added later.)
 - The mapping is defined once (templateVariables in promptService). The preview uses it, and the
   backend fills the same variables the same way for real feedback.
 
@@ -143,6 +145,43 @@ activity model's forStep). For example, in Stakeholder Tokens step 2, indirect s
 - Activities that don't share a board are unchanged.
 - Trimming is done in the frontend (workUpToStep, next to the activity registry), so the backend
   never needs to know how an activity works.
+
+
+STUDENT WORK IN PLAIN LANGUAGE
+
+The work is always stored as JSON (in the browser now, on the backend later). For the prompt,
+{{student_work}} writes it out in plain language, so the AI and the preview read the same thing:
+what the student made, without ids or board positions. For example, Stakeholder Tokens step 5:
+
+    Starting point (technology): Smart doorbell camera that records the front door ...
+
+    Direct stakeholders:
+    - Homeowners — core
+    ...
+    Indirect stakeholders:
+    - People experiencing homelessness — excluded, hidden or overlooked
+
+    Relationships:
+    - Homeowners —shares footage with→ Police      (one way)
+    - Homeowners ←share a home→ Household members   (mutual)
+
+    Harms and benefits:
+    - Homeowners:
+      - Benefit: Sees who is at the door from anywhere
+      - Harm: Clips stored on company servers could be leaked
+
+- Only the parts the step has reached appear, in the order the steps add them (values on harms and
+  benefits from step 6, owners and next steps from step 9; for value scenarios, each card's fields
+  as the steps add them, and tensions at step 8). A reached part with nothing in it reads
+  "(none yet)"; an empty field reads "(not written yet)".
+- Each activity writes out its own work (describeWork in its model.ts, listed in
+  activities/workText.ts). Activities without one are sent as JSON.
+- The wording (section headings, ring names, "Harm"/"Benefit", "(none yet)", ...) is lesson
+  content: content/<lesson>/work-description.json. Labels left out of the file keep the activity's
+  default wording; a key the activity doesn't use is reported as a content mistake.
+- The preview shows exactly what is sent.
+- The backend never converts work: the frontend sends both the JSON (stored) and the text (used for
+  {{student_work}}). See BACKEND_SPEC.txt.
 
 
 VARIABLE CHIPS
@@ -175,6 +214,10 @@ Shown in the issue color under the variable chips, as the student types:
     spelling." One line per distinct name.
   - Missing work: "There's no {{student_work}}, so the AI won't see the student's work and can't
     give feedback on it."
+
+Shown under the System prompt, "For every step", and "For this step", for any {{name}} typed there:
+  - "{{student_work}} only works in the User prompt. Here, the AI gets it exactly as typed." (Several
+    names are listed together.) Variables are only filled in the User prompt.
 
 They inform; they never block saving, since students are meant to experiment. They are announced
 to screen readers when they appear.
@@ -356,7 +399,6 @@ CODE MAP
 
 LATER
 
-- Warn about {{variables}} in the System prompt and the questions (they are never filled there).
 - Versions work: "Edit from this version" (load an older version as the draft) and showing what
   changed between versions. See C. VERSIONS TAB in APP_SPECS.txt.
 - Record each saved version's changes (promptChanges) with it, so the Versions tab can show them,

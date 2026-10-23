@@ -13,7 +13,7 @@ import '@xyflow/react/dist/style.css';
 import type { ActivityProps } from '../../types/contracts';
 import {
   CONTEXT_LABEL, CONTEXT_SIZE, LAST_STEP, RADIUS, RING_LABEL, TOKEN_SIZE, addLink, addToken, allows, guide, hasLink,
-  forStep, linkLabel, moveToken, newId, normalize, removeLinks, removeTokens,
+  forStep, linkLabel, moveToken, newId, normalize, removeLinks, removeTokens, tokenLabel,
   type Link, type StakeholderTokensState, type Token,
 } from './model';
 import { BoardContext, ContextNode, LinkEdge, RingsNode, TokenNode } from './BoardNodes';
@@ -70,8 +70,11 @@ function toEdges(board: Board, selection: Selection): Edge[] {
     data: { type: l.type },
     label: linkLabel(board, l),
     selected: selection?.id === l.id,
-    markerEnd: l.type === 'relationship' ? { type: MarkerType.ArrowClosed } : undefined,
-    ariaLabel: `${l.type} between ${board.tokens.find((t) => t.id === l.source)?.label || 'Unnamed'} and ${board.tokens.find((t) => t.id === l.target)?.label || 'Unnamed'}`,
+    // One-way relationships point at the stakeholder affected; mutual ones and tensions have no arrowhead.
+    markerEnd: l.type === 'relationship' && !l.mutual ? { type: MarkerType.ArrowClosed } : undefined,
+    ariaLabel: l.type === 'relationship' && !l.mutual
+      ? `relationship from ${tokenLabel(board, l.source)} to ${tokenLabel(board, l.target)}`
+      : `${l.mutual ? 'mutual relationship' : l.type} between ${tokenLabel(board, l.source)} and ${tokenLabel(board, l.target)}`,
   }));
 }
 

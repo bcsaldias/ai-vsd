@@ -12,7 +12,8 @@ The Prompts and Versions tabs are for the people participating in the learning e
 Placeholders are acceptable for the initial version, but each tab should have its basic structure in place.
 
 Students see and edit the prompts because they take part in shaping the norms, rules, and prompts
-that guide the AI tutor, and doing so teaches them how to prompt AI. The prompts are fully transparent
+that guide the AI, a critical-thinking partner that asks questions rather than giving answers, and
+doing so teaches them how to prompt AI. The prompts are fully transparent
 and nothing is locked: a student could remove a rule such as "do not give away the answer". We trust
 them not to.
 
@@ -84,7 +85,8 @@ Steps (each one adds tools to the board; earlier tools stay available, so studen
   2. Direct stakeholders — people who interact with the technology or its outputs.
   3. Indirect stakeholders — people affected without using it; mark excluded stakeholders and flag
      hidden or overlooked ones.
-  4. Relationships — connect stakeholders who affect one another, with a label ("cares for").
+  4. Relationships — connect stakeholders who affect one another, with a label ("cares for"), one way
+     or both ways (mutual: "share a home").
   5. Harms and benefits — what each stakeholder could gain or lose.
   6. Map to values — tag each harm and benefit with the values it touches (privacy, trust, ...).
   7. Define the key values — what each value means in this context.
@@ -96,7 +98,10 @@ The board:
     Where a token sits sets its ring; moving it re-classifies it.
   - Tokens: filled = direct, outlined = indirect, dotted plum outline and "?" = hidden or overlooked
     (Yoo's first goal: surfacing hidden, overlooked, or neglected stakeholders).
-  - Relationships are arrows; tensions are dashed red curves labelled with the two values.
+  - Relationships are lines between tokens: one-way relationships have an arrowhead at the
+    stakeholder affected; mutual ones have none. VSD doesn't require direction; it is offered because
+    unequal relationships (who watches, pays, or decides for whom) are central to the analysis.
+    Tensions are dashed red curves labelled with the two values.
   - Harms (−), benefits (+), and values show as small chips under each token.
   - The starting point appears in full as a heading strip above the board (click it to edit); the
     centre token shows a short version.
@@ -109,7 +114,11 @@ Interaction:
     label themselves): the new token is selected, the cursor goes to its Name field in the inspector,
     and Enter returns to the token on the board. Unnamed tokens read "Name me".
   - Drag from a token's dot to another token to connect them. From step 8, a toggle chooses whether a
-    new connection is a relationship or a tension.
+    new connection is a relationship or a tension. A pair has at most one relationship and one
+    tension; "Connect to…" and "Tension with…" list only stakeholders not yet connected that way.
+  - A selected relationship has a Direction menu: "One way: A → B", "One way: B → A", or "Both ways
+    (mutual)". Its label question follows it ("How does A affect B?" / "How are A and B related?").
+    New relationships start one way, in the direction they were drawn.
   - An inspector on the right edits whatever is selected (centre, token, or connection) and lists the
     values. Every board action is also available here as a form control, so the activity works from
     the keyboard: ring select, "Connect to…", "Tension with…", harm/benefit editors, value tags.
@@ -214,7 +223,7 @@ The full Prompts tab spec is in specs/PROMPTS_TAB_SPEC.txt; this section is the 
 - Saving creates a new version; it never overwrites an existing one.
 - A save bar pinned to the bottom of the tab shows the version being edited, lists what changed
   (each item links to its editor, on its step), and confirms each save.
-- Prompts are kept per lesson (each lesson has its own tutor role and rubric): the tab shows the
+- Prompts are kept per lesson (each lesson has its own AI role, questions, and rubric): the tab shows the
   lesson selected in the top bar.
 
 
@@ -268,7 +277,8 @@ ai-vsd/
   frontend/       Self-contained Vite project (package.json, index.html, src/)
     content/       Lesson content as plain files anyone can edit, one folder per lesson: lesson.json
                    (steps' titles, tasks, objectives, guide), worked-example.json, prompts.json
-                   (starting prompts). See content/README.md. Read by services/lessonContent.ts.
+                   (starting prompts), work-description.json (wording of the student's work as
+                   the AI reads it). See content/README.md. Read by services/lessonContent.ts.
     src/
       types/         Shared data contracts
       services/      The only code that talks to data sources (mock now, backend later)
@@ -328,7 +338,8 @@ Defined once in frontend/src/types/contracts.ts and mirrored as Pydantic models 
 - ActivityDefinition: id, kind (diagram | annotation | stakeholder-tokens), title, prompt, objectives,
   optional stateKey (activities with the same key share one state), optional config (activity-specific
   settings, passed through untouched, e.g. { step: 3 }), optional guide[] (what the activity introduces:
-  target, label, where; shown on the step card).
+  target, label, where; shown on the step card), optional example (worked example), optional
+  workLabels (wording for the student's work in plain language for the AI).
 - ActivityGuideItem: target (matches data-guide on activity elements), label, where.
 - ActivityProps (what an activity receives): prompt, config, savedState, onChange(state).
 - ActivityReport (what gets stored and sent for feedback): activityId, kind, status (in-progress | submitted), state, updatedAt.

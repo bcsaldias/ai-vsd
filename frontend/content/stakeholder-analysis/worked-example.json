@@ -86,6 +86,14 @@
       "label": "shares footage with"
     },
     {
+      "id": "ex-l2",
+      "source": "ex-home",
+      "target": "ex-household",
+      "type": "relationship",
+      "label": "share a home",
+      "mutual": true
+    },
+    {
       "id": "ex-l3",
       "source": "ex-home",
       "target": "ex-delivery",

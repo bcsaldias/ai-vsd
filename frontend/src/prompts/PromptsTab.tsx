@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Lesson, LessonSummary, PromptPart, PromptSet, PromptVersion } from '../types/contracts';
 import {
-  checkTemplate, getLatestPromptVersion, promptChanges, sameStepQuestions, savePromptVersion, systemPromptParts,
-  TEMPLATE_VARIABLES, templateParts, templateVariables, type PromptChange,
+  checkTemplate, getLatestPromptVersion, placeholdersIn, promptChanges, sameStepQuestions, savePromptVersion,
+  systemPromptParts, TEMPLATE_VARIABLES, templateParts, templateVariables, type PromptChange,
 } from '../services/promptService';
 import { getLesson, loadReport } from '../services/activityService';
 import { lessonAccent } from '../lessons/LessonPicker';
 import { workUpToStep } from '../workspace/ActivityHost';
+import { describeWork } from '../activities/workText';
 import { TemplateTextarea } from './TemplateTextarea';
 
 // In the order they are sent: the questions go inside the system prompt, right after its text.
@@ -169,6 +170,22 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved, onS
   };
 
   const checks = checkTemplate(draft.user);
+  // Under the System prompt and the question lists: {{names}} there are sent as typed. The list is
+  // always there (empty when fine), so screen readers announce a warning when it appears.
+  const notFilledWarning = (text: string) => {
+    const names = placeholdersIn(text);
+    return (
+      <ul className="template-checks" role="status">
+        {names.length > 0 && (
+          <li>
+            {names.map((n, i) => <span key={n}>{i > 0 && ', '}<code>{n}</code></span>)}{' '}
+            {names.length > 1 ? 'only work' : 'only works'} in the User prompt. Here, the AI gets{' '}
+            {names.length > 1 ? 'them' : 'it'} exactly as typed.
+          </li>
+        )}
+      </ul>
+    );
+  };
 
   // The student's work, or the worked example until there is some.
   // The chosen sample, or the other one when the step doesn't have it.
@@ -179,8 +196,10 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved, onS
 
   // The system prompt as sent for the open step: its questions, and the ones for every step.
   const systemPrompt = systemPromptParts(draft, activity?.id ?? null);
+  // The work as of the open step, as stored (JSON) and in plain language.
+  const stepWork = activity && work != null ? workUpToStep(activity, work) : null;
   const preview = activity
-    ? templateParts(draft.user, templateVariables(activity, work != null ? workUpToStep(activity, work) : null))
+    ? templateParts(draft.user, templateVariables(activity, stepWork, stepWork != null ? describeWork(activity, stepWork) : null))
     : [{ text: draft.user }];
 
   // Copy: both messages as plain text under their labels, so they can be pasted into any chat tool.
@@ -223,6 +242,7 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved, onS
                       rows={4}
                     />
                   </label>
+                  {notFilledWarning(draft.questions)}
                   {activity && (
                     <label className="question-list">
                       <span className="list-label">
@@ -240,6 +260,7 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved, onS
                       />
                     </label>
                   )}
+                  {activity && notFilledWarning(draft.stepQuestions[activity.id] ?? '')}
                 </>
               ) : (
                 <label>
@@ -257,6 +278,7 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved, onS
                   )}
                 </label>
               )}
+              {part === 'system' && notFilledWarning(draft.system)}
               {part === 'user' && (
                 <div className="variables">
                   <span className="hint">Click to insert:</span>

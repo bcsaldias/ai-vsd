@@ -153,13 +153,26 @@ export function checkTemplate(template: string): { unknown: string[]; missingWor
   };
 }
 
+/** The {{names}} in text that is sent exactly as typed (the System prompt, the questions to ask):
+    variables are only filled in the User prompt. */
+export function placeholdersIn(text: string): string[] {
+  return [...new Set([...text.matchAll(PLACEHOLDER)].map((m) => `{{${m[1]}}}`))];
+}
+
 /** What each variable is filled with, for an activity and the student's work on it (already
-    limited to the activity's step). The backend fills the same variables for real feedback. */
-export function templateVariables(activity: ActivityDefinition, work: unknown): Record<(typeof TEMPLATE_VARIABLES)[number], string> {
+    limited to the activity's step). {{student_work}} is the work in plain language (`workText`, from
+    the activity; JSON when it has none). The work itself is always stored as JSON. The backend
+    fills the same variables for real feedback, with the text the frontend sends. */
+export function templateVariables(
+  activity: ActivityDefinition,
+  work: unknown,
+  workText: string | null,
+): Record<(typeof TEMPLATE_VARIABLES)[number], string> {
+  const json = work != null ? JSON.stringify(work, null, 2) : '(no student work yet)';
   return {
     activity_title: activity.title,
     activity_prompt: activity.prompt,
     objectives: activity.objectives.map((o) => `- ${o}`).join('\n'),
-    student_work: work != null ? JSON.stringify(work, null, 2) : '(no student work yet)',
+    student_work: work != null ? (workText ?? json) : json,
   };
 }

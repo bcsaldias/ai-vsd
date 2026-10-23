@@ -10,8 +10,9 @@ content/
     lesson.json                 title, intro, color, and each step's text
     worked-example.json         the example students can open on each step
     prompts.json                the AI's starting prompts for this lesson
+    work-description.json       the wording used when a student's work is written out for the AI
   value-scenarios/
-    (the same three files)
+    (the same four files)
 ```
 
 ## How to edit
@@ -82,14 +83,36 @@ the starting point.
 | `system` | Who the AI is and its rules. |
 | `questionsForEveryStep` | Questions the AI can ask at any step, as a list. |
 | `questionsForEachStep` | Questions for one step only, listed under that step's `id` from lesson.json. Only the step being checked gets its questions. |
-| `userTemplate` | The message sent with each request, one line per item. `{{activity_title}}`, `{{activity_prompt}}`, `{{objectives}}`, and `{{student_work}}` are filled in by the app. |
+| `userTemplate` | The message sent with each request, one line per item. `{{activity_title}}`, `{{activity_prompt}}`, `{{objectives}}`, and `{{student_work}}` (the work in plain language, see work-description.json) are filled in by the app. |
 
 A changed prompts.json shows up for everyone who hasn't saved their own version of that lesson's
 prompts in their browser. Anyone who has keeps seeing their saved version (that's on purpose: it's
 their work).
 
+## work-description.json
+
+The app stores a student's work as data. When it goes to the AI as `{{student_work}}`, the app
+writes it out in plain language instead, for example:
+
+```
+Direct stakeholders:
+- Homeowners — core
+Harms and benefits:
+- Homeowners:
+  - Benefit: Sees who is at the door from anywhere (Safety)
+```
+
+This file holds that wording: each line is a name on the left (keep it) and the words the AI sees
+on the right (change them freely). For example, `"core": "core"` → `"core": "inner ring"` makes
+the AI read "Homeowners — inner ring". The Prompts tab preview shows the result straight away.
+
+- Delete a line to go back to the app's built-in wording for it.
+- The names on the left are fixed by the activity; a misspelled one is reported when the app
+  opens, with the list of names it accepts.
+- `none` is shown for a part with nothing in it yet, and `blank` for an empty field.
+
 ## lessons.json
 
 The folder names of the lessons, in the order they appear. A new lesson that uses one of the
-existing activities only needs a new folder with the three files and its name added here. A lesson
+existing activities only needs a new folder with the four files (work-description.json is optional) and its name added here. A lesson
 with a new kind of activity needs a developer.

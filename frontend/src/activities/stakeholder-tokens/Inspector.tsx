@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
-  CONTEXT_LABEL, RING_LABEL, addImpact, addLink, allows, guide, linkLabel, moveToRing, newId, patchContext,
+  CONTEXT_LABEL, RING_LABEL, addImpact, addLink, allows, guide, hasLink, linkLabel, moveToRing, newId, patchContext,
   patchImpact, patchLink, patchToken, patchValue, removeImpact, removeLinks, removeTokens, removeValue,
   tagImpact, tokenLabel, untagImpact,
   type ContextType, type Impact, type Link, type Ring, type StakeholderTokensState, type Token,
@@ -105,6 +105,10 @@ function TokenForm({ token, board, step, update, select, focusName, onNameFocuse
   // Enter (or Escape) finishes naming and returns to the token on the board.
   const finishNaming = () => document.querySelector<HTMLElement>(`.react-flow__node[data-id="${token.id}"]`)?.focus();
   const others = board.tokens.filter((t) => t.id !== token.id);
+  // Only stakeholders not yet connected that way (one relationship and one tension per pair).
+  const canConnect = (type: Link['type']) => others.filter((t) => !hasLink(board, token.id, t.id, type));
+  const relationTargets = canConnect('relationship');
+  const tensionTargets = canConnect('tension');
   const impacts = board.impacts.filter((i) => i.tokenId === token.id);
 
   const connect = (type: Link['type'], target: string) => {
@@ -160,21 +164,21 @@ function TokenForm({ token, board, step, update, select, focusName, onNameFocuse
         </label>
       )}
 
-      {allows(step, 'relationships') && others.length > 0 && (
+      {allows(step, 'relationships') && relationTargets.length > 0 && (
         <label className="field edit-only" {...guide(step, 'relationships')}>
           <span>Connect to…</span>
           <select value="" onChange={(e) => connect('relationship', e.target.value)}>
             <option value="">Choose a stakeholder</option>
-            {others.map((t) => <option key={t.id} value={t.id}>{t.label || 'Unnamed'}</option>)}
+            {relationTargets.map((t) => <option key={t.id} value={t.id}>{t.label || 'Unnamed'}</option>)}
           </select>
         </label>
       )}
-      {allows(step, 'tensions') && others.length > 0 && (
+      {allows(step, 'tensions') && tensionTargets.length > 0 && (
         <label className="field edit-only" {...guide(step, 'tensions')}>
           <span>Tension with…</span>
           <select value="" onChange={(e) => connect('tension', e.target.value)}>
             <option value="">Choose a stakeholder</option>
-            {others.map((t) => <option key={t.id} value={t.id}>{t.label || 'Unnamed'}</option>)}
+            {tensionTargets.map((t) => <option key={t.id} value={t.id}>{t.label || 'Unnamed'}</option>)}
           </select>
         </label>
       )}
@@ -260,13 +264,31 @@ function LinkForm({ link, board, step, update, select }: FormProps & { link: Lin
     return (
       <section>
         <h3>Relationship</h3>
-        <p className="link-ends">{from} → {to}</p>
+        <p className="link-ends">{from} {link.mutual ? '↔' : '→'} {to}</p>
+        {/* One way (either direction) or both ways. "back" swaps the ends, so it then reads as the
+            first option with the names in the new order. */}
         <label className="field">
-          <span>How does {from} affect {to}?</span>
-          <input value={link.label} onChange={(e) => set({ label: e.target.value })} placeholder="e.g. reports to, cares for, pays for" />
+          <span>Direction</span>
+          <select
+            value={link.mutual ? 'mutual' : 'forward'}
+            onChange={(e) =>
+              set(e.target.value === 'back' ? { source: link.target, target: link.source, mutual: false } : { mutual: e.target.value === 'mutual' })
+            }
+          >
+            <option value="forward">One way: {from} → {to}</option>
+            <option value="back">One way: {to} → {from}</option>
+            <option value="mutual">Both ways (mutual)</option>
+          </select>
+        </label>
+        <label className="field">
+          <span>{link.mutual ? `How are ${from} and ${to} related?` : `How does ${from} affect ${to}?`}</span>
+          <input
+            value={link.label}
+            onChange={(e) => set({ label: e.target.value })}
+            placeholder={link.mutual ? 'e.g. share a home, work together' : 'e.g. reports to, cares for, pays for'}
+          />
         </label>
         <div className="inline-buttons">
-          <button className="small" onClick={() => set({ source: link.target, target: link.source })}>Reverse direction</button>
           <button className="small danger" onClick={remove}>Remove</button>
         </div>
       </section>

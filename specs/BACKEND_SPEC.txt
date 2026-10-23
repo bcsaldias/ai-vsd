@@ -105,7 +105,9 @@ THE AI CALL: POST /feedback
 
 The frontend sends:
   - lessonId, activityId, promptVersionId
-  - the student's work, already limited to the step (workUpToStep in the frontend)
+  - the student's work, already limited to the step (workUpToStep in the frontend), twice: as
+    JSON, which is stored, and in plain language (describeWork), which fills {{student_work}}.
+    The backend never converts work itself.
   - the prompts as they stand for this request: system, questions (every step and this step),
     user template
 
@@ -152,7 +154,8 @@ WHAT IS STORED
   prompt versions     owner (participant), lesson, number, note, created, prompts (system,
                       questions, stepQuestions, user)
   feedback requests   participant, group, lesson, activity, prompt version, the exact system and
-                      user prompts sent, the work sent, the model and its reply, the Feedback
+                      user prompts sent, the work sent (JSON, and the plain-language text used
+                      in the prompt), the model and its reply, the Feedback
                       returned, input and output tokens, estimated cost, time taken, time
   ratings             feedback request, item, helpful or not, time
 

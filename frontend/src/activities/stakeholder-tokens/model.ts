@@ -47,6 +47,8 @@ export interface Link {
   type: 'relationship' | 'tension';
   /** Relationship: how they relate ("cares for"). Tension: a short description. */
   label: string;
+  /** Relationship only: it goes both ways (no arrowhead), rather than from source to target. */
+  mutual?: boolean;
   /** Tension only: the value at stake on each side. */
   sourceValueId?: string;
   targetValueId?: string;
@@ -277,4 +279,86 @@ export function linkLabel(b: Board, l: Link): string {
   if (l.type === 'relationship') return l.label;
   const values = [valueName(b, l.sourceValueId), valueName(b, l.targetValueId)].filter(Boolean).join(' vs ');
   return `⚡ ${values || l.label || 'Tension'}`;
+}
+
+// ---------- Work in plain language ----------
+
+/** The wording of the board written out for the AI ({{student_work}}). These are the defaults; a
+    lesson's content/<lesson>/work-description.json can reword any of them. */
+export const WORK_LABELS = {
+  startingPoint: 'Starting point',
+  technology: 'technology',
+  value: 'value',
+  context: 'context of use',
+  direct: 'Direct stakeholders',
+  indirect: 'Indirect stakeholders',
+  core: 'core',
+  peripheral: 'peripheral',
+  excluded: 'excluded',
+  overlooked: 'hidden or overlooked',
+  relationships: 'Relationships',
+  impacts: 'Harms and benefits',
+  harm: 'Harm',
+  benefit: 'Benefit',
+  values: 'Values',
+  tensions: 'Value tensions',
+  for: 'for',
+  versus: 'vs',
+  owner: 'Owner',
+  action: 'Next step',
+  unnamed: '(unnamed)',
+  blank: '(not written yet)',
+  none: '(none yet)',
+};
+export type WorkLabels = Record<keyof typeof WORK_LABELS, string>;
+
+/** The board as of a step, in plain language: one section per part the step has reached, in the
+    order the steps add them. Ids and board positions are left out; only what they mean stays. */
+export function describeWork(b: Board, step: number, t: WorkLabels): string {
+  const text = (s: string | undefined, empty = t.blank) => s?.trim() || empty;
+  const name = (id: string) => text(b.tokens.find((tk) => tk.id === id)?.label, t.unnamed);
+  const value = (id?: string) => text(valueName(b, id), t.unnamed);
+  const organization = (x: { owner?: string; action?: string }) =>
+    allows(step, 'organization')
+      ? [x.owner?.trim() && `  ${t.owner}: ${x.owner.trim()}`, x.action?.trim() && `  ${t.action}: ${x.action.trim()}`].filter(Boolean)
+      : [];
+  const sections = [`${t.startingPoint} (${t[b.context.type]}): ${text(b.context.label)}`];
+  const section = (title: string, lines: (string | false | undefined)[]) => {
+    const kept = lines.filter(Boolean);
+    sections.push([`${title}:`, ...(kept.length ? kept : [t.none])].join('\n'));
+  };
+  const people = (kind: Token['kind']) =>
+    b.tokens
+      .filter((tk) => tk.kind === kind)
+      .map((tk) => `- ${text(tk.label, t.unnamed)} — ${[t[tk.ring], tk.overlooked && t.overlooked].filter(Boolean).join(', ')}`);
+
+  if (allows(step, 'direct')) section(t.direct, people('direct'));
+  if (allows(step, 'indirect')) section(t.indirect, people('indirect'));
+  if (allows(step, 'relationships')) {
+    // Read in the arrow's direction: "Homeowners —shares footage with→ Police". Mutual ones point
+    // both ways: "Homeowners ←share a home→ Household members".
+    section(t.relationships, b.links.filter((l) => l.type === 'relationship').map((l) => {
+      const label = l.label.trim();
+      const arrow = l.mutual ? (label ? `←${label}→` : '↔') : label ? `—${label}→` : '→';
+      return `- ${name(l.source)} ${arrow} ${name(l.target)}`;
+    }));
+  }
+  if (allows(step, 'impacts')) {
+    section(t.impacts, b.tokens.flatMap((tk) => {
+      const impacts = b.impacts.filter((i) => i.tokenId === tk.id);
+      if (!impacts.length) return [];
+      return [`- ${name(tk.id)}:`, ...impacts.map((i) =>
+        `  - ${t[i.kind]}: ${text(i.text)}${i.valueIds.length ? ` (${i.valueIds.map(value).join(', ')})` : ''}`)];
+    }));
+  }
+  if (allows(step, 'values')) {
+    section(t.values, b.values.map((v) =>
+      [`- ${text(v.name, t.unnamed)}${v.definition.trim() ? `: ${v.definition.trim()}` : ''}`, ...organization(v)].join('\n')));
+  }
+  if (allows(step, 'tensions')) {
+    section(t.tensions, b.links.filter((l) => l.type === 'tension').map((l) =>
+      [`- ${value(l.sourceValueId)} ${t.for} ${name(l.source)} ${t.versus} ${value(l.targetValueId)} ${t.for} ${name(l.target)}` +
+        `${l.label.trim() ? `: ${l.label.trim()}` : ''}`, ...organization(l)].join('\n')));
+  }
+  return sections.join('\n\n');
 }

@@ -1,6 +1,6 @@
 // Prompt version history. Compare and restore are placeholders for now.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Lesson, LessonSummary, PromptVersion } from '../types/contracts';
 import { listPromptVersions } from '../services/promptService';
 import { getLesson } from '../services/activityService';
@@ -23,11 +23,16 @@ export function VersionsTab({ lessons, lessonId, refreshKey }: Props) {
     if (lessonId) getLesson(lessonId).then(setLesson);
   }, [lessonId]);
 
+  // After a save (refreshKey changes), open the version just saved: the newest. Otherwise keep the
+  // selection while it is still in the list.
+  const seenRefresh = useRef(refreshKey);
   useEffect(() => {
     if (!lessonId) return;
     listPromptVersions(lessonId).then((list) => {
+      const justSaved = seenRefresh.current !== refreshKey;
+      seenRefresh.current = refreshKey;
       setVersions(list);
-      setSelectedId((id) => (list.some((v) => v.id === id) ? id : (list[0]?.id ?? null)));
+      setSelectedId((id) => (!justSaved && list.some((v) => v.id === id) ? id : (list[0]?.id ?? null)));
     });
   }, [refreshKey, lessonId]);
 

@@ -208,3 +208,63 @@ export function scenarioName(s: State, sc: Scenario): string {
   const who = s.stakeholders.find((st) => st.id === sc.stakeholderId)?.name;
   return sc.title || (who ? storyOf(who) : 'Untitled scenario');
 }
+
+// ---------- Work in plain language ----------
+
+/** The wording of the scenarios written out for the AI ({{student_work}}). These are the defaults; a
+    lesson's content/<lesson>/work-description.json can reword any of them. */
+export const WORK_LABELS = {
+  technology: 'Technology',
+  stakeholders: 'Whose stories',
+  direct: 'direct',
+  indirect: 'indirect',
+  scenarios: 'Scenarios',
+  whose: 'Whose story',
+  story: 'Today',
+  years: 'In 5 years',
+  decades: 'In 20+ years',
+  widespread: 'If everyone had it',
+  systemic: 'Knock-on effects',
+  values: 'Values at stake',
+  harm: 'harmed',
+  benefit: 'supported',
+  tensions: 'Tensions between scenarios',
+  versus: 'vs',
+  untitled: 'Untitled scenario',
+  unnamed: '(unnamed)',
+  blank: '(not written yet)',
+  none: '(none yet)',
+};
+export type WorkLabels = Record<keyof typeof WORK_LABELS, string>;
+
+/** The scenarios as of a step, in plain language: the parts the step has reached, in the order the
+    steps add them. Ids are left out; scenarios are numbered so tensions can refer to them. */
+export function describeWork(s: ValueScenariosState, step: number, t: WorkLabels): string {
+  const text = (v: string | undefined, empty = t.blank) => v?.trim() || empty;
+  const title = (id: string) => {
+    const i = s.scenarios.findIndex((sc) => sc.id === id);
+    return i < 0 ? t.unnamed : `${i + 1}. ${text(s.scenarios[i].title, t.untitled)}`;
+  };
+  const sections = [`${t.technology}: ${text(s.technology)}`];
+  const section = (heading: string, lines: string[]) => sections.push([`${heading}:`, ...(lines.length ? lines : [t.none])].join('\n'));
+
+  if (allows(step, 'stakeholders')) {
+    section(t.stakeholders, s.stakeholders.map((st) => `- ${text(st.name, t.unnamed)} — ${t[st.kind]}`));
+  }
+  if (allows(step, 'story')) {
+    section(t.scenarios, s.scenarios.map((sc) => [
+      title(sc.id),
+      `   ${t.whose}: ${text(s.stakeholders.find((st) => st.id === sc.stakeholderId)?.name, t.unnamed)}`,
+      `   ${t.story}: ${text(sc.story)}`,
+      allows(step, 'time') && `   ${t[sc.horizon]}: ${text(sc.later)}`,
+      allows(step, 'widespread') && `   ${t.widespread}: ${text(sc.widespread)}`,
+      allows(step, 'systemic') && `   ${t.systemic}: ${text(sc.systemic)}`,
+      allows(step, 'values') &&
+        `   ${t.values}: ${sc.values.length ? sc.values.map((v) => `${v.name} (${t[v.effect]})`).join(', ') : t.none}`,
+    ].filter(Boolean).join('\n')));
+  }
+  if (allows(step, 'tensions')) {
+    section(t.tensions, s.tensions.map((x) => `- ${title(x.a)} ${t.versus} ${title(x.b)}${x.note.trim() ? `: ${x.note.trim()}` : ''}`));
+  }
+  return sections.join('\n\n');
+}

@@ -70,16 +70,17 @@
     {
       "id": "stakeholders-relationships",
       "title": "Relationships between stakeholders",
-      "task": "Connect stakeholders who affect one another: drag from a token’s dot to another token, then label how one affects the other (e.g. “reports to”, “cares for”, “pays for”).",
+      "task": "Connect stakeholders who affect one another: drag from a token’s dot to another token. Then label how one affects the other (e.g. “reports to”, “cares for”, “pays for”), or, if it goes both ways, mark it mutual and say how they relate (e.g. “share a home”).",
       "objectives": [
         "Connects stakeholders whose interests are linked",
-        "Labels each relationship with how one affects the other"
+        "Labels each relationship with how one affects the other, or how they relate",
+        "Marks whether each relationship goes one way or both ways"
       ],
       "guide": [
         {
           "target": "relationships",
           "label": "Connections",
-          "where": "Drag from a token’s dot to another token, or use “Connect to…” in the right panel."
+          "where": "Drag from a token’s dot to another token, or use “Connect to…” in the right panel. Select a connection to set its direction."
         }
       ]
     },

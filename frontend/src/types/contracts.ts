@@ -29,6 +29,9 @@ export interface ActivityDefinition {
   guide?: ActivityGuideItem[];
   /** A worked example in the activity's state shape, shown read-only on request. */
   example?: unknown;
+  /** Wording for the student's work written out in plain language for the AI ({{student_work}}),
+      from the lesson's work-description.json; the activity's defaults fill in the rest. */
+  workLabels?: Record<string, string>;
   /** Where the student can optionally bring in stakeholders from (another lesson's saved work). */
   stakeholderSource?: { stateKey: string; kind: ActivityKind; label: string };
 }

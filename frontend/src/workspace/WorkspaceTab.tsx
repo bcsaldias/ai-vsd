@@ -10,6 +10,7 @@ import { requestFeedback } from '../services/feedbackService';
 import { LearningWorkspace } from './LearningWorkspace';
 import { FeedbackPanel } from './FeedbackPanel';
 import { ActivityHost, STAKEHOLDER_EXPORTERS, workUpToStep } from './ActivityHost';
+import { describeWork } from '../activities/workText';
 import { ResizeHandle } from './ResizeHandle';
 import { LAYOUT_LIMITS, useWorkspaceLayout } from './useWorkspaceLayout';
 
@@ -104,8 +105,10 @@ export function WorkspaceTab({ lessonId, steps, onStepChange }: Props) {
     if (report.status !== 'submitted') return;
     setLoadingFeedback(true);
     try {
-      // Feedback sees the work as of this step, as in the Prompts preview, never later steps'.
-      const result = await requestFeedback({ ...report, state: workUpToStep(definition, report.state) }, lesson!.id);
+      // Feedback sees the work as of this step, as in the Prompts preview, never later steps'; the
+      // plain-language form goes with it for {{student_work}}.
+      const state = workUpToStep(definition, report.state);
+      const result = await requestFeedback({ ...report, state }, lesson!.id, describeWork(definition, state));
       // Ignore results for an activity the student has already left.
       if (result.activityId === currentId.current) setFeedback(result);
     } finally {

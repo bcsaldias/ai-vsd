@@ -4,11 +4,13 @@
 // Later: the backend serves the same content (GET /lessons/{id}).
 
 import type { ActivityDefinition, ActivityKind, Lesson, PromptVersion } from '../types/contracts';
+import { WORK_TEXT } from '../activities/workText';
 import order from '../../content/lessons.json';
 
 const lessonFiles = import.meta.glob('../../content/*/lesson.json', { eager: true, import: 'default' });
 const exampleFiles = import.meta.glob('../../content/*/worked-example.json', { eager: true, import: 'default' });
 const promptFiles = import.meta.glob('../../content/*/prompts.json', { eager: true, import: 'default' });
+const workTextFiles = import.meta.glob('../../content/*/work-description.json', { eager: true, import: 'default' });
 
 const ACTIVITY_KINDS = ['diagram', 'annotation', 'stakeholder-tokens', 'value-scenarios'] as const satisfies readonly ActivityKind[];
 
@@ -40,6 +42,20 @@ function readLesson(folder: string): { lesson: Lesson; prompts: PromptVersion } 
   const example = file(exampleFiles, 'worked-example.json');
   if (!Array.isArray(l.steps) || !l.steps.length) fail(where('steps'), 'should be a list of at least one step');
 
+  // Optional: rewording of how the student's work is written out for the AI. Every key must be a
+  // label the lesson's activity uses; labels left out keep the activity's default wording.
+  const rawLabels = file(workTextFiles, 'work-description.json');
+  let workLabels: Record<string, string> | undefined;
+  if (rawLabels !== undefined) {
+    const labels = obj(rawLabels, at('work-description.json'));
+    const known = Object.keys(WORK_TEXT[activity as ActivityKind]?.labels ?? {});
+    workLabels = Object.fromEntries(Object.entries(labels).map(([key, v]) => {
+      const lw = `${at('work-description.json')} → ${key}`;
+      if (!known.includes(key)) fail(lw, `is not a label this activity uses. Its labels are: ${known.join(', ')}`);
+      return [key, text(v, lw)];
+    }));
+  }
+
   const ids = new Set<string>();
   const activities: ActivityDefinition[] = (l.steps as unknown[]).map((s, i) => {
     const step = obj(s, where(`steps[${i + 1}]`));
@@ -62,6 +78,7 @@ function readLesson(folder: string): { lesson: Lesson; prompts: PromptVersion } 
       config: { step: i + 1 },
       ...(sharedBoard && { stateKey: sharedBoard }),
       ...(example !== undefined && { example }),
+      ...(workLabels && { workLabels }),
       ...(source && {
         stakeholderSource: {
           stateKey: text(source.stateKey, where('bringStakeholdersFrom.stateKey')),

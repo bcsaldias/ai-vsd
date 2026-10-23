@@ -16,7 +16,7 @@ Each step has a worked example (a smart doorbell camera) that students can open 
 The app has three tabs:
 
 - **Workspace:** for students.
-- **Prompts:** the instructions the AI tutor follows, one set per lesson. Students edit them too: they help shape these norms and rules, and learn how to prompt AI by doing so.
+- **Prompts:** the instructions the AI follows when it gives feedback, one set per lesson. The AI acts as a critical-thinking partner: it asks questions rather than giving answers. Students edit them too: they help shape these norms and rules, and learn how to prompt AI by doing so.
 - **Versions:** the history of prompt changes, so every piece of feedback can be traced to the prompts that produced it.
 
 ## Status

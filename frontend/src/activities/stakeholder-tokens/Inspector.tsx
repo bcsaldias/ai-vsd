@@ -4,10 +4,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
-  CONTEXT_LABEL, RING_LABEL, addImpact, addLink, allows, guide, hasLink, linkLabel, moveToRing, newId, patchContext,
+  CONTEXT_TYPES, RINGS, addImpact, addLink, allows, guide, hasLink, linkLabel, moveToRing, newId, patchContext,
   patchImpact, patchLink, patchToken, patchValue, removeImpact, removeLinks, removeTokens, removeValue,
   tagImpact, tokenLabel, untagImpact,
-  type ContextType, type Impact, type Link, type Ring, type StakeholderTokensState, type Token,
+  type Impact, type Link, type Ring, type StakeholderTokensState, type Token, type Wording,
 } from './model';
 
 type Board = StakeholderTokensState;
@@ -16,6 +16,8 @@ export type Selection = { kind: 'token' | 'link' | 'context'; id: string } | nul
 interface Props {
   board: Board;
   step: number;
+  /** The lesson's words for the board's parts, the same the AI reads. */
+  wording: Wording;
   selection: Selection;
   update: (fn: (b: Board) => Board) => void;
   select: (s: Selection) => void;
@@ -26,10 +28,10 @@ interface Props {
   onNameFocused?: () => void;
 }
 
-export function Inspector({ board, step, selection, update, select, readOnly, nameRequest, onNameFocused }: Props) {
+export function Inspector({ board, step, wording, selection, update, select, readOnly, nameRequest, onNameFocused }: Props) {
   const token = selection?.kind === 'token' ? board.tokens.find((t) => t.id === selection.id) : undefined;
   const link = selection?.kind === 'link' ? board.links.find((l) => l.id === selection.id) : undefined;
-  const common = { board, step, update, select };
+  const common = { board, step, wording, update, select };
 
   return (
     <aside className={readOnly ? 'token-inspector read-only' : 'token-inspector'} aria-label="Inspector">
@@ -51,14 +53,14 @@ export function Inspector({ board, step, selection, update, select, readOnly, na
 
 type FormProps = Omit<Props, 'selection' | 'readOnly' | 'nameRequest' | 'onNameFocused'>;
 
-function ContextForm({ board, step, update }: FormProps) {
+function ContextForm({ board, step, wording: w, update }: FormProps) {
   return (
     <section {...guide(step, 'context')}>
-      <h3>Starting point</h3>
+      <h3>{w.startingPoint}</h3>
       <fieldset className="field">
         <legend>Start from a…</legend>
         <div className="choices">
-          {(Object.keys(CONTEXT_LABEL) as ContextType[]).map((type) => (
+          {CONTEXT_TYPES.map((type) => (
             <label key={type}>
               <input
                 type="radio"
@@ -66,7 +68,7 @@ function ContextForm({ board, step, update }: FormProps) {
                 checked={board.context.type === type}
                 onChange={() => update((b) => patchContext(b, { type }))}
               />
-              {CONTEXT_LABEL[type]}
+              {w[type]}
             </label>
           ))}
         </div>
@@ -84,7 +86,7 @@ function ContextForm({ board, step, update }: FormProps) {
   );
 }
 
-function TokenForm({ token, board, step, update, select, focusName, onNameFocused }: FormProps & {
+function TokenForm({ token, board, step, wording: w, update, select, focusName, onNameFocused }: FormProps & {
   token: Token;
   focusName?: boolean;
   onNameFocused?: () => void;
@@ -143,24 +145,24 @@ function TokenForm({ token, board, step, update, select, focusName, onNameFocuse
         <div className="choices">
           <label>
             <input type="radio" name={`kind-${token.id}`} checked={token.kind === 'direct'} onChange={() => set({ kind: 'direct' })} />
-            Direct (uses it)
+            {w.direct} <span className="hint">uses it</span>
           </label>
           <label>
             <input type="radio" name={`kind-${token.id}`} checked={token.kind === 'indirect'} onChange={() => set({ kind: 'indirect' })} />
-            Indirect (affected by it)
+            {w.indirect} <span className="hint">affected by it</span>
           </label>
         </div>
       </fieldset>
       <label className="field">
         <span>Ring</span>
         <select value={token.ring} onChange={(e) => update((b) => moveToRing(b, token.id, e.target.value as Ring))}>
-          {(Object.keys(RING_LABEL) as Ring[]).map((r) => <option key={r} value={r}>{RING_LABEL[r]}</option>)}
+          {RINGS.map((r) => <option key={r} value={r}>{w[r]}</option>)}
         </select>
       </label>
       {allows(step, 'overlooked') && (
         <label className="check" {...guide(step, 'overlooked')}>
           <input type="checkbox" checked={token.overlooked} onChange={(e) => set({ overlooked: e.target.checked })} />
-          Hidden or overlooked <span className="hint">easy to miss; you only found them by looking hard</span>
+          {w.overlooked} <span className="hint">easy to miss; you only found them by looking hard</span>
         </label>
       )}
 
@@ -169,7 +171,7 @@ function TokenForm({ token, board, step, update, select, focusName, onNameFocuse
           <span>Connect to…</span>
           <select value="" onChange={(e) => connect('relationship', e.target.value)}>
             <option value="">Choose a stakeholder</option>
-            {relationTargets.map((t) => <option key={t.id} value={t.id}>{t.label || 'Unnamed'}</option>)}
+            {relationTargets.map((t) => <option key={t.id} value={t.id}>{t.label || w.unnamed}</option>)}
           </select>
         </label>
       )}
@@ -178,19 +180,19 @@ function TokenForm({ token, board, step, update, select, focusName, onNameFocuse
           <span>Tension with…</span>
           <select value="" onChange={(e) => connect('tension', e.target.value)}>
             <option value="">Choose a stakeholder</option>
-            {tensionTargets.map((t) => <option key={t.id} value={t.id}>{t.label || 'Unnamed'}</option>)}
+            {tensionTargets.map((t) => <option key={t.id} value={t.id}>{t.label || w.unnamed}</option>)}
           </select>
         </label>
       )}
 
       {allows(step, 'impacts') && (
         <>
-          <h3>Harms &amp; benefits</h3>
+          <h3>{w.impacts}</h3>
           {impacts.length === 0 && <p className="hint">What could this stakeholder gain or lose?</p>}
-          {impacts.map((impact) => <ImpactEditor key={impact.id} impact={impact} board={board} step={step} update={update} />)}
+          {impacts.map((impact) => <ImpactEditor key={impact.id} impact={impact} board={board} step={step} wording={w} update={update} />)}
           <div className="inline-buttons" {...guide(step, 'impacts')}>
-            <button className="small" onClick={() => { const id = newId('i'); update((b) => addImpact(b, id, token.id, 'harm')); }}>+ Harm</button>
-            <button className="small" onClick={() => { const id = newId('i'); update((b) => addImpact(b, id, token.id, 'benefit')); }}>+ Benefit</button>
+            <button className="small" onClick={() => { const id = newId('i'); update((b) => addImpact(b, id, token.id, 'harm')); }}>+ {w.harm}</button>
+            <button className="small" onClick={() => { const id = newId('i'); update((b) => addImpact(b, id, token.id, 'benefit')); }}>+ {w.benefit}</button>
           </div>
         </>
       )}
@@ -202,7 +204,7 @@ function TokenForm({ token, board, step, update, select, focusName, onNameFocuse
   );
 }
 
-function ImpactEditor({ impact, board, step, update }: Omit<FormProps, 'select'> & { impact: Impact }) {
+function ImpactEditor({ impact, board, step, wording: w, update }: Omit<FormProps, 'select'> & { impact: Impact }) {
   const [draft, setDraft] = useState('');
   const listId = `values-${impact.id}`;
   const addTag = () => {
@@ -214,7 +216,7 @@ function ImpactEditor({ impact, board, step, update }: Omit<FormProps, 'select'>
   return (
     <div className={`impact ${impact.kind}`}>
       <div className="impact-row">
-        <span className="impact-kind">{impact.kind === 'harm' ? '− Harm' : '+ Benefit'}</span>
+        <span className="impact-kind">{impact.kind === 'harm' ? `− ${w.harm}` : `+ ${w.benefit}`}</span>
         <button className="icon" aria-label={`Remove ${impact.kind}`} onClick={() => update((b) => removeImpact(b, impact.id))}>×</button>
       </div>
       <textarea
@@ -254,10 +256,10 @@ function ImpactEditor({ impact, board, step, update }: Omit<FormProps, 'select'>
   );
 }
 
-function LinkForm({ link, board, step, update, select }: FormProps & { link: Link }) {
+function LinkForm({ link, board, step, wording: w, update, select }: FormProps & { link: Link }) {
   const set = (patch: Partial<Link>) => update((b) => patchLink(b, link.id, patch));
-  const from = tokenLabel(board, link.source);
-  const to = tokenLabel(board, link.target);
+  const from = tokenLabel(board, link.source, w.unnamed);
+  const to = tokenLabel(board, link.target, w.unnamed);
   const remove = () => { update((b) => removeLinks(b, new Set([link.id]))); select(null); };
 
   if (link.type === 'relationship') {
@@ -318,22 +320,22 @@ function LinkForm({ link, board, step, update, select }: FormProps & { link: Lin
         <textarea rows={3} value={link.label} onChange={(e) => set({ label: e.target.value })} />
       </label>
       {allows(step, 'organization') && (
-        <OwnerFields step={step} owner={link.owner ?? ''} action={link.action ?? ''} onChange={set} />
+        <OwnerFields step={step} wording={w} owner={link.owner ?? ''} action={link.action ?? ''} onChange={set} />
       )}
       <button className="small danger" onClick={remove}>Remove</button>
     </section>
   );
 }
 
-function ValuesList({ board, step, update }: FormProps) {
+function ValuesList({ board, step, wording: w, update }: FormProps) {
   const usedBy = (valueId: string) => {
     const ids = new Set(board.impacts.filter((i) => i.valueIds.includes(valueId)).map((i) => i.tokenId));
-    return board.tokens.filter((t) => ids.has(t.id)).map((t) => t.label || 'Unnamed');
+    return board.tokens.filter((t) => ids.has(t.id)).map((t) => t.label || w.unnamed);
   };
 
   return (
     <section {...guide(step, 'values')}>
-      <h3>Values</h3>
+      <h3>{w.values}</h3>
       {board.values.length === 0 && <p className="hint">Values appear here once you tag harms and benefits with them.</p>}
       {board.values.map((v) => {
         const users = usedBy(v.id);
@@ -360,7 +362,7 @@ function ValuesList({ board, step, update }: FormProps) {
               />
             )}
             {allows(step, 'organization') && (
-              <OwnerFields step={step} owner={v.owner} action={v.action} onChange={(patch) => update((b) => patchValue(b, v.id, patch))} />
+              <OwnerFields step={step} wording={w} owner={v.owner} action={v.action} onChange={(patch) => update((b) => patchValue(b, v.id, patch))} />
             )}
           </div>
         );
@@ -369,8 +371,9 @@ function ValuesList({ board, step, update }: FormProps) {
   );
 }
 
-function OwnerFields({ step, owner, action, onChange }: {
+function OwnerFields({ step, wording: w, owner, action, onChange }: {
   step: number;
+  wording: Wording;
   owner: string;
   action: string;
   onChange: (p: { owner?: string; action?: string }) => void;
@@ -378,11 +381,11 @@ function OwnerFields({ step, owner, action, onChange }: {
   return (
     <div className="owner-fields" {...guide(step, 'organization')}>
       <label className="field">
-        <span>Owner</span>
+        <span>{w.owner}</span>
         <input value={owner} onChange={(e) => onChange({ owner: e.target.value })} placeholder="Who is responsible?" />
       </label>
       <label className="field">
-        <span>Next action</span>
+        <span>{w.action}</span>
         <input value={action} onChange={(e) => onChange({ action: e.target.value })} placeholder="What will they do?" />
       </label>
     </div>

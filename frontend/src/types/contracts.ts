@@ -29,9 +29,9 @@ export interface ActivityDefinition {
   guide?: ActivityGuideItem[];
   /** A worked example in the activity's state shape, shown read-only on request. */
   example?: unknown;
-  /** Wording for the student's work written out in plain language for the AI ({{student_work}}),
-      from the lesson's work-description.json; the activity's defaults fill in the rest. */
-  workLabels?: Record<string, string>;
+  /** The words for the activity's parts, from the lesson's wording.json: shown on screen and used
+      in the work as the AI reads it ({{student_work}}), so both say exactly the same. */
+  wording?: Record<string, string>;
   /** Where the student can optionally bring in stakeholders from (another lesson's saved work). */
   stakeholderSource?: { stateKey: string; kind: ActivityKind; label: string };
 }
@@ -68,6 +68,8 @@ export interface ActivityProps<S> {
   example?: boolean;
   /** Offered when the activity can bring in stakeholders from elsewhere (see stakeholderSource). */
   importStakeholders?: { label: string; load: () => Promise<StakeholderRef[]> };
+  /** The words for the activity's parts (ActivityDefinition.wording), the same the AI reads. */
+  wording: Record<string, string>;
   onChange: (state: S) => void;
 }
 

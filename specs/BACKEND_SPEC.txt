@@ -138,8 +138,8 @@ PROMPTS ARE PERSONAL
 - The Versions tab shows the lesson's starting version and the participant's own versions only.
 - Group leads can see their participants' versions read-only (with usage, later), e.g. to study
   how prompts changed. Participants never see each other's.
-- Version numbers are per participant and per lesson (starting version is 1). The numbering
-  collision noted in promptService goes away: the backend numbers versions.
+- Version numbers are per participant and per lesson (starting version is 1); the backend
+  assigns them.
 
 
 WHAT IS STORED

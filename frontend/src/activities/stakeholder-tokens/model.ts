@@ -1,4 +1,7 @@
 import type { StakeholderRef } from '../../types/contracts';
+import { filled, patchIn, section, stepTools } from '../shared';
+
+export { newId } from '../shared';
 
 // Board model for the Stakeholder Tokens activity: plain data and pure updates,
 // with no React Flow types, so the saved state stays library-independent.
@@ -83,14 +86,7 @@ export const STEP = {
 export const LAST_STEP = 9;
 
 export type Tool = keyof typeof STEP;
-export const allows = (step: number, tool: Tool) => step >= STEP[tool];
-
-/** Marks where a tool lives: data-guide names it (the learning workspace can spotlight it from the
-    step card), and data-new flags it in the step that introduces it. */
-export const guide = (step: number, tool: Tool) => ({
-  'data-guide': tool,
-  'data-new': STEP[tool] === step ? '' : undefined,
-});
+export const { allows, guide } = stepTools<Tool>(STEP);
 
 // ---------- Geometry ----------
 
@@ -100,8 +96,9 @@ export const TOKEN_SIZE = 88;
 export const CONTEXT_SIZE = 112;
 // Token and centre sizes must match .token and .context-token in styles.css.
 
-export const RING_LABEL: Record<Ring, string> = { core: 'Core', peripheral: 'Peripheral', excluded: 'Excluded' };
-export const CONTEXT_LABEL: Record<ContextType, string> = { technology: 'Technology', value: 'Value', context: 'Context of use' };
+/** The rings and starting-point types, in order. Their words come from the lesson's wording (see Words). */
+export const RINGS: Ring[] = ['core', 'peripheral', 'excluded'];
+export const CONTEXT_TYPES: ContextType[] = ['technology', 'value', 'context'];
 
 export function ringAt(x: number, y: number): Ring {
   const d = Math.hypot(x, y);
@@ -143,15 +140,9 @@ export function normalize(saved: Partial<StakeholderTokensState> | null): Stakeh
   };
 }
 
-export const newId = (prefix: string) => `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
-
 // ---------- Updates (pure: board in, board out) ----------
 
 type Board = StakeholderTokensState;
-
-function patchIn<T extends { id: string }>(list: T[], id: string, patch: Partial<T>): T[] {
-  return list.map((item) => (item.id === id ? { ...item, ...patch } : item));
-}
 
 export const patchContext = (b: Board, patch: Partial<Board['context']>): Board => ({ ...b, context: { ...b.context, ...patch } });
 export const patchToken = (b: Board, id: string, patch: Partial<Token>): Board => ({ ...b, tokens: patchIn(b.tokens, id, patch) });
@@ -268,7 +259,7 @@ export function stakeholderRefs(saved: unknown): StakeholderRef[] {
 // ---------- Queries ----------
 
 export const valueName = (b: Board, id?: string) => b.values.find((v) => v.id === id)?.name;
-export const tokenLabel = (b: Board, id: string) => b.tokens.find((t) => t.id === id)?.label || 'Unnamed';
+export const tokenLabel = (b: Board, id: string, unnamed: string) => b.tokens.find((t) => t.id === id)?.label || unnamed;
 
 /** Values touched by a token's harms and benefits, in first-use order. */
 export function tokenValueIds(b: Board, tokenId: string): string[] {
@@ -281,84 +272,61 @@ export function linkLabel(b: Board, l: Link): string {
   return `⚡ ${values || l.label || 'Tension'}`;
 }
 
-// ---------- Work in plain language ----------
+// ---------- Words ----------
 
-/** The wording of the board written out for the AI ({{student_work}}). These are the defaults; a
-    lesson's content/<lesson>/work-description.json can reword any of them. */
-export const WORK_LABELS = {
-  startingPoint: 'Starting point',
-  technology: 'technology',
-  value: 'value',
-  context: 'context of use',
-  direct: 'Direct stakeholders',
-  indirect: 'Indirect stakeholders',
-  core: 'core',
-  peripheral: 'peripheral',
-  excluded: 'excluded',
-  overlooked: 'hidden or overlooked',
-  relationships: 'Relationships',
-  impacts: 'Harms and benefits',
-  harm: 'Harm',
-  benefit: 'Benefit',
-  values: 'Values',
-  tensions: 'Value tensions',
-  for: 'for',
-  versus: 'vs',
-  owner: 'Owner',
-  action: 'Next step',
-  unnamed: '(unnamed)',
-  blank: '(not written yet)',
-  none: '(none yet)',
-};
-export type WorkLabels = Record<keyof typeof WORK_LABELS, string>;
+/** The words for the board's parts, used on screen and in the work as the AI reads it
+    ({{student_work}}), so students see exactly the words the AI gets. Each lesson's
+    content/<lesson>/wording.json gives every one. */
+export const WORDING_KEYS = [
+  'startingPoint', 'technology', 'value', 'context',
+  'direct', 'indirect', 'stakeholders', 'core', 'peripheral', 'excluded', 'overlooked',
+  'relationships', 'impacts', 'harm', 'benefit', 'values', 'tensions', 'for', 'versus', 'owner', 'action',
+  'unnamed', 'blank', 'none',
+] as const;
+export type Wording = Record<(typeof WORDING_KEYS)[number], string>;
 
 /** The board as of a step, in plain language: one section per part the step has reached, in the
     order the steps add them. Ids and board positions are left out; only what they mean stays. */
-export function describeWork(b: Board, step: number, t: WorkLabels): string {
-  const text = (s: string | undefined, empty = t.blank) => s?.trim() || empty;
-  const name = (id: string) => text(b.tokens.find((tk) => tk.id === id)?.label, t.unnamed);
-  const value = (id?: string) => text(valueName(b, id), t.unnamed);
+export function describeWork(b: Board, step: number, w: Wording): string {
+  const name = (id: string) => filled(b.tokens.find((tk) => tk.id === id)?.label, w.unnamed);
+  const value = (id?: string) => filled(valueName(b, id), w.unnamed);
   const organization = (x: { owner?: string; action?: string }) =>
     allows(step, 'organization')
-      ? [x.owner?.trim() && `  ${t.owner}: ${x.owner.trim()}`, x.action?.trim() && `  ${t.action}: ${x.action.trim()}`].filter(Boolean)
+      ? [x.owner?.trim() && `  ${w.owner}: ${x.owner.trim()}`, x.action?.trim() && `  ${w.action}: ${x.action.trim()}`].filter(Boolean)
       : [];
-  const sections = [`${t.startingPoint} (${t[b.context.type]}): ${text(b.context.label)}`];
-  const section = (title: string, lines: (string | false | undefined)[]) => {
-    const kept = lines.filter(Boolean);
-    sections.push([`${title}:`, ...(kept.length ? kept : [t.none])].join('\n'));
-  };
   const people = (kind: Token['kind']) =>
     b.tokens
       .filter((tk) => tk.kind === kind)
-      .map((tk) => `- ${text(tk.label, t.unnamed)} — ${[t[tk.ring], tk.overlooked && t.overlooked].filter(Boolean).join(', ')}`);
+      .map((tk) => `- ${filled(tk.label, w.unnamed)} — ${[w[tk.ring], tk.overlooked && w.overlooked].filter(Boolean).join(' · ')}`);
 
-  if (allows(step, 'direct')) section(t.direct, people('direct'));
-  if (allows(step, 'indirect')) section(t.indirect, people('indirect'));
+  const sections = [`${w.startingPoint} (${w[b.context.type]}): ${filled(b.context.label, w.blank)}`];
+  if (allows(step, 'direct')) sections.push(section(`${w.direct} ${w.stakeholders}`, people('direct'), w.none));
+  if (allows(step, 'indirect')) sections.push(section(`${w.indirect} ${w.stakeholders}`, people('indirect'), w.none));
   if (allows(step, 'relationships')) {
     // Read in the arrow's direction: "Homeowners —shares footage with→ Police". Mutual ones point
     // both ways: "Homeowners ←share a home→ Household members".
-    section(t.relationships, b.links.filter((l) => l.type === 'relationship').map((l) => {
+    sections.push(section(w.relationships, b.links.filter((l) => l.type === 'relationship').map((l) => {
       const label = l.label.trim();
       const arrow = l.mutual ? (label ? `←${label}→` : '↔') : label ? `—${label}→` : '→';
       return `- ${name(l.source)} ${arrow} ${name(l.target)}`;
-    }));
+    }), w.none));
   }
   if (allows(step, 'impacts')) {
-    section(t.impacts, b.tokens.flatMap((tk) => {
+    sections.push(section(w.impacts, b.tokens.flatMap((tk) => {
       const impacts = b.impacts.filter((i) => i.tokenId === tk.id);
       if (!impacts.length) return [];
       return [`- ${name(tk.id)}:`, ...impacts.map((i) =>
-        `  - ${t[i.kind]}: ${text(i.text)}${i.valueIds.length ? ` (${i.valueIds.map(value).join(', ')})` : ''}`)];
-    }));
+        `  - ${w[i.kind]}: ${filled(i.text, w.blank)}${i.valueIds.length ? ` (${i.valueIds.map(value).join(', ')})` : ''}`)];
+    }), w.none));
   }
   if (allows(step, 'values')) {
-    section(t.values, b.values.map((v) =>
-      [`- ${text(v.name, t.unnamed)}${v.definition.trim() ? `: ${v.definition.trim()}` : ''}`, ...organization(v)].join('\n')));
+    sections.push(section(w.values, b.values.map((v) =>
+      [`- ${filled(v.name, w.unnamed)}${v.definition.trim() ? `: ${v.definition.trim()}` : ''}`, ...organization(v)].join('\n')), w.none));
   }
   if (allows(step, 'tensions')) {
-    section(t.tensions, b.links.filter((l) => l.type === 'tension').map((l) =>
-      [`- ${value(l.sourceValueId)} ${t.for} ${name(l.source)} ${t.versus} ${value(l.targetValueId)} ${t.for} ${name(l.target)}` +
-        `${l.label.trim() ? `: ${l.label.trim()}` : ''}`, ...organization(l)].join('\n')));
+    sections.push(section(w.tensions, b.links.filter((l) => l.type === 'tension').map((l) =>
+      [`- ${value(l.sourceValueId)} ${w.for} ${name(l.source)} ${w.versus} ${value(l.targetValueId)} ${w.for} ${name(l.target)}` +
+        `${l.label.trim() ? `: ${l.label.trim()}` : ''}`, ...organization(l)].join('\n')), w.none));
   }
   return sections.join('\n\n');
 }

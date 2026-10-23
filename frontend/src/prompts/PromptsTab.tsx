@@ -3,26 +3,25 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Lesson, LessonSummary, PromptPart, PromptSet, PromptVersion } from '../types/contracts';
 import {
-  checkTemplate, getLatestPromptVersion, placeholdersIn, promptChanges, sameStepQuestions, savePromptVersion,
+  EVERY_STEP, PART_LABEL, checkTemplate, getLatestPromptVersion, stepLabel, placeholdersIn, promptChanges, sameStepQuestions, savePromptVersion,
   systemPromptParts, TEMPLATE_VARIABLES, templateParts, templateVariables, type PromptChange,
 } from '../services/promptService';
 import { getLesson, loadReport } from '../services/activityService';
 import { lessonAccent } from '../lessons/LessonPicker';
-import { workUpToStep } from '../workspace/ActivityHost';
-import { describeWork } from '../activities/workText';
+import { describeWork, workUpToStep } from '../activities/registry';
 import { TemplateTextarea } from './TemplateTextarea';
 
 // In the order they are sent: the questions go inside the system prompt, right after its text.
 const PARTS: { part: PromptPart; label: string; help: string }[] = [
-  { part: 'system', label: 'System', help: "The AI's role, tone, and rules." },
+  { part: 'system', label: PART_LABEL.system, help: "The AI's role, tone, and rules." },
   {
     part: 'questions',
-    label: 'Questions to ask',
+    label: PART_LABEL.questions,
     help:
       'Questions the AI can ask about the work, one per line. They’re sent with the System prompt: the ones for every ' +
       'step, plus the ones for the step being checked. Add, remove, or reword them to change what the AI pushes you on.',
   },
-  { part: 'user', label: 'User', help: 'Template sent with each request. Use {{variables}} below.' },
+  { part: 'user', label: PART_LABEL.user, help: 'Template sent with each request. Use {{variables}} below.' },
 ];
 
 interface Props {
@@ -205,8 +204,8 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved, onS
   // Copy: both messages as plain text under their labels, so they can be pasted into any chat tool.
   const sentText = (parts: { text: string }[]) => parts.map((p) => p.text).join('').trim();
   const promptText = [
-    sentText(systemPrompt) && `System:\n${sentText(systemPrompt)}`,
-    draft.user.trim() && `User:\n${sentText(preview)}`,
+    sentText(systemPrompt) && `${PART_LABEL.system}:\n${sentText(systemPrompt)}`,
+    draft.user.trim() && `${PART_LABEL.user}:\n${sentText(preview)}`,
   ].filter(Boolean).join('\n\n');
   const copyPrompt = () =>
     navigator.clipboard.writeText(promptText).then(() => setCopied('done'), () => setCopied('failed'));
@@ -234,7 +233,7 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved, onS
                   <span className="role-label">{label}</span>
                   <span className="hint">{help}</span>
                   <label className="question-list">
-                    <span className="list-label">For every step{changed('questions') && changedTag}</span>
+                    <span className="list-label">{EVERY_STEP}{changed('questions') && changedTag}</span>
                     <textarea
                       ref={questionsEditor}
                       value={draft.questions}
@@ -246,7 +245,7 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved, onS
                   {activity && (
                     <label className="question-list">
                       <span className="list-label">
-                        For this step · Step {index + 1} · {activity.title}
+                        For this step · {stepLabel(index, activity.title)}
                         {stepChanged(activity.id) && changedTag}
                       </span>
                       <span className="hint">To edit another step’s questions, pick it in the steps at the top.</span>
@@ -346,7 +345,7 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved, onS
             {/* What is sent: the system prompt (with the questions inside it) and the user prompt. */}
             {systemPrompt.some((part) => part.text.trim()) && (
               <div className="preview-message">
-                <span className="role-label">System</span>
+                <span className="role-label">{PART_LABEL.system}</span>
                 <pre>
                   {systemPrompt.map((part, i) =>
                     part.framing ? (
@@ -362,7 +361,7 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved, onS
               <div className="preview-message">
                 {/* The sample switch sits with the User message: it only changes {{student_work}}. */}
                 <div className="role-row">
-                  <span className="role-label">User</span>
+                  <span className="role-label">{PART_LABEL.user}</span>
                   <div className="sample-toggle" role="group" aria-label="Student work in the preview">
                     {/* aria-disabled rather than disabled, so the tooltip saying why still shows on hover. */}
                     <button

@@ -7,11 +7,11 @@ import {
   type Edge, type EdgeProps, type InternalNode, type NodeProps,
 } from '@xyflow/react';
 import {
-  CONTEXT_LABEL, RADIUS, allows, guide, tokenValueIds, valueName,
-  type Link, type StakeholderTokensState,
+  RADIUS, allows, guide, tokenValueIds, valueName,
+  type Link, type StakeholderTokensState, type Wording,
 } from './model';
 
-export const BoardContext = createContext<{ board: StakeholderTokensState; step: number } | null>(null);
+export const BoardContext = createContext<{ board: StakeholderTokensState; step: number; wording: Wording } | null>(null);
 
 function useBoard() {
   const ctx = useContext(BoardContext);
@@ -45,28 +45,28 @@ function useFitText(text: string, max: number, min: number) {
 
 /** The rings themselves: a non-interactive node, so fitView frames the whole board. */
 export function RingsNode() {
-  const { step } = useBoard();
+  const { step, wording: w } = useBoard();
   const r = RADIUS.board;
   return (
     <svg className="rings" width={r * 2} height={r * 2} viewBox={`${-r} ${-r} ${r * 2} ${r * 2}`} aria-hidden="true">
       <circle className="ring excluded" r={RADIUS.board - 1} {...guide(step, 'excluded')} />
       <circle className="ring peripheral" r={RADIUS.peripheral} />
       <circle className="ring core" r={RADIUS.core} />
-      <text y={-RADIUS.board + 32}>Excluded</text>
-      <text y={-RADIUS.peripheral + 28}>Peripheral</text>
-      <text y={-RADIUS.core + 26}>Core</text>
+      <text y={-RADIUS.board + 32}>{w.excluded}</text>
+      <text y={-RADIUS.peripheral + 28}>{w.peripheral}</text>
+      <text y={-RADIUS.core + 26}>{w.core}</text>
     </svg>
   );
 }
 
 /** What is being designed, fixed at the centre of the board. The heading above the board shows it in full. */
 export function ContextNode() {
-  const { board, step } = useBoard();
+  const { board, step, wording: w } = useBoard();
   const label = board.context.label || 'Name what you’re designing';
   const { ref, truncated } = useFitText(label, 15, 13);
   return (
     <div className="context-token" {...guide(step, 'context')}>
-      <span className="context-type">{CONTEXT_LABEL[board.context.type]}</span>
+      <span className="context-type">{w[board.context.type]}</span>
       <span ref={ref} className={board.context.label ? 'context-label' : 'context-label placeholder'}>{label}</span>
       {truncated && <span className="token-tooltip" aria-hidden="true">{label}</span>}
     </div>

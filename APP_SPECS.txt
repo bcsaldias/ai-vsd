@@ -277,8 +277,8 @@ ai-vsd/
   frontend/       Self-contained Vite project (package.json, index.html, src/)
     content/       Lesson content as plain files anyone can edit, one folder per lesson: lesson.json
                    (steps' titles, tasks, objectives, guide), worked-example.json, prompts.json
-                   (starting prompts), work-description.json (wording of the student's work as
-                   the AI reads it). See content/README.md. Read by services/lessonContent.ts.
+                   (starting prompts), wording.json (the words for the activity's parts, on screen
+                   and in the AI's text). See content/README.md. Read by services/lessonContent.ts.
     src/
       types/         Shared data contracts
       services/      The only code that talks to data sources (mock now, backend later)
@@ -339,9 +339,9 @@ Defined once in frontend/src/types/contracts.ts and mirrored as Pydantic models 
   optional stateKey (activities with the same key share one state), optional config (activity-specific
   settings, passed through untouched, e.g. { step: 3 }), optional guide[] (what the activity introduces:
   target, label, where; shown on the step card), optional example (worked example), optional
-  workLabels (wording for the student's work in plain language for the AI).
+  wording (the words for the activity's parts, shown on screen and used in the AI's text).
 - ActivityGuideItem: target (matches data-guide on activity elements), label, where.
-- ActivityProps (what an activity receives): prompt, config, savedState, onChange(state).
+- ActivityProps (what an activity receives): prompt, config, savedState, wording, onChange(state).
 - ActivityReport (what gets stored and sent for feedback): activityId, kind, status (in-progress | submitted), state, updatedAt.
 - Feedback: activityId, source (mock | ai), promptVersionId, generatedAt, summary, items[].
 - FeedbackItem: id, tone (praise | suggestion | issue), message, optional targetId.

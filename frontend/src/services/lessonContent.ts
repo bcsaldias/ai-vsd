@@ -4,13 +4,13 @@
 // Later: the backend serves the same content (GET /lessons/{id}).
 
 import type { ActivityDefinition, ActivityKind, Lesson, PromptVersion } from '../types/contracts';
-import { WORK_TEXT } from '../activities/workText';
+import { wordingKeys } from '../activities/registry';
 import order from '../../content/lessons.json';
 
 const lessonFiles = import.meta.glob('../../content/*/lesson.json', { eager: true, import: 'default' });
 const exampleFiles = import.meta.glob('../../content/*/worked-example.json', { eager: true, import: 'default' });
 const promptFiles = import.meta.glob('../../content/*/prompts.json', { eager: true, import: 'default' });
-const workTextFiles = import.meta.glob('../../content/*/work-description.json', { eager: true, import: 'default' });
+const wordingFiles = import.meta.glob('../../content/*/wording.json', { eager: true, import: 'default' });
 
 const ACTIVITY_KINDS = ['diagram', 'annotation', 'stakeholder-tokens', 'value-scenarios'] as const satisfies readonly ActivityKind[];
 
@@ -42,18 +42,17 @@ function readLesson(folder: string): { lesson: Lesson; prompts: PromptVersion } 
   const example = file(exampleFiles, 'worked-example.json');
   if (!Array.isArray(l.steps) || !l.steps.length) fail(where('steps'), 'should be a list of at least one step');
 
-  // Optional: rewording of how the student's work is written out for the AI. Every key must be a
-  // label the lesson's activity uses; labels left out keep the activity's default wording.
-  const rawLabels = file(workTextFiles, 'work-description.json');
-  let workLabels: Record<string, string> | undefined;
-  if (rawLabels !== undefined) {
-    const labels = obj(rawLabels, at('work-description.json'));
-    const known = Object.keys(WORK_TEXT[activity as ActivityKind]?.labels ?? {});
-    workLabels = Object.fromEntries(Object.entries(labels).map(([key, v]) => {
-      const lw = `${at('work-description.json')} → ${key}`;
-      if (!known.includes(key)) fail(lw, `is not a label this activity uses. Its labels are: ${known.join(', ')}`);
-      return [key, text(v, lw)];
-    }));
+  // The words for the activity's parts, on screen and in the AI's text: the file gives every word
+  // the activity uses (it has no wording of its own), and nothing else.
+  const keys = wordingKeys(activity as ActivityKind);
+  let wording: Record<string, string> | undefined;
+  if (keys.length) {
+    const words = obj(file(wordingFiles, 'wording.json') ?? fail(at('wording.json'), 'missing'), at('wording.json'));
+    const ww = (key: string) => `${at('wording.json')} → ${key}`;
+    for (const key of Object.keys(words)) {
+      if (!keys.includes(key)) fail(ww(key), `is not a word this activity uses. Its words are: ${keys.join(', ')}`);
+    }
+    wording = Object.fromEntries(keys.map((key) => [key, text(words[key] ?? fail(ww(key), 'is missing'), ww(key))]));
   }
 
   const ids = new Set<string>();
@@ -78,7 +77,7 @@ function readLesson(folder: string): { lesson: Lesson; prompts: PromptVersion } 
       config: { step: i + 1 },
       ...(sharedBoard && { stateKey: sharedBoard }),
       ...(example !== undefined && { example }),
-      ...(workLabels && { workLabels }),
+      ...(wording && { wording }),
       ...(source && {
         stakeholderSource: {
           stateKey: text(source.stateKey, where('bringStakeholdersFrom.stateKey')),
@@ -126,7 +125,5 @@ const loaded = texts(order, 'content/lessons.json').map(readLesson);
 
 export const LESSONS: Lesson[] = loaded.map((l) => l.lesson);
 
-/** One starting prompt set per lesson (its version 1); each lesson's versions are numbered separately.
-    Versions saved in a browser are numbered after it (see promptService), so each lesson keeps
-    exactly one starting version: edit it in prompts.json rather than adding another. */
+/** Each lesson's starting prompts, from its prompts.json: its version 1. */
 export const SEED_PROMPT_VERSIONS: PromptVersion[] = loaded.map((l) => l.prompts);

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Lesson, LessonSummary, PromptVersion } from '../types/contracts';
-import { listPromptVersions } from '../services/promptService';
+import { EVERY_STEP, PART_LABEL, listPromptVersions, stepLabel } from '../services/promptService';
 import { getLesson } from '../services/activityService';
 import { lessonAccent } from '../lessons/LessonPicker';
 
@@ -73,12 +73,12 @@ export function VersionsTab({ lessons, lessonId, refreshKey }: Props) {
             <div className="panel-body">
               {/* In the order they are sent; only steps that have questions of their own are listed. */}
               {[
-                { label: 'System', text: selected.prompts.system },
-                { label: 'Questions to ask · For every step', text: selected.prompts.questions },
+                { label: PART_LABEL.system, text: selected.prompts.system },
+                { label: `${PART_LABEL.questions} · ${EVERY_STEP}`, text: selected.prompts.questions },
                 ...(lesson?.id === selected.lessonId ? lesson.activities : [])
-                  .map((a, i) => ({ label: `Questions to ask · Step ${i + 1} · ${a.title}`, text: selected.prompts.stepQuestions[a.id] ?? '' }))
+                  .map((a, i) => ({ label: `${PART_LABEL.questions} · ${stepLabel(i, a.title)}`, text: selected.prompts.stepQuestions[a.id] ?? '' }))
                   .filter((s) => s.text.trim()),
-                { label: 'User', text: selected.prompts.user },
+                { label: PART_LABEL.user, text: selected.prompts.user },
               ].map(({ label, text }) => (
                 <div key={label} className="preview-message">
                   <span className="role-label">{label}</span>

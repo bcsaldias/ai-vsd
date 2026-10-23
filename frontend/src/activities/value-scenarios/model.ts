@@ -3,6 +3,9 @@
 // effects and value implications. Plain data and pure updates; the component only renders them.
 
 import type { StakeholderRef } from '../../types/contracts';
+import { filled, patchIn, section, stepTools } from '../shared';
+
+export { newId } from '../shared';
 
 export interface ScenarioStakeholder {
   id: string;
@@ -67,19 +70,12 @@ export const STEP = {
 export const LAST_STEP = 8;
 
 export type Tool = keyof typeof STEP;
-export const allows = (step: number, tool: Tool) => step >= STEP[tool];
+export const { allows, guide } = stepTools<Tool>(STEP);
 
-/** Marks where a part lives (data-guide) and flags it in the step that introduces it (data-new). */
-export const guide = (step: number, tool: Tool) => ({
-  'data-guide': tool,
-  'data-new': STEP[tool] === step ? '' : undefined,
-});
-
-export const HORIZON_LABEL: Record<Horizon, string> = { years: 'In 5 years', decades: 'In 20+ years' };
+/** How far ahead a scenario can be pushed, in order. Their words come from the lesson's wording (see Words). */
+export const HORIZONS: Horizon[] = ['years', 'decades'];
 
 // ---------- Construction ----------
-
-export const newId = (prefix: string) => `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
 export function normalize(saved: Partial<ValueScenariosState> | null): ValueScenariosState {
   return {
@@ -115,10 +111,6 @@ export function forStep(s: ValueScenariosState, step: number): ValueScenariosSta
 // ---------- Updates (pure) ----------
 
 type State = ValueScenariosState;
-
-function patchIn<T extends { id: string }>(list: T[], id: string, patch: Partial<T>): T[] {
-  return list.map((item) => (item.id === id ? { ...item, ...patch } : item));
-}
 
 export const setTechnology = (s: State, technology: string): State => ({ ...s, technology });
 
@@ -209,62 +201,43 @@ export function scenarioName(s: State, sc: Scenario): string {
   return sc.title || (who ? storyOf(who) : 'Untitled scenario');
 }
 
-// ---------- Work in plain language ----------
+// ---------- Words ----------
 
-/** The wording of the scenarios written out for the AI ({{student_work}}). These are the defaults; a
-    lesson's content/<lesson>/work-description.json can reword any of them. */
-export const WORK_LABELS = {
-  technology: 'Technology',
-  stakeholders: 'Whose stories',
-  direct: 'direct',
-  indirect: 'indirect',
-  scenarios: 'Scenarios',
-  whose: 'Whose story',
-  story: 'Today',
-  years: 'In 5 years',
-  decades: 'In 20+ years',
-  widespread: 'If everyone had it',
-  systemic: 'Knock-on effects',
-  values: 'Values at stake',
-  harm: 'harmed',
-  benefit: 'supported',
-  tensions: 'Tensions between scenarios',
-  versus: 'vs',
-  untitled: 'Untitled scenario',
-  unnamed: '(unnamed)',
-  blank: '(not written yet)',
-  none: '(none yet)',
-};
-export type WorkLabels = Record<keyof typeof WORK_LABELS, string>;
+/** The words for the scenarios' parts, used on screen and in the work as the AI reads it
+    ({{student_work}}), so students see exactly the words the AI gets. Each lesson's
+    content/<lesson>/wording.json gives every one. */
+export const WORDING_KEYS = [
+  'technology', 'stakeholders', 'direct', 'indirect', 'scenarios', 'whose', 'story', 'years', 'decades',
+  'widespread', 'systemic', 'values', 'harm', 'benefit', 'tensions', 'versus', 'untitled', 'unnamed', 'blank', 'none',
+] as const;
+export type Wording = Record<(typeof WORDING_KEYS)[number], string>;
 
 /** The scenarios as of a step, in plain language: the parts the step has reached, in the order the
     steps add them. Ids are left out; scenarios are numbered so tensions can refer to them. */
-export function describeWork(s: ValueScenariosState, step: number, t: WorkLabels): string {
-  const text = (v: string | undefined, empty = t.blank) => v?.trim() || empty;
+export function describeWork(s: ValueScenariosState, step: number, w: Wording): string {
   const title = (id: string) => {
     const i = s.scenarios.findIndex((sc) => sc.id === id);
-    return i < 0 ? t.unnamed : `${i + 1}. ${text(s.scenarios[i].title, t.untitled)}`;
+    return i < 0 ? w.unnamed : `${i + 1}. ${filled(s.scenarios[i].title, w.untitled)}`;
   };
-  const sections = [`${t.technology}: ${text(s.technology)}`];
-  const section = (heading: string, lines: string[]) => sections.push([`${heading}:`, ...(lines.length ? lines : [t.none])].join('\n'));
-
+  const sections = [`${w.technology}: ${filled(s.technology, w.blank)}`];
   if (allows(step, 'stakeholders')) {
-    section(t.stakeholders, s.stakeholders.map((st) => `- ${text(st.name, t.unnamed)} — ${t[st.kind]}`));
+    sections.push(section(w.stakeholders, s.stakeholders.map((st) => `- ${filled(st.name, w.unnamed)} — ${w[st.kind]}`), w.none));
   }
   if (allows(step, 'story')) {
-    section(t.scenarios, s.scenarios.map((sc) => [
+    sections.push(section(w.scenarios, s.scenarios.map((sc) => [
       title(sc.id),
-      `   ${t.whose}: ${text(s.stakeholders.find((st) => st.id === sc.stakeholderId)?.name, t.unnamed)}`,
-      `   ${t.story}: ${text(sc.story)}`,
-      allows(step, 'time') && `   ${t[sc.horizon]}: ${text(sc.later)}`,
-      allows(step, 'widespread') && `   ${t.widespread}: ${text(sc.widespread)}`,
-      allows(step, 'systemic') && `   ${t.systemic}: ${text(sc.systemic)}`,
+      `   ${w.whose}: ${filled(s.stakeholders.find((st) => st.id === sc.stakeholderId)?.name, w.unnamed)}`,
+      `   ${w.story}: ${filled(sc.story, w.blank)}`,
+      allows(step, 'time') && `   ${w[sc.horizon]}: ${filled(sc.later, w.blank)}`,
+      allows(step, 'widespread') && `   ${w.widespread}: ${filled(sc.widespread, w.blank)}`,
+      allows(step, 'systemic') && `   ${w.systemic}: ${filled(sc.systemic, w.blank)}`,
       allows(step, 'values') &&
-        `   ${t.values}: ${sc.values.length ? sc.values.map((v) => `${v.name} (${t[v.effect]})`).join(', ') : t.none}`,
-    ].filter(Boolean).join('\n')));
+        `   ${w.values}: ${sc.values.length ? sc.values.map((v) => `${v.name} (${w[v.effect]})`).join(', ') : w.none}`,
+    ].filter(Boolean).join('\n')), w.none));
   }
   if (allows(step, 'tensions')) {
-    section(t.tensions, s.tensions.map((x) => `- ${title(x.a)} ${t.versus} ${title(x.b)}${x.note.trim() ? `: ${x.note.trim()}` : ''}`));
+    sections.push(section(w.tensions, s.tensions.map((x) =>
+      `- ${title(x.a)} ${w.versus} ${title(x.b)}${x.note.trim() ? `: ${x.note.trim()}` : ''}`), w.none));
   }
   return sections.join('\n\n');
 }

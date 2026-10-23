@@ -5,17 +5,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ActivityProps } from '../../types/contracts';
 import {
-  HORIZON_LABEL, LAST_STEP, addScenario, addStakeholder, addTension, addValue, allows, forStep, guide,
+  HORIZONS, LAST_STEP, addScenario, addStakeholder, addTension, addValue, allows, forStep, guide,
   importStakeholders as mergeStakeholders, newId, normalize, patchScenario, patchStakeholder, patchTension,
   removeScenario, removeStakeholder, removeTension, removeValue, scenarioName, setTechnology, storyOf,
-  type Horizon, type Scenario, type ValueNote, type ValueScenariosState,
+  type Horizon, type Scenario, type ValueNote, type ValueScenariosState, type Wording,
 } from './model';
 
 export type { ValueScenariosState } from './model';
 
 type State = ValueScenariosState;
 
-export function ValueScenariosActivity({ savedState, onChange, config, example, importStakeholders }: ActivityProps<State>) {
+export function ValueScenariosActivity({ savedState, onChange, config, example, importStakeholders, wording }: ActivityProps<State>) {
+  const w = wording as Wording;
   const step = typeof config?.step === 'number' ? config.step : LAST_STEP;
   const [stored, setStored] = useState<State>(() => normalize(savedState));
   const state = useMemo(() => (example ? forStep(stored, step) : stored), [stored, step, example]);
@@ -53,7 +54,7 @@ export function ValueScenariosActivity({ savedState, onChange, config, example, 
         <aside className="scenario-setup">
           <section {...guide(step, 'technology')}>
             <label className="field">
-              <span>Technology</span>
+              <span>{w.technology}</span>
               <textarea
                 rows={2}
                 value={state.technology}
@@ -65,7 +66,7 @@ export function ValueScenariosActivity({ savedState, onChange, config, example, 
 
           {allows(step, 'stakeholders') && (
             <section {...guide(step, 'stakeholders')}>
-              <h3>Whose stories?</h3>
+              <h3>{w.stakeholders}</h3>
               {state.stakeholders.length === 0 && <p className="hint">Add the people your scenarios will follow.</p>}
               <ul className="stakeholder-rows">
                 {state.stakeholders.map((st) => (
@@ -81,8 +82,8 @@ export function ValueScenariosActivity({ savedState, onChange, config, example, 
                       onChange={(e) => update((s) => patchStakeholder(s, st.id, { kind: e.target.value as 'direct' | 'indirect' }))}
                       aria-label={`${st.name || 'Stakeholder'}: direct or indirect`}
                     >
-                      <option value="direct">Direct</option>
-                      <option value="indirect">Indirect</option>
+                      <option value="direct">{w.direct}</option>
+                      <option value="indirect">{w.indirect}</option>
                     </select>
                     <button className="icon" aria-label={`Remove ${st.name || 'stakeholder'}`} onClick={() => update((s) => removeStakeholder(s, st.id))}>×</button>
                   </li>
@@ -106,7 +107,7 @@ export function ValueScenariosActivity({ savedState, onChange, config, example, 
           {allows(step, 'story') && (
             <>
               {state.scenarios.map((sc) => (
-                <ScenarioCard key={sc.id} scenario={sc} state={state} step={step} update={update} />
+                <ScenarioCard key={sc.id} scenario={sc} state={state} step={step} wording={w} update={update} />
               ))}
               <button
                 className="small add-scenario"
@@ -120,7 +121,7 @@ export function ValueScenariosActivity({ savedState, onChange, config, example, 
 
           {allows(step, 'tensions') && (
             <section className="scenario-tensions" {...guide(step, 'tensions')}>
-              <h3>Tensions between scenarios</h3>
+              <h3>{w.tensions}</h3>
               {state.scenarios.length < 2 && <p className="hint">Write at least two scenarios to compare them.</p>}
               {state.tensions.map((t) => (
                 <div key={t.id} className="tension-row">
@@ -164,10 +165,12 @@ interface CardProps {
   scenario: Scenario;
   state: State;
   step: number;
+  /** The lesson's words for the scenarios' parts, the same the AI reads. */
+  wording: Wording;
   update: (fn: (s: State) => State) => void;
 }
 
-function ScenarioCard({ scenario: sc, state, step, update }: CardProps) {
+function ScenarioCard({ scenario: sc, state, step, wording: w, update }: CardProps) {
   const set = (patch: Partial<Scenario>) => update((s) => patchScenario(s, sc.id, patch));
   const who = state.stakeholders.find((st) => st.id === sc.stakeholderId);
 
@@ -182,14 +185,14 @@ function ScenarioCard({ scenario: sc, state, step, update }: CardProps) {
           aria-label="Scenario title"
         />
         <select value={sc.stakeholderId} onChange={(e) => set({ stakeholderId: e.target.value })} aria-label="Whose story">
-          <option value="">Whose story?</option>
-          {state.stakeholders.map((st) => <option key={st.id} value={st.id}>{st.name || 'Unnamed'} ({st.kind})</option>)}
+          <option value="">{w.whose}</option>
+          {state.stakeholders.map((st) => <option key={st.id} value={st.id}>{st.name || w.unnamed} — {w[st.kind]}</option>)}
         </select>
         <button className="icon" aria-label="Remove scenario" onClick={() => update((s) => removeScenario(s, sc.id))}>×</button>
       </header>
 
       <label className="field">
-        <span>Today</span>
+        <span>{w.story}</span>
         <textarea rows={3} value={sc.story} onChange={(e) => set({ story: e.target.value })} placeholder="A person, a place, a moment: what happens?" />
       </label>
 
@@ -198,7 +201,7 @@ function ScenarioCard({ scenario: sc, state, step, update }: CardProps) {
           <span className="scenario-later-head">
             Later:
             <select value={sc.horizon} onChange={(e) => set({ horizon: e.target.value as Horizon })} aria-label="How far ahead">
-              {(Object.keys(HORIZON_LABEL) as Horizon[]).map((h) => <option key={h} value={h}>{HORIZON_LABEL[h]}</option>)}
+              {HORIZONS.map((h) => <option key={h} value={h}>{w[h]}</option>)}
             </select>
           </span>
           <textarea rows={2} value={sc.later} onChange={(e) => set({ later: e.target.value })} placeholder="What has changed for this person by then?" aria-label="Later" />
@@ -206,22 +209,22 @@ function ScenarioCard({ scenario: sc, state, step, update }: CardProps) {
       )}
       {allows(step, 'widespread') && (
         <label className="field" {...guide(step, 'widespread')}>
-          <span>If everyone had it</span>
+          <span>{w.widespread}</span>
           <textarea rows={2} value={sc.widespread} onChange={(e) => set({ widespread: e.target.value })} placeholder="What if it were everywhere, not just here?" />
         </label>
       )}
       {allows(step, 'systemic') && (
         <label className="field" {...guide(step, 'systemic')}>
-          <span>Knock-on effects</span>
+          <span>{w.systemic}</span>
           <textarea rows={2} value={sc.systemic} onChange={(e) => set({ systemic: e.target.value })} placeholder="How do institutions, norms, or relationships change?" />
         </label>
       )}
-      {allows(step, 'values') && <ValueTags scenario={sc} step={step} update={update} />}
+      {allows(step, 'values') && <ValueTags scenario={sc} step={step} wording={w} update={update} />}
     </article>
   );
 }
 
-function ValueTags({ scenario: sc, step, update }: Omit<CardProps, 'state'>) {
+function ValueTags({ scenario: sc, step, wording: w, update }: Omit<CardProps, 'state'>) {
   const [name, setName] = useState('');
   const [effect, setEffect] = useState<ValueNote['effect']>('harm');
   const add = () => {
@@ -231,7 +234,7 @@ function ValueTags({ scenario: sc, step, update }: Omit<CardProps, 'state'>) {
   };
   return (
     <div className="field" {...guide(step, 'values')}>
-      <span>Values at stake</span>
+      <span>{w.values}</span>
       <div className="tags">
         {sc.values.map((v) => (
           <span key={v.id} className={`tag ${v.effect}`}>
@@ -241,8 +244,8 @@ function ValueTags({ scenario: sc, step, update }: Omit<CardProps, 'state'>) {
         ))}
         <span className="value-add edit-only">
           <select value={effect} onChange={(e) => setEffect(e.target.value as ValueNote['effect'])} aria-label="Harm or benefit">
-            <option value="harm">− Harm</option>
-            <option value="benefit">+ Benefit</option>
+            <option value="harm">− {w.harm}</option>
+            <option value="benefit">+ {w.benefit}</option>
           </select>
           <input
             className="tag-input"

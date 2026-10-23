@@ -7,9 +7,8 @@ import { SEED_PROMPT_VERSIONS } from './lessonContent';
 
 const KEY = 'prompt-versions';
 
-/** Versions saved in this browser. The starting versions stay in the content files, so changes to
-    them still show up. Numbers continue after them, so each lesson keeps exactly one starting
-    version (see SEED_PROMPT_VERSIONS). Goes away once the backend numbers versions. */
+/** Versions saved in this browser, numbered after the lesson's starting version (which stays in
+    its content file, so edits to it still show up). Later the backend numbers versions. */
 function loadSaved(): PromptVersion[] {
   try {
     const parsed = JSON.parse(localStorage.getItem(KEY) ?? '[]');
@@ -95,17 +94,23 @@ export interface PromptChange {
   label: string;
 }
 
+/** The names of the prompt's parts and question lists, wherever they are shown (Prompts tab,
+    Versions tab, lists of changes), so each is written once. */
+export const PART_LABEL: Record<PromptPart, string> = { system: 'System', questions: 'Questions to ask', user: 'User' };
+export const EVERY_STEP = 'For every step';
+export const stepLabel = (index: number, title: string) => `Step ${index + 1} · ${title}`;
+
 /** What differs from `before` to `after`, in the order the parts are sent, with steps in lesson order.
     Shown while editing; meant to be recorded with each saved version later, for the version history. */
-export function promptChanges(before: PromptSet, after: PromptSet, activities: Pick<ActivityDefinition, 'id'>[]): PromptChange[] {
+export function promptChanges(before: PromptSet, after: PromptSet, activities: Pick<ActivityDefinition, 'id' | 'title'>[]): PromptChange[] {
   const changes: PromptChange[] = [];
-  if (after.system !== before.system) changes.push({ part: 'system', label: 'System' });
-  if (after.questions !== before.questions) changes.push({ part: 'questions', label: 'Questions for every step' });
-  activities.forEach(({ id }, i) => {
+  if (after.system !== before.system) changes.push({ part: 'system', label: PART_LABEL.system });
+  if (after.questions !== before.questions) changes.push({ part: 'questions', label: `${PART_LABEL.questions} · ${EVERY_STEP}` });
+  activities.forEach(({ id, title }, i) => {
     if ((after.stepQuestions[id] ?? '') !== (before.stepQuestions[id] ?? ''))
-      changes.push({ part: 'questions', activityId: id, label: `Step ${i + 1} questions` });
+      changes.push({ part: 'questions', activityId: id, label: `${PART_LABEL.questions} · ${stepLabel(i, title)}` });
   });
-  if (after.user !== before.user) changes.push({ part: 'user', label: 'User' });
+  if (after.user !== before.user) changes.push({ part: 'user', label: PART_LABEL.user });
   return changes;
 }
 

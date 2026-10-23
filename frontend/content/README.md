@@ -10,7 +10,7 @@ content/
     lesson.json                 title, intro, color, and each step's text
     worked-example.json         the example students can open on each step
     prompts.json                the AI's starting prompts for this lesson
-    work-description.json       the wording used when a student's work is written out for the AI
+    wording.json                the words for the activity's parts, on screen and for the AI
   value-scenarios/
     (the same four files)
 ```
@@ -83,36 +83,42 @@ the starting point.
 | `system` | Who the AI is and its rules. |
 | `questionsForEveryStep` | Questions the AI can ask at any step, as a list. |
 | `questionsForEachStep` | Questions for one step only, listed under that step's `id` from lesson.json. Only the step being checked gets its questions. |
-| `userTemplate` | The message sent with each request, one line per item. `{{activity_title}}`, `{{activity_prompt}}`, `{{objectives}}`, and `{{student_work}}` (the work in plain language, see work-description.json) are filled in by the app. |
+| `userTemplate` | The message sent with each request, one line per item. `{{activity_title}}`, `{{activity_prompt}}`, `{{objectives}}`, and `{{student_work}}` (the work in plain language, see wording.json) are filled in by the app. |
 
 A changed prompts.json shows up for everyone who hasn't saved their own version of that lesson's
 prompts in their browser. Anyone who has keeps seeing their saved version (that's on purpose: it's
 their work).
 
-## work-description.json
+## wording.json
 
-The app stores a student's work as data. When it goes to the AI as `{{student_work}}`, the app
-writes it out in plain language instead, for example:
+The words for the activity's parts: ring names, "Harm" and "Benefit", the scenario card fields,
+and so on. The same words are used in two places, so students see exactly what the AI gets:
+
+- on screen, in the activity (the ring captions, buttons, field names), and
+- in `{{student_work}}`, where the app writes the student's work out in plain language for the AI:
 
 ```
 Direct stakeholders:
-- Homeowners — core
+- Homeowners — Core
 Harms and benefits:
 - Homeowners:
   - Benefit: Sees who is at the door from anywhere (Safety)
 ```
 
-This file holds that wording: each line is a name on the left (keep it) and the words the AI sees
-on the right (change them freely). For example, `"core": "core"` → `"core": "inner ring"` makes
-the AI read "Homeowners — inner ring". The Prompts tab preview shows the result straight away.
+Each line is a name on the left (keep it) and the words on the right (change them freely). For
+example, `"core": "Core"` → `"core": "Inner ring"` changes the ring's caption on the board and
+makes the AI read "Homeowners — Inner ring". The Prompts tab preview shows the result straight
+away.
 
-- Delete a line to go back to the app's built-in wording for it.
-- The names on the left are fixed by the activity; a misspelled one is reported when the app
-  opens, with the list of names it accepts.
-- `none` is shown for a part with nothing in it yet, and `blank` for an empty field.
+- Every name the activity uses must be in the file; a missing or misspelled one is reported when
+  the app opens, with the list of names it accepts.
+- `none` is shown for a part with nothing in it yet, `blank` for an empty field, and `unnamed`
+  for something not named yet. These, `for` and `vs` are only in the AI's text.
+- The step texts in lesson.json mention some of these words (e.g. "+ Harm / + Benefit" in a guide
+  item); if you change a word here, change it there too.
 
 ## lessons.json
 
 The folder names of the lessons, in the order they appear. A new lesson that uses one of the
-existing activities only needs a new folder with the four files (work-description.json is optional) and its name added here. A lesson
+existing activities only needs a new folder with the four files and its name added here. A lesson
 with a new kind of activity needs a developer.

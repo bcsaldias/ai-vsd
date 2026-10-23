@@ -99,9 +99,8 @@ card; the questions are prompts anyone can edit.
 - Why questions and not an example: each question is one thing the AI may do, so students can add,
   remove or reword one and see the effect, which is the prompting lesson. An example would also show
   tone and length, but the AI tends to copy its specifics; the System rules cover tone and length.
-- Why not an assistant message: the third box was first an "Assistant" box meant as a prefill (the
-  start of the model's reply), but current Claude models reject a request that ends with an
-  assistant message, so a filled-in box would have made every feedback request fail.
+- Never sent as an assistant message (a prefill of the model's reply): current Claude models reject
+  a request that ends with one.
 - One definition of the sent text: systemPromptParts in promptService. The preview uses it, and the
   backend sends the same text.
 - Saved versions keep the questions in PromptSet.questions (every step) and
@@ -156,10 +155,10 @@ what the student made, without ids or board positions. For example, Stakeholder 
     Starting point (technology): Smart doorbell camera that records the front door ...
 
     Direct stakeholders:
-    - Homeowners — core
+    - Homeowners — Core
     ...
     Indirect stakeholders:
-    - People experiencing homelessness — excluded, hidden or overlooked
+    - People experiencing homelessness — Excluded · Hidden or overlooked
 
     Relationships:
     - Homeowners —shares footage with→ Police      (one way)
@@ -175,10 +174,12 @@ what the student made, without ids or board positions. For example, Stakeholder 
   as the steps add them, and tensions at step 8). A reached part with nothing in it reads
   "(none yet)"; an empty field reads "(not written yet)".
 - Each activity writes out its own work (describeWork in its model.ts, listed in
-  activities/workText.ts). Activities without one are sent as JSON.
-- The wording (section headings, ring names, "Harm"/"Benefit", "(none yet)", ...) is lesson
-  content: content/<lesson>/work-description.json. Labels left out of the file keep the activity's
-  default wording; a key the activity doesn't use is reported as a content mistake.
+  activities/registry.ts). Activities without one are sent as JSON.
+- The words (ring names, "Harm"/"Benefit", the scenario fields, "(none yet)", ...) are lesson
+  content: content/<lesson>/wording.json, the only place they are written. The activity shows the
+  same words on screen, so students see exactly the words the AI gets, never a rewording. The file
+  must give every word the activity uses; a missing or unknown one is reported as a content
+  mistake.
 - The preview shows exactly what is sent.
 - The backend never converts work: the frontend sends both the JSON (stored) and the text (used for
   {{student_work}}). See BACKEND_SPEC.txt.
@@ -337,10 +338,6 @@ EDITING, SAVING, AND VERSIONS
 - Storage (placeholder until the backend): the starting versions live in code (mock data); versions
   saved in the browser are kept in localStorage ("prompt-versions") and listed after them, so they
   survive a reload but are only visible in that browser. Unsaved drafts don't survive a reload.
-- Caution: saved versions are numbered after the starting versions, so adding a starting version to
-  a lesson later gives it the same number and id as that browser's first saved version there. Edit
-  an existing starting version instead, or clear "prompt-versions" after adding one. This goes away
-  once the backend numbers versions.
 
 
 CONNECTION TO FEEDBACK

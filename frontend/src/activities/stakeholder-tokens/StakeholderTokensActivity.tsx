@@ -12,9 +12,9 @@ import {
 import '@xyflow/react/dist/style.css';
 import type { ActivityProps } from '../../types/contracts';
 import {
-  CONTEXT_LABEL, CONTEXT_SIZE, LAST_STEP, RADIUS, RING_LABEL, TOKEN_SIZE, addLink, addToken, allows, guide, hasLink,
+  CONTEXT_SIZE, LAST_STEP, RADIUS, TOKEN_SIZE, addLink, addToken, allows, guide, hasLink,
   forStep, linkLabel, moveToken, newId, normalize, removeLinks, removeTokens, tokenLabel,
-  type Link, type StakeholderTokensState, type Token,
+  type Link, type StakeholderTokensState, type Token, type Wording,
 } from './model';
 import { BoardContext, ContextNode, LinkEdge, RingsNode, TokenNode } from './BoardNodes';
 import { Inspector, type Selection } from './Inspector';
@@ -34,14 +34,15 @@ const nodeTypes = { rings: RingsNode, context: ContextNode, token: TokenNode };
 const edgeTypes = { link: LinkEdge };
 
 /** Builds React Flow nodes from the board, keeping what React Flow tracks itself (size, drag state). */
-function toNodes(prev: BoardNode[], board: Board, selection: Selection): BoardNode[] {
+function toNodes(prev: BoardNode[], board: Board, selection: Selection, w: Wording): BoardNode[] {
   const byId = new Map(prev.map((n) => [n.id, n]));
   const keep = (next: BoardNode): BoardNode => {
     const old = byId.get(next.id);
     return old ? { ...old, ...next, position: old.dragging ? old.position : next.position } : next;
   };
+  // In the same words as the AI's text: "Homeowners: Direct stakeholders — Core · Hidden or overlooked".
   const describe = (t: Token) =>
-    `${t.label || 'Unnamed'}: ${t.kind} stakeholder, ${RING_LABEL[t.ring].toLowerCase()}${t.overlooked ? ', hidden or overlooked' : ''}`;
+    `${t.label || w.unnamed}: ${w[t.kind]} ${w.stakeholders} — ${[w[t.ring], t.overlooked && w.overlooked].filter(Boolean).join(' · ')}`;
 
   return [
     keep({
@@ -51,7 +52,7 @@ function toNodes(prev: BoardNode[], board: Board, selection: Selection): BoardNo
     keep({
       id: CONTEXT_ID, type: 'context', data: {}, position: { x: -CONTEXT_SIZE / 2, y: -CONTEXT_SIZE / 2 },
       draggable: false, connectable: false, deletable: false, selected: selection?.id === CONTEXT_ID,
-      ariaLabel: `${CONTEXT_LABEL[board.context.type]}: ${board.context.label || 'not named yet'}`,
+      ariaLabel: `${w[board.context.type]}: ${board.context.label || w.blank}`,
     }),
     ...board.tokens.map((t) => keep({
       id: t.id, type: 'token', data: {}, position: { x: t.x - TOKEN_SIZE / 2, y: t.y - TOKEN_SIZE / 2 },
@@ -60,7 +61,7 @@ function toNodes(prev: BoardNode[], board: Board, selection: Selection): BoardNo
   ];
 }
 
-function toEdges(board: Board, selection: Selection): Edge[] {
+function toEdges(board: Board, selection: Selection, w: Wording): Edge[] {
   return board.links.map((l) => ({
     id: l.id,
     source: l.source,
@@ -73,19 +74,20 @@ function toEdges(board: Board, selection: Selection): Edge[] {
     // One-way relationships point at the stakeholder affected; mutual ones and tensions have no arrowhead.
     markerEnd: l.type === 'relationship' && !l.mutual ? { type: MarkerType.ArrowClosed } : undefined,
     ariaLabel: l.type === 'relationship' && !l.mutual
-      ? `relationship from ${tokenLabel(board, l.source)} to ${tokenLabel(board, l.target)}`
-      : `${l.mutual ? 'mutual relationship' : l.type} between ${tokenLabel(board, l.source)} and ${tokenLabel(board, l.target)}`,
+      ? `relationship from ${tokenLabel(board, l.source, w.unnamed)} to ${tokenLabel(board, l.target, w.unnamed)}`
+      : `${l.mutual ? 'mutual relationship' : l.type} between ${tokenLabel(board, l.source, w.unnamed)} and ${tokenLabel(board, l.target, w.unnamed)}`,
   }));
 }
 
-export function StakeholderTokensActivity({ savedState, onChange, config, example }: ActivityProps<Board>) {
+export function StakeholderTokensActivity({ savedState, onChange, config, example, wording }: ActivityProps<Board>) {
+  const w = wording as Wording;
   const step = typeof config?.step === 'number' ? config.step : LAST_STEP;
   const [stored, setBoard] = useState<Board>(() => normalize(savedState));
   // A worked example is read-only and shows only what exists by the current step.
   const board = useMemo(() => (example ? forStep(stored, step) : stored), [stored, step, example]);
   const [selection, setSelection] = useState<Selection>(null);
-  const [nodes, setNodes] = useState<BoardNode[]>(() => toNodes([], board, null));
-  const [edges, setEdges] = useState<Edge[]>(() => toEdges(board, null));
+  const [nodes, setNodes] = useState<BoardNode[]>(() => toNodes([], board, null, w));
+  const [edges, setEdges] = useState<Edge[]>(() => toEdges(board, null, w));
   const [flow, setFlow] = useState<ReactFlowInstance<BoardNode, Edge> | null>(null);
   // A token just added from the palette: the inspector puts the cursor in its Name field.
   const [nameRequest, setNameRequest] = useState<string | null>(null);
@@ -127,9 +129,9 @@ export function StakeholderTokensActivity({ savedState, onChange, config, exampl
   }, [stored]);
 
   useEffect(() => {
-    setNodes((ns) => toNodes(ns, board, selection));
-    setEdges(toEdges(board, selection));
-  }, [board, selection]);
+    setNodes((ns) => toNodes(ns, board, selection, w));
+    setEdges(toEdges(board, selection, w));
+  }, [board, selection, w]);
 
   const trackSelection = (changes: (NodeChange<BoardNode> | EdgeChange)[], kind: 'node' | 'link') => {
     for (const c of changes) {
@@ -222,8 +224,8 @@ export function StakeholderTokensActivity({ savedState, onChange, config, exampl
           ) : allows(step, 'direct') ? (
             <>
               <span className="palette-title">Add a stakeholder</span>
-              {paletteToken('direct', 'Direct')}
-              {allows(step, 'indirect') && paletteToken('indirect', 'Indirect')}
+              {paletteToken('direct', w.direct)}
+              {allows(step, 'indirect') && paletteToken('indirect', w.indirect)}
               <p className="hint">Drag a token onto the rings (or click it), then name it. Move it to change its ring.</p>
             </>
           ) : (
@@ -244,20 +246,20 @@ export function StakeholderTokensActivity({ savedState, onChange, config, exampl
           <ul className="token-legend" aria-label="Legend">
             <li><span className="swatch direct" /> Direct</li>
             <li><span className="swatch indirect" /> Indirect</li>
-            {allows(step, 'overlooked') && <li><span className="swatch overlooked" /> Hidden or overlooked</li>}
+            {allows(step, 'overlooked') && <li><span className="swatch overlooked" /> {w.overlooked}</li>}
           </ul>
         </div>
 
         <div className="board-column">
           {/* The starting point in full, as the board's heading; the centre token has room for only a few words. */}
           <button className="board-heading" onClick={() => setSelection({ kind: 'context', id: CONTEXT_ID })} title="Edit the starting point">
-            <span className="context-type">{CONTEXT_LABEL[board.context.type]}</span>
+            <span className="context-type">{w[board.context.type]}</span>
             <span className={board.context.label ? 'board-heading-label' : 'board-heading-label placeholder'}>
               {board.context.label || 'Name what you’re designing'}
             </span>
           </button>
         <div ref={canvasRef} className={`canvas tokens-board${canConnect ? ' can-connect' : ''}`} onDragOver={onDragOver} onDrop={onDrop}>
-          <BoardContext.Provider value={{ board, step }}>
+          <BoardContext.Provider value={{ board, step, wording: w }}>
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -295,6 +297,7 @@ export function StakeholderTokensActivity({ savedState, onChange, config, exampl
         <Inspector
           board={board}
           step={step}
+          wording={w}
           selection={selection}
           update={update}
           select={setSelection}

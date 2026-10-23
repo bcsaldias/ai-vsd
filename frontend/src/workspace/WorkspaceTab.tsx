@@ -9,8 +9,8 @@ import {
 import { requestFeedback } from '../services/feedbackService';
 import { LearningWorkspace } from './LearningWorkspace';
 import { FeedbackPanel } from './FeedbackPanel';
-import { ActivityHost, STAKEHOLDER_EXPORTERS, workUpToStep } from './ActivityHost';
-import { describeWork } from '../activities/workText';
+import { ActivityHost } from './ActivityHost';
+import { describeWork, stakeholdersFrom, workUpToStep } from '../activities/registry';
 import { ResizeHandle } from './ResizeHandle';
 import { LAYOUT_LIMITS, useWorkspaceLayout } from './useWorkspaceLayout';
 
@@ -136,7 +136,7 @@ export function WorkspaceTab({ lessonId, steps, onStepChange }: Props) {
   };
   // Optional bridge: bring stakeholders in from another lesson's saved work.
   const source = definition.stakeholderSource;
-  const exporter = source && STAKEHOLDER_EXPORTERS[source.kind];
+  const exporter = source && stakeholdersFrom(source.kind);
   const importStakeholders = source && exporter
     ? { label: source.label, load: async () => exporter(await loadSharedState(source.stateKey)) }
     : undefined;

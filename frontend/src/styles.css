@@ -165,7 +165,8 @@ textarea { width: 100%; resize: vertical; font-family: var(--mono); font-size: 0
 }
 .step-trail-label { font-size: 0.95rem; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .step-dot { transition: none; } }
-.tab-content { flex: 1; min-height: 0; overflow: auto; }
+/* Positioned so absolutely placed bits (like .sr-only status text) stay inside it instead of lengthening the page. */
+.tab-content { flex: 1; min-height: 0; overflow: auto; position: relative; }
 .tab-content > [role='tabpanel'] { min-height: 100%; }
 
 /* ---------- Panels ---------- */
@@ -730,6 +731,18 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 /* The active lesson is filled with its own color (set per tab as --tab-accent). */
 .lesson-tab.active, .lesson-tab.active:hover:not(:disabled) { color: var(--ink); font-weight: 700; background: var(--tab-accent); text-decoration: none; }
 .lesson-mark { font-weight: 700; }
+/* A lesson with unsaved prompt edits. */
+.unsaved-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: var(--plum);
+  vertical-align: middle;
+}
+/* Opens below and right-aligned: the lesson tabs sit at the top right of the page. */
+.lesson-tab[data-tip]::after { top: calc(100% + 6px); bottom: auto; left: auto; right: 0; transform: none; text-transform: none; letter-spacing: normal; }
 /* On Prompts and Versions, the lesson being edited colors the editors, preview, and version details. */
 .prompts-page .prompt-editor textarea { border-left: 6px solid var(--lesson, var(--ink-line)); }
 .prompts-page .prompt-preview, .versions-page .version-detail { border-top: 10px solid var(--lesson, var(--rule)); }
@@ -749,9 +762,32 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
   text-transform: uppercase;
   color: #fff;
 }
-.save-block { display: grid; gap: 4px; max-width: 36rem; }
-.save-block p { margin: 0; }
-.save-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+/* Spans the page and sits flush with its bottom edge while the tab scrolls behind it. */
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin: 0 -24px -24px;
+  padding: 10px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 24px;
+  flex-wrap: wrap;
+  background: #b0a9b2; /* the bottom of --ground-prompts */
+  border-top: 1px solid var(--ink-line);
+}
+/* Unsaved edits: a plum edge, like the one on a focused editor. */
+.save-bar.dirty { border-top: 3px solid var(--plum); }
+.save-status { min-width: 0; }
+.save-status p { margin: 0; }
+/* Ink, not --praise: the green is under 4.5:1 on the mauve ground. */
+.save-status .saved { font-weight: 700; }
+/* The changes are links: ink with a plum underline, since plum text is under 4.5:1 on the bar. */
+.save-status button.link { color: var(--ink); text-decoration: underline; text-decoration-color: var(--plum); text-underline-offset: 3px; }
+.save-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; flex: 1 1 30rem; }
+.save-row input { flex: 1 1 12rem; max-width: 22rem; }
+.save-row button { flex: none; }
 .prompts-intro { max-width: 46rem; }
 
 .prompts-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
@@ -871,6 +907,9 @@ button.variable[aria-disabled='true']:hover { background: var(--surface-strong);
   /* Stacked lesson tabs: line their text up with the app name. */
   .app-bar .lesson-switch { margin-left: -10px; }
   .tab-page { padding: 14px 16px 24px; }
+  .save-bar { margin: 0 -16px -24px; padding: 10px 16px; }
+  /* Nothing to save: just the version line, so the bar takes less of a small screen. */
+  .save-bar:not(.dirty) .save-row, .save-bar:not(.dirty) .save-status .hint { display: none; }
 }
 
 /* Shown instead of the app when a lesson content file has a mistake (see main.tsx). */

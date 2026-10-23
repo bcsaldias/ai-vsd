@@ -150,7 +150,9 @@ read as belonging to it. The selected lesson is one choice for the whole app: sw
 open section, and the browser remembers the lesson. The open section is in the address (#prompts,
 #versions; none for the Workspace), so a refresh stays on it and opening the app fresh starts on
 the Workspace. Switching back to a lesson returns to the step last open in it. Unsaved prompt edits
-are kept per lesson, so switching never discards them.
+are kept per lesson, so switching never discards them. A lesson with unsaved prompt edits shows a
+small plum dot after its name in the lesson switcher, from any section (tooltip and screen-reader
+text: "Unsaved prompt changes"). The dot clears when the edits are saved or discarded.
 
 The open step is also one choice for the whole app. A step trail under the sections, on Workspace and
 Prompts (not Versions: versions are kept per lesson, not per step), shows the lesson's steps as dots joined by arrows (o → o → o); the current step's dot is filled
@@ -210,15 +212,21 @@ The full Prompts tab spec is in specs/PROMPTS_TAB_SPEC.txt; this section is the 
   sent inside the system prompt (only the checked step's own list).
 - A preview that shows the user prompt filled in for the step open in the Workspace.
 - Saving creates a new version; it never overwrites an existing one.
+- A save bar pinned to the bottom of the tab shows the version being edited, lists what changed
+  (each item links to its editor, on its step), and confirms each save.
 - Prompts are kept per lesson (each lesson has its own tutor role and rubric): the tab shows the
   lesson selected in the top bar.
 
 
 C. VERSIONS TAB
 
-Track the history of prompt changes:
+Track the history of prompt changes. Titled "VERSION HISTORY." (the tab stays "Versions"). Not
+"Version Control": the tab shows history, and comparing and restoring aren't built yet.
 
-- List of versions: number, author (a placeholder, "you", until sign-in), date, and a short note.
+- List of versions: number, author (a placeholder, "you", until sign-in), date, and the version's
+  name (the note; "Version N" when saved without one).
+- Later: each version's list of changes (see WHAT CHANGED in specs/PROMPTS_TAB_SPEC.txt), once
+  saving records it.
 - Selecting a version shows its full system prompt, questions to ask, and user prompt.
 - Placeholders for later: comparing two versions (diff) and restoring an older version.
 - Every feedback result records the prompt version that produced it, so results can be traced back
@@ -232,7 +240,7 @@ Adapted from the VSD Lab site (vsdesign.org: home, projects, the lab):
   Workspace = orange #D68C45 (home), Prompts = mauve #BAB3BC→#B0A9B2 (projects), Versions = blue #7F9CC7 (the lab).
 - Cormorant Garamond for all text; a condensed sans (Barlow Condensed) for the app wordmark.
 - Ink #00001C for text, plum #573D52 for links, primary buttons, and focus.
-- Large white display titles with a trailing period ("PROMPT DESIGN.", "VERSIONS."), and stacked thin white rules as dividers.
+- Large white display titles with a trailing period ("PROMPT DESIGN.", "VERSION HISTORY."), and stacked thin white rules as dividers.
 - Flat and editorial: square corners, no shadows; panels are light translucent fills with thin white borders.
 - Accessibility: white fails contrast on these grounds (about 2.2–2.8:1), so it is only used for large titles
   and rules; all working text is ink (7:1 or higher). Lining numerals are used so "1" does not read as "I".

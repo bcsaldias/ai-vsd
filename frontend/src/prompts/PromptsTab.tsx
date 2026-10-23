@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Lesson, LessonSummary, PromptPart, PromptSet, PromptVersion } from '../types/contracts';
 import {
-  checkTemplate, getLatestPromptVersion, sameStepQuestions, savePromptVersion, systemPromptParts, TEMPLATE_VARIABLES,
-  templateParts, templateVariables,
+  checkTemplate, getLatestPromptVersion, promptChanges, sameStepQuestions, savePromptVersion, systemPromptParts,
+  TEMPLATE_VARIABLES, templateParts, templateVariables, type PromptChange,
 } from '../services/promptService';
 import { getLesson, loadReport } from '../services/activityService';
 import { lessonAccent } from '../lessons/LessonPicker';
@@ -32,6 +32,10 @@ interface Props {
   /** Whether this tab is showing, so the preview picks up work done since it was last open. */
   active: boolean;
   onSaved: () => void;
+  /** Opens a step of this lesson, as picking it in the steps at the top does. */
+  onStepChange: (activityId: string) => void;
+  /** The lessons with unsaved prompt edits, whenever that changes. */
+  onUnsavedChange: (lessonIds: string[]) => void;
 }
 
 type Session = { base: PromptVersion; draft: PromptSet; note: string };
@@ -41,7 +45,7 @@ const isDirty = ({ base, draft }: Session) =>
 /** Each lesson has its own prompts. The preview fills the template with the step open in the
     workspace and the student's saved work on it (or, if there is none yet, its worked example),
     up to that step: on a board shared by several steps, later steps' work is left out. */
-export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: Props) {
+export function PromptsTab({ lessons, lessonId, activityId, active, onSaved, onStepChange, onUnsavedChange }: Props) {
   // One editing session per lesson (the version it started from, the draft, the note), kept while
   // the app is open, so switching lessons — from any tab — never discards unsaved edits.
   const [sessions, setSessions] = useState<Record<string, Session>>({});
@@ -52,6 +56,10 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
   const [sample, setSample] = useState<'own' | 'example'>('own');
   // The User editor, so the variable chips can insert at its cursor.
   const userEditor = useRef<HTMLTextAreaElement>(null);
+  // The other editors, so a change listed in the save bar can be jumped to.
+  const systemEditor = useRef<HTMLTextAreaElement>(null);
+  const questionsEditor = useRef<HTMLTextAreaElement>(null);
+  const stepEditor = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!lessonId) return;
@@ -76,8 +84,10 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
     };
   }, [activity, active]);
 
-  // Unsaved edits in any lesson: the browser asks before closing or reloading the page.
-  const unsaved = Object.values(sessions).some(isDirty);
+  // Unsaved edits in any lesson: marked on the lesson tabs, and the browser asks before closing or reloading the page.
+  const unsavedLessons = Object.keys(sessions).filter((id) => isDirty(sessions[id]));
+  const unsaved = unsavedLessons.length > 0;
+  useEffect(() => onUnsavedChange(unsavedLessons), [unsavedLessons.join(' ')]);
   useEffect(() => {
     if (!unsaved) return;
     const warn = (e: BeforeUnloadEvent) => e.preventDefault();
@@ -93,6 +103,25 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
     const t = setTimeout(() => setCopied(null), 2000);
     return () => clearTimeout(t);
   }, [copied]);
+
+  // "Saved as version N" in the save bar, for four seconds after saving.
+  const [justSaved, setJustSaved] = useState<string | null>(null);
+  useEffect(() => {
+    if (!justSaved) return;
+    const t = setTimeout(() => setJustSaved(null), 4000);
+    return () => clearTimeout(t);
+  }, [justSaved]);
+
+  // A change picked in the save bar: its editor is focused once the step it belongs to is open.
+  const [goTo, setGoTo] = useState<PromptChange | null>(null);
+  useEffect(() => {
+    if (!goTo || (goTo.activityId && goTo.activityId !== activity?.id)) return;
+    const editor = goTo.activityId ? stepEditor : { system: systemEditor, questions: questionsEditor, user: userEditor }[goTo.part];
+    editor.current?.focus({ preventScroll: true });
+    // Centered, so the editor doesn't end up behind the save bar.
+    editor.current?.scrollIntoView({ block: 'center' });
+    setGoTo(null);
+  }, [goTo, activity]);
 
   if (!lessonId || !session) return <p className="hint">Loading prompts…</p>;
   const { base, draft, note } = session;
@@ -115,19 +144,23 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
 
   const dirty = isDirty(session);
   // What differs from the version being edited, so edits to steps not open here aren't saved unseen.
-  const changed = (part: PromptPart) => draft[part] !== base.prompts[part];
-  const stepChanged = (id: string) => (draft.stepQuestions[id] ?? '') !== (base.prompts.stepQuestions[id] ?? '');
-  const changedParts = [
-    changed('system') && 'System',
-    changed('questions') && 'Questions for every step',
-    ...activities.map((a, i) => stepChanged(a.id) && `Step ${i + 1} questions`),
-    changed('user') && 'User',
-  ].filter(Boolean);
+  const changes = promptChanges(base.prompts, draft, activities);
+  const changed = (part: PromptPart) => changes.some((c) => c.part === part && !c.activityId);
+  const stepChanged = (id: string) => changes.some((c) => c.activityId === id);
   const changedTag = <span className="badge">Changed</span>;
+  // Until the next edit, the save bar confirms the save instead of naming the version being edited.
+  const showSaved = justSaved === lessonId && !dirty;
+
+  // A step's questions are on the open step only, so jumping to them opens that step first.
+  const goToChange = (c: PromptChange) => {
+    if (c.activityId && c.activityId !== activity?.id) onStepChange(c.activityId);
+    setGoTo(c);
+  };
 
   const save = async () => {
     const v = await savePromptVersion(lessonId, draft, note);
     patch({ base: v, note: '' });
+    setJustSaved(lessonId);
     onSaved();
   };
 
@@ -170,19 +203,6 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
             them: deciding how an AI should challenge you is part of learning to work with one.
           </p>
         </div>
-        {/* What is being saved, and from which version, sits with the controls that save it. */}
-        <div className="save-block">
-          <p className="hint">
-            Editing from version {base.number}
-            {dirty && <span className="badge">Unsaved changes</span>}
-          </p>
-          {changedParts.length > 0 && <p className="hint">Changed: {changedParts.join(', ')}</p>}
-          <div className="save-row">
-            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="What changed?" aria-label="Version note" />
-            <button onClick={discard} disabled={!dirty}>Discard changes</button>
-            <button className="primary" onClick={save} disabled={!dirty}>Save as new version</button>
-          </div>
-        </div>
       </div>
 
       <div className="prompts-grid">
@@ -196,7 +216,12 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
                   <span className="hint">{help}</span>
                   <label className="question-list">
                     <span className="list-label">For every step{changed('questions') && changedTag}</span>
-                    <textarea value={draft.questions} onChange={(e) => setDraft({ ...draft, questions: e.target.value })} rows={4} />
+                    <textarea
+                      ref={questionsEditor}
+                      value={draft.questions}
+                      onChange={(e) => setDraft({ ...draft, questions: e.target.value })}
+                      rows={4}
+                    />
                   </label>
                   {activity && (
                     <label className="question-list">
@@ -206,6 +231,7 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
                       </span>
                       <span className="hint">To edit another step’s questions, pick it in the steps at the top.</span>
                       <textarea
+                        ref={stepEditor}
                         value={draft.stepQuestions[activity.id] ?? ''}
                         onChange={(e) =>
                           setDraft({ ...draft, stepQuestions: { ...draft.stepQuestions, [activity.id]: e.target.value } })
@@ -222,7 +248,12 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
                   {part === 'user' ? (
                     <TemplateTextarea ref={userEditor} value={draft.user} onChange={(user) => setDraft({ ...draft, user })} rows={8} />
                   ) : (
-                    <textarea value={draft[part]} onChange={(e) => setDraft({ ...draft, [part]: e.target.value })} rows={4} />
+                    <textarea
+                      ref={part === 'system' ? systemEditor : undefined}
+                      value={draft[part]}
+                      onChange={(e) => setDraft({ ...draft, [part]: e.target.value })}
+                      rows={4}
+                    />
                   )}
                 </label>
               )}
@@ -358,6 +389,41 @@ export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: P
             )}
           </div>
         </aside>
+      </div>
+
+      {/* Pinned to the bottom, so what changed and the controls that save it stay in view while editing. */}
+      <div className={dirty ? 'save-bar dirty' : 'save-bar'}>
+        <div className="save-status">
+          {showSaved ? (
+            <p className="saved">Saved as version {base.number}.</p>
+          ) : (
+            <p>
+              Editing from version {base.number}
+              {dirty && <span className="badge">Unsaved changes</span>}
+            </p>
+          )}
+          {changes.length > 0 ? (
+            // Each change opens its editor, on its step if it's another step's questions.
+            <p className="hint">
+              Changed:{' '}
+              {changes.map((c, i) => (
+                <span key={`${c.part}-${c.activityId ?? ''}`}>
+                  {i > 0 && ', '}
+                  <button type="button" className="link" onClick={() => goToChange(c)}>{c.label}</button>
+                </span>
+              ))}
+            </p>
+          ) : (
+            <p className="hint">{showSaved ? 'You’re now editing from it.' : 'No changes yet.'}</p>
+          )}
+          {/* Announces the save; the visible line changes too, but isn't read out on its own. */}
+          <span className="sr-only" role="status">{showSaved ? `Saved as version ${base.number}` : ''}</span>
+        </div>
+        <div className="save-row">
+          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Name this version, e.g. “Sharper questions”" aria-label="Version name" />
+          <button onClick={discard} disabled={!dirty}>Discard changes</button>
+          <button className="primary" onClick={save} disabled={!dirty}>Save as new version</button>
+        </div>
       </div>
     </div>
   );

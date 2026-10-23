@@ -60,13 +60,15 @@ export function App() {
     if (lessonId) getLesson(lessonId).then(setLesson);
   }, [lessonId]);
   const trailLesson = lesson?.id === lessonId ? lesson : null;
+  // Lessons with unsaved prompt edits, marked on the lesson tabs.
+  const [unsavedLessons, setUnsavedLessons] = useState<string[]>([]);
 
   // The lesson comes first: Workspace, Prompts, and Versions are its sections, and the trail its steps.
   return (
     <div className="app" data-tab={tab}>
       <header className="app-bar">
         <span className="app-title"><span>VSD Learning</span> <span>Workspace</span></span>
-        <LessonPicker lessons={lessons} value={lessonId} onChange={selectLesson} />
+        <LessonPicker lessons={lessons} value={lessonId} onChange={selectLesson} unsaved={unsavedLessons} />
       </header>
       <div className="lesson-bar" style={lessonAccent(lessons, lessonId)}>
       <nav className="tab-bar" role="tablist" aria-label="Sections of this lesson">
@@ -105,6 +107,8 @@ export function App() {
             activityId={lessonId ? (steps[lessonId] ?? null) : null}
             active={tab === 'prompts'}
             onSaved={() => setVersionsRefreshKey((k) => k + 1)}
+            onStepChange={(activityId) => lessonId && selectStep(lessonId, activityId)}
+            onUnsavedChange={setUnsavedLessons}
           />
         </div>
         <div role="tabpanel" id="panel-versions" aria-labelledby="tab-versions" hidden={tab !== 'versions'}>

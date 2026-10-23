@@ -8,22 +8,34 @@ interface Props {
   lessons: LessonSummary[];
   value: string | null;
   onChange: (id: string) => void;
+  /** Lessons with unsaved prompt edits, marked with a dot. */
+  unsaved?: string[];
 }
 
-export function LessonPicker({ lessons, value, onChange }: Props) {
+export function LessonPicker({ lessons, value, onChange, unsaved = [] }: Props) {
   return (
     <nav className="lesson-switch" aria-label="Lesson">
-      {lessons.map((l) => (
-        <button
-          key={l.id}
-          className={l.id === value ? 'lesson-tab active' : 'lesson-tab'}
-          style={{ '--tab-accent': l.accent } as CSSProperties}
-          aria-current={l.id === value ? 'page' : undefined}
-          onClick={() => l.id !== value && onChange(l.id)}
-        >
-          <span className="lesson-mark" aria-hidden="true">{l.symbol}</span> {l.title}
-        </button>
-      ))}
+      {lessons.map((l) => {
+        const hasUnsaved = unsaved.includes(l.id);
+        return (
+          <button
+            key={l.id}
+            className={l.id === value ? 'lesson-tab active' : 'lesson-tab'}
+            style={{ '--tab-accent': l.accent } as CSSProperties}
+            aria-current={l.id === value ? 'page' : undefined}
+            data-tip={hasUnsaved ? 'Unsaved prompt changes' : undefined}
+            onClick={() => l.id !== value && onChange(l.id)}
+          >
+            <span className="lesson-mark" aria-hidden="true">{l.symbol}</span> {l.title}
+            {hasUnsaved && (
+              <>
+                <span className="unsaved-dot" aria-hidden="true" />
+                <span className="sr-only"> (unsaved prompt changes)</span>
+              </>
+            )}
+          </button>
+        );
+      })}
     </nav>
   );
 }

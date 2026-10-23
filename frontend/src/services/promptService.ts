@@ -2,7 +2,7 @@
 // Placeholder: each lesson's starting version (content/<lesson>/prompts.json), plus versions saved in this browser (localStorage).
 // Later: FastAPI endpoints, shared by everyone.
 
-import type { ActivityDefinition, PromptSet, PromptVersion } from '../types/contracts';
+import type { ActivityDefinition, PromptPart, PromptSet, PromptVersion } from '../types/contracts';
 import { SEED_PROMPT_VERSIONS } from './lessonContent';
 
 const KEY = 'prompt-versions';
@@ -86,6 +86,27 @@ export function systemPromptParts(prompts: PromptSet, activityId: string | null)
   add(QUESTIONS_INTRO, prompts.questions);
   add(STEP_QUESTIONS_INTRO, activityId ? (prompts.stepQuestions[activityId] ?? '') : '');
   return parts;
+}
+
+/** One part of a prompt set that differs between two versions. `activityId` is set for a step's own questions. */
+export interface PromptChange {
+  part: PromptPart;
+  activityId?: string;
+  label: string;
+}
+
+/** What differs from `before` to `after`, in the order the parts are sent, with steps in lesson order.
+    Shown while editing; meant to be recorded with each saved version later, for the version history. */
+export function promptChanges(before: PromptSet, after: PromptSet, activities: Pick<ActivityDefinition, 'id'>[]): PromptChange[] {
+  const changes: PromptChange[] = [];
+  if (after.system !== before.system) changes.push({ part: 'system', label: 'System' });
+  if (after.questions !== before.questions) changes.push({ part: 'questions', label: 'Questions for every step' });
+  activities.forEach(({ id }, i) => {
+    if ((after.stepQuestions[id] ?? '') !== (before.stepQuestions[id] ?? ''))
+      changes.push({ part: 'questions', activityId: id, label: `Step ${i + 1} questions` });
+  });
+  if (after.user !== before.user) changes.push({ part: 'user', label: 'User' });
+  return changes;
 }
 
 /** Whether two sets of per-step questions say the same (a missing step and an empty one are equal). */

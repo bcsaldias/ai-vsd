@@ -21,14 +21,14 @@ Header:
     Instead, it asks questions, points out gaps, and challenges your reasoning, following the
     instructions below. Anyone, students included, can read and change them: deciding how an AI
     should challenge you is part of learning to work with one."
-  - "Editing from version N", with an "Unsaved changes" badge while the draft differs from version N.
-  - On the right: a "What changed?" note field, "Discard changes", and "Save as new version" (the two
-    buttons are disabled when there are no unsaved changes).
 
 Body, two columns:
   - Left: three editors in the order they are sent: System, Questions to ask right under it (they
     are sent inside the system prompt), then User. The Versions tab uses the same order.
   - Right: the Preview panel.
+
+Save bar, pinned to the bottom of the tab: the version being edited, what changed, and the controls
+that save it (see SAVE BAR).
 
 
 THE THREE PARTS
@@ -235,14 +235,61 @@ TOOLTIPS
   nothing. They are dimmed by text color, not opacity, which would fade the tooltip too.
 
 
+SAVE BAR
+
+Pinned to the bottom of the tab (sticky in the tab's scroll area) and spanning the page, so what
+changed and the controls that save it stay in view while editing. Why not in the header: the header
+scrolls away as soon as an editor is clicked, taking the changes and the save button with it.
+
+  - Left, the status: "Editing from version N", with an "Unsaved changes" badge while the draft
+    differs from version N. Under it, "Changed: ..." listing each changed part (see WHAT CHANGED),
+    or "No changes yet."
+  - Right, the controls: a version name field, "Discard changes", and "Save as new version" (both
+    buttons disabled when nothing has changed).
+  - Name field placeholder: Name this version, e.g. “Sharper questions” (labelled "Version name"
+    for screen readers). Why not "What changed?": the bar already lists what changed, and the name
+    is what the Versions tab shows under the version number. The example steers people toward
+    names that say something, not "v2 final". It is short enough to fit a phone-width field.
+  - While there are unsaved changes, the bar's top edge is a thicker plum line.
+  - After saving: "Saved as version N." (bold) and "You're now editing from it." for four seconds,
+    or until the next edit, then back to "Editing from version N" / "No changes yet." The save is
+    announced to screen readers.
+  - Narrow screens (800px or less): with nothing to save, the bar shows only the "Editing from
+    version N" line, so it takes less of a small screen. The field and buttons come back with the
+    first edit.
+
+
+WHAT CHANGED
+
+The draft is compared with the version its session started from, part by part.
+
+  - Each editor whose text differs shows a "Changed" badge beside its label: System, For every
+    step, the open step's list, User.
+  - The save bar lists every changed part, in the order they are sent: System, Questions for every
+    step, Step N questions (each step whose list differs, in lesson order), User. It includes steps
+    that aren't open, which is how edits to other steps' questions are seen before saving or
+    discarding.
+  - Each item in the list is a link to its editor: it focuses the editor and scrolls it to the
+    middle of the window, clear of the save bar. "Step N questions" opens that step first,
+    everywhere, as picking it in the step trail does.
+  - Not highlighted inside the editors or the preview. A textarea can't color parts of its own text
+    without drawing a copy behind it (see HIGHLIGHTING IN THE USER EDITOR), and colors would
+    distract while writing. In the preview, highlighted text already means "filled in from a
+    variable". A line-by-line comparison belongs to the Versions tab (Compare; see LATER).
+  - The list is worked out in one place, promptChanges in promptService, which returns each change
+    with its part and step, so the Versions tab can use it later. For now it is shown only while
+    editing: saved versions don't record it yet (see LATER).
+
+
 EDITING, SAVING, AND VERSIONS
 
-- Each lesson has its own editing session (the version it started from, the draft, the note), kept
-  while the app is open, so switching lessons from any tab never discards unsaved edits.
-- "Save as new version" saves the draft with the note (or "Version N" when the note is empty). It
-  never overwrites an existing version. Versions are numbered within each lesson.
-- "Discard changes" asks for confirmation, then returns the draft and note to the version the
-  session started from.
+- Each lesson has its own editing session (the version it started from, the draft, the version
+  name), kept while the app is open, so switching lessons from any tab never discards unsaved edits.
+  A lesson with unsaved edits is marked with a dot in the lesson switcher (see APP_SPECS.txt).
+- "Save as new version" saves the draft with the version name (or "Version N" when the name is
+  empty). It never overwrites an existing version. Versions are numbered within each lesson.
+- "Discard changes" asks for confirmation, then returns the draft and version name to the version
+  the session started from.
 - Closing or reloading the page with unsaved edits in any lesson makes the browser ask first.
 - Storage (placeholder until the backend): the starting versions live in code (mock data); versions
   saved in the browser are kept in localStorage ("prompt-versions") and listed after them, so they
@@ -272,6 +319,8 @@ Follows VISUAL STYLE in APP_SPECS.txt (mauve ground, Cormorant Garamond, ink tex
   - Issue color #9C3328 (--issue) for unknown names and the template warnings.
   - The lesson's accent color marks the editors' left edge and the preview's top band.
   - Monospace for the editors, chips, and preview text.
+  - The save bar is solid #B0A9B2 (the bottom of the mauve ground) with a thin top border and no
+    shadow, so the editors scrolling behind it don't show through.
 
 
 ACCESSIBILITY
@@ -281,17 +330,23 @@ ACCESSIBILITY
 - Unavailable controls use aria-disabled, so they stay focusable and say why they are unavailable.
 - The sample switch is a labelled group of toggle buttons (aria-pressed).
 - The colored copy behind the User editor is hidden from screen readers; the textarea is the editor.
+- "Saved as version N" is announced through a status region, since the visible line changing isn't
+  read out on its own.
+- The links in the save bar's change list are ink with a plum underline: plum text is about 4.2:1
+  on the bar, under the 4.5:1 needed at that size. Ink is about 9:1. The save message is bold ink
+  for the same reason (the green --praise is about 3.4:1).
 
 
 CODE MAP
 
   frontend/src/prompts/PromptsTab.tsx         The tab: sessions, editors, chips, warnings, preview,
-                                              sample switch.
+                                              sample switch, save bar.
   frontend/src/prompts/TemplateTextarea.tsx   The User editor with colored variables.
   frontend/src/services/promptService.ts      Versions and storage; TEMPLATE_VARIABLES,
                                               templateVariables, templateParts, checkTemplate,
                                               systemPromptParts (the questions' headings),
-                                              sameStepQuestions.
+                                              promptChanges (what changed), sameStepQuestions.
+  frontend/src/lessons/LessonPicker.tsx       The lesson switcher, with the unsaved-edits dot.
   frontend/content/<lesson>/prompts.json      Each lesson's starting prompts (editable without code).
   frontend/src/services/lessonContent.ts      Reads and checks the content files.
   frontend/src/workspace/ActivityHost.tsx     workUpToStep (per-step view of shared work).
@@ -303,6 +358,8 @@ LATER
 
 - Warn about {{variables}} in the System prompt and the questions (they are never filled there).
 - Versions work: "Edit from this version" (load an older version as the draft) and showing what
-  changed before saving / between versions. See C. VERSIONS TAB in APP_SPECS.txt.
+  changed between versions. See C. VERSIONS TAB in APP_SPECS.txt.
+- Record each saved version's changes (promptChanges) with it, so the Versions tab can show them,
+  even for versions saved without a name. Not done yet: saving doesn't record them.
 - When the backend arrives: make lesson loading ignore out-of-order responses (also in the
   Workspace and Versions tabs).

@@ -4,18 +4,17 @@ import { useEffect, useState } from 'react';
 import type { Lesson, LessonSummary, PromptVersion } from '../types/contracts';
 import { listPromptVersions } from '../services/promptService';
 import { getLesson } from '../services/activityService';
-import { LessonPicker, lessonAccent } from '../lessons/LessonPicker';
+import { lessonAccent } from '../lessons/LessonPicker';
 
 interface Props {
   lessons: LessonSummary[];
   lessonId: string | null;
-  onLessonChange: (id: string) => void;
   /** Changes whenever a new version is saved elsewhere. */
   refreshKey: number;
 }
 
 /** Prompt history for one lesson at a time. */
-export function VersionsTab({ lessons, lessonId, onLessonChange, refreshKey }: Props) {
+export function VersionsTab({ lessons, lessonId, refreshKey }: Props) {
   const [versions, setVersions] = useState<PromptVersion[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // The lesson's steps, to label each step's questions.
@@ -39,7 +38,6 @@ export function VersionsTab({ lessons, lessonId, onLessonChange, refreshKey }: P
       <div className="page-header">
         <div>
           <h1 className="page-title">Versions.</h1>
-          <LessonPicker lessons={lessons} value={lessonId} onChange={onLessonChange} />
           <p className="hint">Prompt history. Every saved prompt change appears here; feedback records which version produced it.</p>
         </div>
       </div>

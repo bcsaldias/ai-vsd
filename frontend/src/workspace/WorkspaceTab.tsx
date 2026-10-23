@@ -2,7 +2,7 @@
 // reports to persistence and feedback; implements no activity behavior itself.
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import type { ActivityReport, ActivityStatus, Feedback, Lesson, LessonSummary } from '../types/contracts';
+import type { ActivityReport, ActivityStatus, Feedback, Lesson } from '../types/contracts';
 import {
   clearWork, exportWork, getLesson, importWork, loadReport, loadSharedState, saveReport,
 } from '../services/activityService';
@@ -14,17 +14,15 @@ import { ResizeHandle } from './ResizeHandle';
 import { LAYOUT_LIMITS, useWorkspaceLayout } from './useWorkspaceLayout';
 
 interface Props {
-  lessons: LessonSummary[];
-  /** The lesson selected across the app (shared with the Prompts and Versions tabs). */
+  /** The lesson selected at the top of the app (shared with the Prompts and Versions tabs). */
   lessonId: string | null;
-  onLessonChange: (id: string) => void;
   /** The step last open in each lesson, so switching lessons (from any tab) comes back to it.
       Shared with the Prompts tab, whose preview uses the open step. */
   steps: Record<string, string>;
   onStepChange: (lessonId: string, activityId: string) => void;
 }
 
-export function WorkspaceTab({ lessons, lessonId, onLessonChange, steps, onStepChange }: Props) {
+export function WorkspaceTab({ lessonId, steps, onStepChange }: Props) {
   const [layout, setLayout] = useWorkspaceLayout();
   const gridRef = useRef<HTMLDivElement>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -261,8 +259,6 @@ export function WorkspaceTab({ lessons, lessonId, onLessonChange, steps, onStepC
   return (
     <div className="workspace-grid" ref={gridRef} style={gridStyle}>
       <LearningWorkspace
-        lessons={lessons}
-        onSelectLesson={(id) => id !== lesson.id && onLessonChange(id)}
         lesson={lesson}
         currentActivityId={activityId}
         onSelectActivity={setActivityId}

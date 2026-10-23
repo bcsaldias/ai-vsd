@@ -15,7 +15,7 @@ prompt AI. Each lesson has its own prompts (its own AI role, questions, and rubr
 LAYOUT
 
 Header:
-  - "PROMPTS." title, the lesson switcher (the same lesson selection as every other tab), and a short
+  - "PROMPTS." title (the lesson is picked in the top bar, above the sections), and a short
     introduction that frames the AI as a critical-thinking partner, not a tutor, and says anyone can
     change its instructions: "The AI here is told not to give answers. Instead, it asks questions,
     points out gaps, and challenges your reasoning, following the instructions below. Anyone,
@@ -73,7 +73,7 @@ Editing:
   - "For every step" is always shown.
   - "For this step · Step N · Title" shows the list for the step open in the Workspace, the same
     step the preview uses. There is no step picker in the Prompts tab itself: to edit another
-    step's questions, pick that step in the step trail under the tab bar (see APP_SPECS.txt; the
+    step's questions, pick that step in the step trail under the sections (see APP_SPECS.txt; the
     hint under the box says "To edit another step's questions, pick it in the steps at the top.").
   - Edits to any step's list count as unsaved changes and are saved with the version. Lists for
     several steps can be edited before saving one version.

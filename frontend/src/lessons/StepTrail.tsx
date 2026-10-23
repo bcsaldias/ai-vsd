@@ -1,5 +1,5 @@
-// The lesson's steps as a trail of dots (o → o → o) under the tab bar, on every tab. The current
-// step is filled with the lesson's color; clicking a dot opens that step everywhere.
+// The lesson's steps as a trail of dots (o → o → o) under its sections, on Workspace and Prompts.
+// The current step is filled with the lesson's color; clicking a dot opens that step everywhere.
 
 import type { CSSProperties } from 'react';
 import type { Lesson } from '../types/contracts';

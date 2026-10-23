@@ -110,20 +110,22 @@ textarea { width: 100%; resize: vertical; font-family: var(--mono); font-size: 0
 .app[data-tab='prompts'] { background: var(--ground-prompts); }
 .app[data-tab='versions'] { background: var(--ground-versions); }
 
-.tab-bar {
+.app-bar {
   display: flex;
   align-items: flex-end;
-  gap: 4px 22px;
-  padding: 18px 24px 12px;
+  gap: 8px 28px;
+  padding: 18px 24px 14px;
   flex-wrap: wrap;
 }
+/* The selected lesson's sections and steps, hung off its color so they read as belonging to it. */
+.lesson-bar { margin: 0 24px 12px; padding: 2px 0 2px 14px; border-left: 6px solid var(--lesson, var(--ink-line)); }
+.tab-bar { display: flex; align-items: flex-end; gap: 4px 22px; flex-wrap: wrap; }
 .app-title {
   font-family: var(--wordmark);
   font-weight: 600;
   font-size: 1.15rem;
   line-height: 0.95;
   text-transform: uppercase;
-  margin-right: auto;
 }
 .app-title span { display: block; }
 .tab {
@@ -139,10 +141,10 @@ textarea { width: 100%; resize: vertical; font-family: var(--mono); font-size: 0
 .tab.active { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: var(--plum); }
 .app > .rules { margin: 0 24px; }
 
-/* Step trail: the lesson's steps as dots joined by arrows, under the tab bar on every tab. The
-   current step is filled with the lesson's color and named beside the trail, so color isn't the
-   only cue. */
-.step-trail { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin: 0 24px 10px; }
+/* Step trail: the lesson's steps as dots joined by arrows, under the sections on Workspace and
+   Prompts. The current step is filled with the lesson's color and named beside the trail, so color
+   isn't the only cue. */
+.step-trail { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; }
 .step-trail ol { list-style: none; display: flex; align-items: center; flex-wrap: wrap; row-gap: 6px; margin: 0; padding: 0; }
 .step-trail li { display: flex; align-items: center; }
 .step-dot {
@@ -708,13 +710,14 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 .tension-side { display: inline-flex; align-items: center; gap: 6px; }
 .tension-row textarea { width: 100%; }
 
-/* Lesson switcher in the learning workspace header, and the lesson picker on Prompts / Versions. */
+/* Lesson switcher at the top of the app, at the far right. */
 .lesson-switch { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.app-bar .lesson-switch { margin-left: auto; }
 .lesson-tab {
   border: none;
   background: none;
-  padding: 2px 8px;
-  font-size: 0.8rem;
+  padding: 4px 10px;
+  font-size: 0.95rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -725,7 +728,6 @@ button.icon { border: none; padding: 0 6px; font-size: 1.1rem; line-height: 1; }
 /* The active lesson is filled with its own color (set per tab as --tab-accent). */
 .lesson-tab.active, .lesson-tab.active:hover:not(:disabled) { color: var(--ink); font-weight: 700; background: var(--tab-accent); text-decoration: none; }
 .lesson-mark { font-weight: 700; }
-.lesson-picker { margin-top: 10px; }
 /* On Prompts and Versions, the lesson being edited colors the editors, preview, and version details. */
 .prompts-page .prompt-editor textarea { border-left: 6px solid var(--lesson, var(--ink-line)); }
 .prompts-page .prompt-preview, .versions-page .version-detail { border-top: 10px solid var(--lesson, var(--rule)); }
@@ -824,7 +826,9 @@ button.variable[aria-disabled='true']:hover { background: var(--surface-strong);
 /* ---------- Short windows: compact header to leave room for the panels ---------- */
 
 @media (max-height: 700px) {
-  .tab-bar { padding-top: 8px; padding-bottom: 6px; align-items: center; }
+  .app-bar { padding-top: 8px; padding-bottom: 6px; align-items: center; }
+  .lesson-bar { margin-bottom: 6px; }
+  .step-trail { margin-top: 6px; }
   .app-title span { display: inline; }
   .app > .rules { height: 9px; background-size: 100% 1px; }
   .workspace-grid { padding-top: 10px; padding-bottom: 12px; }
@@ -850,9 +854,11 @@ button.variable[aria-disabled='true']:hover { background: var(--surface-strong);
   .scenario-head select { grid-column: 1 / -1; grid-row: 2; }
   .token-legend { margin-top: 0; }
   .prompts-grid, .versions-grid { grid-template-columns: minmax(0, 1fr); }
-  .tab-bar { padding: 14px 16px 10px; }
+  .app-bar { padding: 14px 16px 10px; }
   .app > .rules { margin: 0 16px; }
-  .step-trail { margin: 0 16px 8px; }
+  .lesson-bar { margin: 0 16px 8px; }
+  /* Stacked lesson tabs: line their text up with the app name. */
+  .app-bar .lesson-switch { margin-left: -10px; }
   .tab-page { padding: 14px 16px 24px; }
 }
 

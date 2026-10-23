@@ -140,12 +140,15 @@ traced to a step. A step that was submitted shows as in-progress again once the 
 
 VALUE SCENARIOS LESSON
 
-The selected lesson is one choice for the whole app: picking a lesson on any tab (Workspace, Prompts,
-Versions) changes it everywhere, and the browser remembers it. Switching back to a lesson returns to
+The lesson is the outer level of the app. The top bar holds the app name and the lesson switcher;
+under it, Workspace, Prompts, and Versions are the selected lesson's sections, and under those the
+step trail shows its steps. The sections and the trail hang off a rule in the lesson's color, so they
+read as belonging to it. The selected lesson is one choice for the whole app: switching keeps the
+open section, and the browser remembers the lesson. Switching back to a lesson returns to
 the step last open in it. Unsaved prompt edits are kept per lesson, so switching never discards them.
 
-The open step is also one choice for the whole app. A step trail under the tab bar, on every tab,
-shows the lesson's steps as dots joined by arrows (o → o → o); the current step's dot is filled
+The open step is also one choice for the whole app. A step trail under the sections, on Workspace and
+Prompts (not Versions: versions are kept per lesson, not per step), shows the lesson's steps as dots joined by arrows (o → o → o); the current step's dot is filled
 with the lesson's color and slightly larger, and "Step N of M · Title" is written beside the trail,
 so color is never the only cue. Clicking a dot opens that step everywhere: the Workspace activity,
 the Prompts preview, and the Prompts step questions. Each dot shows "Step N · Title" on hover or
@@ -155,17 +158,17 @@ Next button move the trail too. On narrow screens the trail wraps.
 A second, independent lesson (Nathan, Klasnja & Friedman, 2007): short stories about how a technology
 plays out for different stakeholders, once widely used and over many years. Its own steps, saved work
 (stateKey "value-scenarios"), example, Export / Import / Start over, and prompts. The learning
-workspace header switches between lessons.
+workspace header names the lesson; switching happens in the top bar.
 
 Telling lessons apart: each lesson has an accent color and a symbol (Stakeholder Analysis: sage
 #A6BAA0 and ◎; Value Scenarios: coral #D26559 and ≡), both from the VSD Lab palette. The color
-appears in four places only: the active lesson tab (filled), a band along the top of the step card,
-the open step in the activity list (its number in a filled circle, like the trail's dot, and its
-title filled and bold), and the activity panel header (filled; it stays in view while working).
-The lesson's name and symbol always appear alongside, so color is never the only cue. The workspace ground stays orange.
-The Prompts and Versions tabs use the same lesson switcher (active lesson filled with its color),
-and the lesson being edited colors the prompt editors' left edge, the preview, the selected version,
-and the version details. Each tab keeps its own ground.
+marks the lesson in these places only: the active lesson tab in the top bar (filled), the rule beside
+the sections and step trail, the trail's current dot, a band along the top of the step card, the
+open step in the activity list (its number in a filled circle, like the trail's dot, and its title
+filled and bold), and the activity panel header (filled; it stays in view while working). On
+Prompts and Versions, it also colors the prompt editors' left edge, the preview, the selected
+version, and the version details. The lesson's name and symbol always appear alongside, so color is
+never the only cue. Each section keeps its own ground (the workspace's stays orange).
 
 Bottom panel (a simple list for now; a time × pervasiveness grid may come later):
   - Left: the technology, and "Whose stories?" (stakeholders, direct or indirect). Optional bridge:
@@ -202,8 +205,8 @@ The full Prompts tab spec is in specs/PROMPTS_TAB_SPEC.txt; this section is the 
   sent inside the system prompt (only the checked step's own list).
 - A preview that shows the user prompt filled in for the step open in the Workspace.
 - Saving creates a new version; it never overwrites an existing one.
-- Prompts are kept per lesson (each lesson has its own tutor role and rubric). The lesson switcher at
-  the top is the same selection as in the Workspace and Versions tabs.
+- Prompts are kept per lesson (each lesson has its own tutor role and rubric): the tab shows the
+  lesson selected in the top bar.
 
 
 C. VERSIONS TAB

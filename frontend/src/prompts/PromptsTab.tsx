@@ -7,7 +7,7 @@ import {
   templateParts, templateVariables,
 } from '../services/promptService';
 import { getLesson, loadReport } from '../services/activityService';
-import { LessonPicker, lessonAccent } from '../lessons/LessonPicker';
+import { lessonAccent } from '../lessons/LessonPicker';
 import { workUpToStep } from '../workspace/ActivityHost';
 import { TemplateTextarea } from './TemplateTextarea';
 
@@ -27,7 +27,6 @@ const PARTS: { part: PromptPart; label: string; help: string }[] = [
 interface Props {
   lessons: LessonSummary[];
   lessonId: string | null;
-  onLessonChange: (id: string) => void;
   /** The step open in this lesson's workspace (null until the workspace has opened one). */
   activityId: string | null;
   /** Whether this tab is showing, so the preview picks up work done since it was last open. */
@@ -42,7 +41,7 @@ const isDirty = ({ base, draft }: Session) =>
 /** Each lesson has its own prompts. The preview fills the template with the step open in the
     workspace and the student's saved work on it (or, if there is none yet, its worked example),
     up to that step: on a board shared by several steps, later steps' work is left out. */
-export function PromptsTab({ lessons, lessonId, onLessonChange, activityId, active, onSaved }: Props) {
+export function PromptsTab({ lessons, lessonId, activityId, active, onSaved }: Props) {
   // One editing session per lesson (the version it started from, the draft, the note), kept while
   // the app is open, so switching lessons — from any tab — never discards unsaved edits.
   const [sessions, setSessions] = useState<Record<string, Session>>({});
@@ -138,7 +137,6 @@ export function PromptsTab({ lessons, lessonId, onLessonChange, activityId, acti
       <div className="page-header">
         <div>
           <h1 className="page-title">Prompts.</h1>
-          <LessonPicker lessons={lessons} value={lessonId} onChange={onLessonChange} />
           <p className="prompts-intro">
             The AI here is told not to give answers. Instead, it asks questions, points out gaps, and challenges
             your reasoning, following the instructions below. Anyone, students included, can read and change

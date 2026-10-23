@@ -1,5 +1,5 @@
-// Chooses which lesson's prompts the Prompts and Versions tabs work on (each lesson has its own).
-// Looks like the lesson switcher in the workspace: the active lesson is filled with its color.
+// The lesson switcher at the top of the app. The lesson is the outer choice: Workspace, Prompts, and
+// Versions all show the selected lesson. The active lesson is filled with its color.
 
 import type { CSSProperties } from 'react';
 import type { LessonSummary } from '../types/contracts';
@@ -12,7 +12,7 @@ interface Props {
 
 export function LessonPicker({ lessons, value, onChange }: Props) {
   return (
-    <nav className="lesson-switch lesson-picker" aria-label="Lesson">
+    <nav className="lesson-switch" aria-label="Lesson">
       {lessons.map((l) => (
         <button
           key={l.id}
@@ -28,6 +28,6 @@ export function LessonPicker({ lessons, value, onChange }: Props) {
   );
 }
 
-/** The lesson's accent as a CSS variable, for a page that shows one lesson's prompts. */
+/** The lesson's accent as a CSS variable, for anything that shows one lesson. */
 export const lessonAccent = (lessons: LessonSummary[], id: string | null) =>
   ({ '--lesson': lessons.find((l) => l.id === id)?.accent } as CSSProperties);

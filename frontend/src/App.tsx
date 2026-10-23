@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { Lesson, LessonSummary } from './types/contracts';
 import { getLesson, getLessons } from './services/activityService';
 import { rememberLesson, rememberedLesson } from './lessons/rememberedLesson';
+import { LessonPicker, lessonAccent } from './lessons/LessonPicker';
 import { StepTrail } from './lessons/StepTrail';
 import { WorkspaceTab } from './workspace/WorkspaceTab';
 import { PromptsTab } from './prompts/PromptsTab';
@@ -34,7 +35,7 @@ export function App() {
     setLessonId(id);
     rememberLesson(id);
   };
-  const lessonProps = { lessons, lessonId, onLessonChange: selectLesson };
+  const lessonProps = { lessons, lessonId };
   // The step open in each lesson's workspace; the Prompts preview fills its template from it.
   const [steps, setSteps] = useState<Record<string, string>>({});
   const selectStep = (lesson: string, activityId: string) =>
@@ -46,10 +47,15 @@ export function App() {
   }, [lessonId]);
   const trailLesson = lesson?.id === lessonId ? lesson : null;
 
+  // The lesson comes first: Workspace, Prompts, and Versions are its sections, and the trail its steps.
   return (
     <div className="app" data-tab={tab}>
-      <nav className="tab-bar" role="tablist" aria-label="Sections">
+      <header className="app-bar">
         <span className="app-title"><span>VSD Learning</span> <span>Workspace</span></span>
+        <LessonPicker lessons={lessons} value={lessonId} onChange={selectLesson} />
+      </header>
+      <div className="lesson-bar" style={lessonAccent(lessons, lessonId)}>
+      <nav className="tab-bar" role="tablist" aria-label="Sections of this lesson">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -64,18 +70,20 @@ export function App() {
           </button>
         ))}
       </nav>
-      {trailLesson && trailLesson.activities.length > 0 && (
+      {/* Versions are kept per lesson, not per step, so the trail has nothing to do there. */}
+      {tab !== 'versions' && trailLesson && trailLesson.activities.length > 0 && (
         <StepTrail
           lesson={trailLesson}
           currentId={steps[trailLesson.id] ?? trailLesson.activities[0].id}
           onSelect={(activityId) => selectStep(trailLesson.id, activityId)}
         />
       )}
+      </div>
       <div className="rules" aria-hidden="true" />
 
       <main className="tab-content">
         <div role="tabpanel" id="panel-workspace" aria-labelledby="tab-workspace" hidden={tab !== 'workspace'}>
-          <WorkspaceTab {...lessonProps} steps={steps} onStepChange={selectStep} />
+          <WorkspaceTab lessonId={lessonId} steps={steps} onStepChange={selectStep} />
         </div>
         <div role="tabpanel" id="panel-prompts" aria-labelledby="tab-prompts" hidden={tab !== 'prompts'}>
           <PromptsTab

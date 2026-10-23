@@ -159,9 +159,10 @@ workspace header switches between lessons.
 
 Telling lessons apart: each lesson has an accent color and a symbol (Stakeholder Analysis: sage
 #A6BAA0 and ◎; Value Scenarios: coral #D26559 and ≡), both from the VSD Lab palette. The color
-appears in three places only: the active lesson tab (filled), a band along the top of the step card,
-and the activity panel header (filled; it stays in view while working). The lesson's name and symbol
-always appear alongside, so color is never the only cue. The workspace ground stays orange.
+appears in four places only: the active lesson tab (filled), a band along the top of the step card,
+the open step in the activity list (its number in a filled circle, like the trail's dot, and its
+title filled and bold), and the activity panel header (filled; it stays in view while working).
+The lesson's name and symbol always appear alongside, so color is never the only cue. The workspace ground stays orange.
 The Prompts and Versions tabs use the same lesson switcher (active lesson filled with its color),
 and the lesson being edited colors the prompt editors' left edge, the preview, the selected version,
 and the version details. Each tab keeps its own ground.

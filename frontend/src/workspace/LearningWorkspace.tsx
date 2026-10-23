@@ -125,7 +125,7 @@ export function LearningWorkspace({
             <h3>Activities</h3>
             <ol className="activity-list">
               {lesson.activities.map((a) => (
-                <li key={a.id}>
+                <li key={a.id} className={a.id === currentActivityId ? 'current' : undefined}>
                   <button
                     className={a.id === currentActivityId ? 'link active' : 'link'}
                     onClick={() => onSelectActivity(a.id)}
